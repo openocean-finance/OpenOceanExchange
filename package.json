@@ -1,0 +1,18 @@
+{
+    "name": "open-ocean-exchange",
+    "description": "OpenOceanExchange",
+    "license": "ISC",
+    "dependencies": {
+        "@openzeppelin/contracts": "^3.1.0"
+    },
+    "devDependencies": {
+        "chai": "^4.2.0",
+        "@openzeppelin/test-helpers": "^0.5.6",
+        "solc": "^0.6.12",
+        "truffle": "^5.1.37",
+        "truffle-flattener": "^1.4.4"
+    },
+    "scripts": {
+        "flattern": "truffle-flattener ./contracts/OpenOceanExchange.sol > OpenOceanExchange.full.sol"
+    }
+}
