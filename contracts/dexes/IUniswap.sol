@@ -19,37 +19,38 @@ library IUniswapExchangeExtension {
     using SafeMath for uint256;
     using UniversalERC20 for IERC20;
 
-    function calculateToEthSwapReturn(
-        IUniswapExchange exchange,
-        IERC20 token,
-        uint256 amount
-    ) internal view returns (uint256) {
-        if (token.isETH()) {
-            return amount;
-        }
-        uint256 inReserve = token.universalBalanceOf(address(exchange));
-        uint256 outReserve = address(exchange).balance;
-        return doCalculate(inReserve, outReserve, amount);
-    }
+    // function calculateToEthSwapReturn(
+    //     IUniswapExchange exchange,
+    //     IERC20 token,
+    //     uint256 amount
+    // ) internal view returns (uint256) {
+    //     if (token.isETH()) {
+    //         return amount;
+    //     }
+    //     uint256 inReserve = token.universalBalanceOf(address(exchange));
+    //     uint256 outReserve = address(exchange).balance;
+    //     return doCalculate(exchange, inReserve, outReserve, amount);
+    // }
 
-    function calculateFromEthSwapReturn(
-        IUniswapExchange exchange,
-        IERC20 token,
-        uint256 amount
-    ) internal view returns (uint256) {
-        if (token.isETH()) {
-            return amount;
-        }
-        uint256 inReserve = address(exchange).balance;
-        uint256 outReserve = token.universalBalanceOf(address(exchange));
-        return doCalculate(inReserve, outReserve, amount);
-    }
+    // function calculateFromEthSwapReturn(
+    //     IUniswapExchange exchange,
+    //     IERC20 token,
+    //     uint256 amount
+    // ) internal view returns (uint256) {
+    //     if (token.isETH()) {
+    //         return amount;
+    //     }
+    //     uint256 inReserve = address(exchange).balance;
+    //     uint256 outReserve = token.universalBalanceOf(address(exchange));
+    //     return doCalculate(exchange, inReserve, outReserve, amount);
+    // }
 
-    function doCalculate(
+    function calculate(
+        IUniswapExchange, /* exchange */
         uint256 inReserve,
         uint256 outReserve,
         uint256 amount
-    ) private pure returns (uint256) {
+    ) internal pure returns (uint256) {
         uint256 inAmountWithFee = amount.mul(997); // Uniswap now requires fixed 0.3% swap fee
         uint256 numerator = inAmountWithFee.mul(outReserve);
         uint256 denominator = inReserve.mul(1000).add(inAmountWithFee);
@@ -71,15 +72,21 @@ library IUniswapFactoryExtension {
         IERC20 outToken,
         uint256[] memory inAmounts
     ) internal view returns (uint256[] memory outAmounts, uint256 gas) {
-        outAmounts = inAmounts;
+        outAmounts = new uint256[](inAmounts.length);
+        for (uint256 i = 0; i < inAmounts.length; i++) {
+            outAmounts[i] = inAmounts[i];
+        }
 
         if (!inToken.isETH()) {
             IUniswapExchange exchange = factory.getExchange(inToken);
             if (exchange == IUniswapExchange(0)) {
                 return (new uint256[](inAmounts.length), 0);
             }
+
+            uint256 inReserve = inToken.universalBalanceOf(address(exchange));
+            uint256 outReserve = address(exchange).balance;
             for (uint256 i = 0; i < outAmounts.length; i++) {
-                outAmounts[i] = exchange.calculateToEthSwapReturn(inToken, outAmounts[i]);
+                outAmounts[i] = exchange.calculate(inReserve, outReserve, outAmounts[i]);
             }
         }
         if (!outToken.isETH()) {
@@ -87,8 +94,11 @@ library IUniswapFactoryExtension {
             if (exchange == IUniswapExchange(0)) {
                 return (new uint256[](inAmounts.length), 0);
             }
+
+            uint256 inReserve = address(exchange).balance;
+            uint256 outReserve = outToken.universalBalanceOf(address(exchange));
             for (uint256 i = 0; i < outAmounts.length; i++) {
-                outAmounts[i] = exchange.calculateFromEthSwapReturn(outToken, outAmounts[i]);
+                outAmounts[i] = exchange.calculate(inReserve, outReserve, outAmounts[i]);
             }
         }
 

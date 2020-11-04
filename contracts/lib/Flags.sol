@@ -19,6 +19,29 @@ library Flags {
     uint256 internal constant FLAG_DISABLE_CURVE_SBTC = 1 << 14;
     uint256 internal constant FLAG_DISABLE_OASIS = 1 << 15;
     uint256 internal constant FLAG_DISABLE_UNISWAP = 1 << 16;
+    // add SushiSwap
+    uint256 internal constant FLAG_DISABLE_SUSHISWAP_ALL = 1 << 17;
+    uint256 internal constant FLAG_DISABLE_SUSHISWAP = 1 << 18;
+    uint256 internal constant FLAG_DISABLE_SUSHISWAP_ETH = 1 << 19;
+    uint256 internal constant FLAG_DISABLE_SUSHISWAP_DAI = 1 << 20;
+    uint256 internal constant FLAG_DISABLE_SUSHISWAP_USDC = 1 << 21;
+    // add Mooniswap
+    uint256 internal constant FLAG_DISABLE_MOONISWAP_ALL = 1 << 22;
+    uint256 internal constant FLAG_DISABLE_MOONISWAP = 1 << 23;
+    uint256 internal constant FLAG_DISABLE_MOONISWAP_ETH = 1 << 24;
+    uint256 internal constant FLAG_DISABLE_MOONISWAP_DAI = 1 << 25;
+    uint256 internal constant FLAG_DISABLE_MOONISWAP_USDC = 1 << 26;
+    // add Balancer
+    uint256 internal constant FLAG_DISABLE_BALANCER_ALL = 1 << 27;
+    uint256 internal constant FLAG_DISABLE_BALANCER_1 = 1 << 28;
+    uint256 internal constant FLAG_DISABLE_BALANCER_2 = 1 << 29;
+    uint256 internal constant FLAG_DISABLE_BALANCER_3 = 1 << 30;
+    // add Kyber
+    uint256 internal constant FLAG_DISABLE_KYBER_ALL = 1 << 31;
+    uint256 internal constant FLAG_DISABLE_KYBER_1 = 1 << 32;
+    uint256 internal constant FLAG_DISABLE_KYBER_2 = 1 << 33;
+    uint256 internal constant FLAG_DISABLE_KYBER_3 = 1 << 34;
+    uint256 internal constant FLAG_DISABLE_KYBER_4 = 1 << 35;
 
     function on(uint256 flags, uint256 flag) internal pure returns (bool) {
         return (flags & flag) != 0;

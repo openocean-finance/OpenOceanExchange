@@ -12,8 +12,8 @@ library UniversalERC20 {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
-    IERC20 private constant ZERO_ADDRESS = IERC20(0x0000000000000000000000000000000000000000);
-    IERC20 private constant ETH_ADDRESS = IERC20(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
+    IERC20 internal constant ZERO_ADDRESS = IERC20(0x0000000000000000000000000000000000000000);
+    IERC20 internal constant ETH_ADDRESS = IERC20(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
 
     function universalTransfer(
         IERC20 token,

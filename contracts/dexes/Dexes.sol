@@ -10,6 +10,10 @@ import "./IUniswapV2.sol";
 import "./ICurvePool.sol";
 import "./IOasis.sol";
 import "./IUniswap.sol";
+import "./ISushiSwap.sol";
+import "./IMooniswap.sol";
+import "./IBalancer.sol";
+import "./IKyber.sol";
 
 enum Dex {
     UniswapV2,
@@ -28,6 +32,27 @@ enum Dex {
     Oasis,
     Uniswap,
     Curve,
+    // add Mooniswap
+    Mooniswap,
+    MooniswapETH,
+    MooniswapDAI,
+    MooniswapUSDC,
+    // add SushiSwap
+    SushiSwap,
+    SushiSwapETH,
+    SushiSwapDAI,
+    SushiSwapUSDC,
+    // add Balancer
+    Balancer,
+    Balancer1,
+    Balancer2,
+    Balancer3,
+    // add Kyber
+    Kyber,
+    Kyber1,
+    Kyber2,
+    Kyber3,
+    Kyber4,
     // bottom mark
     NoDex
 }
@@ -47,6 +72,18 @@ library Dexes {
 
     IUniswapFactory internal constant uniswap = IUniswapFactory(0xc0a47dFe034B400B47bDaD5FecDa2621de6c4d95);
     using IUniswapFactoryExtension for IUniswapFactory;
+
+    ISushiSwapFactory internal constant sushiswap = ISushiSwapFactory(0xC0AEe478e3658e2610c5F7A4A2E1777cE9e4f2Ac);
+    using ISushiSwapFactoryExtension for ISushiSwapFactory;
+
+    IMooniswapRegistry internal constant mooniswap = IMooniswapRegistry(0x71CD6666064C3A1354a3B4dca5fA1E2D3ee7D303);
+    using IMooniswapRegistryExtension for IMooniswapRegistry;
+
+    IBalancerRegistry internal constant balancer = IBalancerRegistry(0x65e67cbc342712DF67494ACEfc06fe951EE93982);
+    using IBalancerRegistryExtension for IBalancerRegistry;
+
+    IKyberNetworkProxy internal constant kyber = IKyberNetworkProxy(0x9AAb3f75489902f3a48495025729a0AF77d4b11e);
+    using IKyberNetworkProxyExtension for IKyberNetworkProxy;
 
     function allDexes() internal pure returns (Dex[] memory dexes) {
         uint256 dexCount = uint256(Dex.NoDex);
@@ -108,6 +145,76 @@ library Dexes {
         if (dex == Dex.Uniswap && !flags.on(Flags.FLAG_DISABLE_UNISWAP)) {
             return uniswap.calculateSwapReturn(inToken, outToken, inAmounts);
         }
+        // add SushiSwap
+        if (dex == Dex.SushiSwap && !flags.or(Flags.FLAG_DISABLE_SUSHISWAP_ALL, Flags.FLAG_DISABLE_SUSHISWAP)) {
+            return sushiswap.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+        if (dex == Dex.SushiSwapETH && !flags.or(Flags.FLAG_DISABLE_SUSHISWAP_ALL, Flags.FLAG_DISABLE_SUSHISWAP_ETH)) {
+            return sushiswap.calculateTransitionalSwapReturn(inToken, Tokens.WETH, outToken, inAmounts);
+        }
+        if (dex == Dex.SushiSwapDAI && !flags.or(Flags.FLAG_DISABLE_SUSHISWAP_ALL, Flags.FLAG_DISABLE_SUSHISWAP_DAI)) {
+            return sushiswap.calculateTransitionalSwapReturn(inToken, Tokens.DAI, outToken, inAmounts);
+        }
+        if (dex == Dex.SushiSwapUSDC && !flags.or(Flags.FLAG_DISABLE_SUSHISWAP_ALL, Flags.FLAG_DISABLE_SUSHISWAP_USDC)) {
+            return sushiswap.calculateTransitionalSwapReturn(inToken, Tokens.USDC, outToken, inAmounts);
+        }
+        // add Mooniswap
+        if (dex == Dex.Mooniswap && !flags.or(Flags.FLAG_DISABLE_MOONISWAP_ALL, Flags.FLAG_DISABLE_MOONISWAP)) {
+            return mooniswap.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+        if (dex == Dex.MooniswapETH && !flags.or(Flags.FLAG_DISABLE_MOONISWAP_ALL, Flags.FLAG_DISABLE_MOONISWAP_ETH)) {
+            return mooniswap.calculateTransitionalSwapReturn(inToken, UniversalERC20.ETH_ADDRESS, outToken, inAmounts);
+        }
+        if (dex == Dex.MooniswapDAI && !flags.or(Flags.FLAG_DISABLE_MOONISWAP_ALL, Flags.FLAG_DISABLE_MOONISWAP_DAI)) {
+            return mooniswap.calculateTransitionalSwapReturn(inToken, Tokens.DAI, outToken, inAmounts);
+        }
+        if (dex == Dex.MooniswapUSDC && !flags.or(Flags.FLAG_DISABLE_MOONISWAP_ALL, Flags.FLAG_DISABLE_MOONISWAP_USDC)) {
+            return mooniswap.calculateTransitionalSwapReturn(inToken, Tokens.USDC, outToken, inAmounts);
+        }
+        // add Balancer
+        if (dex == Dex.Balancer1 && !flags.or(Flags.FLAG_DISABLE_BALANCER_ALL, Flags.FLAG_DISABLE_BALANCER_1)) {
+            return balancer.calculateSwapReturn(inToken, outToken, inAmounts, 0);
+        }
+        if (dex == Dex.Balancer2 && !flags.or(Flags.FLAG_DISABLE_BALANCER_ALL, Flags.FLAG_DISABLE_BALANCER_2)) {
+            return balancer.calculateSwapReturn(inToken, outToken, inAmounts, 1);
+        }
+        if (dex == Dex.Balancer3 && !flags.or(Flags.FLAG_DISABLE_BALANCER_ALL, Flags.FLAG_DISABLE_BALANCER_3)) {
+            return balancer.calculateSwapReturn(inToken, outToken, inAmounts, 2);
+        }
+        // add Kyber
+        if (dex == Dex.Kyber1 && !flags.or(Flags.FLAG_DISABLE_KYBER_ALL, Flags.FLAG_DISABLE_KYBER_1)) {
+            return
+                kyber.calculateSwapReturn(
+                    inToken,
+                    outToken,
+                    inAmounts,
+                    flags,
+                    0xff4b796265722046707200000000000000000000000000000000000000000000
+                );
+        }
+        if (dex == Dex.Kyber2 && !flags.or(Flags.FLAG_DISABLE_KYBER_ALL, Flags.FLAG_DISABLE_KYBER_2)) {
+            return
+                kyber.calculateSwapReturn(
+                    inToken,
+                    outToken,
+                    inAmounts,
+                    flags,
+                    0xffabcd0000000000000000000000000000000000000000000000000000000000
+                );
+        }
+        if (dex == Dex.Kyber3 && !flags.or(Flags.FLAG_DISABLE_KYBER_ALL, Flags.FLAG_DISABLE_KYBER_3)) {
+            return
+                kyber.calculateSwapReturn(
+                    inToken,
+                    outToken,
+                    inAmounts,
+                    flags,
+                    0xff4f6e65426974205175616e7400000000000000000000000000000000000000
+                );
+        }
+        if (dex == Dex.Kyber4 && !flags.or(Flags.FLAG_DISABLE_KYBER_ALL, Flags.FLAG_DISABLE_KYBER_4)) {
+            return kyber.calculateSwapReturn(inToken, outToken, inAmounts, flags, 0);
+        }
         // fallback
         return (new uint256[](inAmounts.length), 0);
     }
@@ -163,6 +270,55 @@ library Dexes {
         }
         if (dex == Dex.Uniswap && !flags.on(Flags.FLAG_DISABLE_UNISWAP)) {
             uniswap.swap(inToken, outToken, amount);
+        }
+        // add SushiSwap
+        if (dex == Dex.SushiSwap && !flags.or(Flags.FLAG_DISABLE_SUSHISWAP_ALL, Flags.FLAG_DISABLE_SUSHISWAP)) {
+            sushiswap.swap(inToken, outToken, amount);
+        }
+        if (dex == Dex.SushiSwapETH && !flags.or(Flags.FLAG_DISABLE_SUSHISWAP_ALL, Flags.FLAG_DISABLE_SUSHISWAP_ETH)) {
+            sushiswap.swapTransitional(inToken, Tokens.WETH, outToken, amount);
+        }
+        if (dex == Dex.SushiSwapDAI && !flags.or(Flags.FLAG_DISABLE_SUSHISWAP_ALL, Flags.FLAG_DISABLE_SUSHISWAP_DAI)) {
+            sushiswap.swapTransitional(inToken, Tokens.DAI, outToken, amount);
+        }
+        if (dex == Dex.SushiSwapUSDC && !flags.or(Flags.FLAG_DISABLE_SUSHISWAP_ALL, Flags.FLAG_DISABLE_SUSHISWAP_USDC)) {
+            sushiswap.swapTransitional(inToken, Tokens.USDC, outToken, amount);
+        }
+        // add Mooniswap
+        if (dex == Dex.Mooniswap && !flags.or(Flags.FLAG_DISABLE_MOONISWAP_ALL, Flags.FLAG_DISABLE_MOONISWAP)) {
+            mooniswap.swap(inToken, outToken, amount);
+        }
+        if (dex == Dex.MooniswapETH && !flags.or(Flags.FLAG_DISABLE_MOONISWAP_ALL, Flags.FLAG_DISABLE_MOONISWAP_ETH)) {
+            mooniswap.swapTransitional(inToken, UniversalERC20.ETH_ADDRESS, outToken, amount);
+        }
+        if (dex == Dex.MooniswapDAI && !flags.or(Flags.FLAG_DISABLE_MOONISWAP_ALL, Flags.FLAG_DISABLE_MOONISWAP_DAI)) {
+            mooniswap.swapTransitional(inToken, Tokens.DAI, outToken, amount);
+        }
+        if (dex == Dex.MooniswapUSDC && !flags.or(Flags.FLAG_DISABLE_MOONISWAP_ALL, Flags.FLAG_DISABLE_MOONISWAP_USDC)) {
+            mooniswap.swapTransitional(inToken, Tokens.USDC, outToken, amount);
+        }
+        // add Balancer
+        if (dex == Dex.Balancer1 && !flags.or(Flags.FLAG_DISABLE_BALANCER_ALL, Flags.FLAG_DISABLE_BALANCER_1)) {
+            balancer.swap(inToken, outToken, amount, 0);
+        }
+        if (dex == Dex.Balancer2 && !flags.or(Flags.FLAG_DISABLE_BALANCER_ALL, Flags.FLAG_DISABLE_BALANCER_2)) {
+            balancer.swap(inToken, outToken, amount, 1);
+        }
+        if (dex == Dex.Balancer3 && !flags.or(Flags.FLAG_DISABLE_BALANCER_ALL, Flags.FLAG_DISABLE_BALANCER_3)) {
+            balancer.swap(inToken, outToken, amount, 2);
+        }
+        // add Kyber
+        if (dex == Dex.Kyber1 && !flags.or(Flags.FLAG_DISABLE_KYBER_ALL, Flags.FLAG_DISABLE_KYBER_1)) {
+            return kyber.swap(inToken, outToken, amount, flags, 0xff4b796265722046707200000000000000000000000000000000000000000000);
+        }
+        if (dex == Dex.Kyber2 && !flags.or(Flags.FLAG_DISABLE_KYBER_ALL, Flags.FLAG_DISABLE_KYBER_2)) {
+            return kyber.swap(inToken, outToken, amount, flags, 0xffabcd0000000000000000000000000000000000000000000000000000000000);
+        }
+        if (dex == Dex.Kyber3 && !flags.or(Flags.FLAG_DISABLE_KYBER_ALL, Flags.FLAG_DISABLE_KYBER_3)) {
+            return kyber.swap(inToken, outToken, amount, flags, 0xff4f6e65426974205175616e7400000000000000000000000000000000000000);
+        }
+        if (dex == Dex.Kyber4 && !flags.or(Flags.FLAG_DISABLE_KYBER_ALL, Flags.FLAG_DISABLE_KYBER_4)) {
+            return kyber.swap(inToken, outToken, amount, flags, 0);
         }
     }
 }
