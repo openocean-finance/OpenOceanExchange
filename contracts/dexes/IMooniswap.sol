@@ -61,11 +61,6 @@ library IMooniswapExtenstion {
         for (uint256 i = 0; i < inAmounts.length; i++) {
             uint256 amount = inAmounts[i].sub(inAmounts[i].mul(fee).div(1e18));
             outAmounts[i] = amount.mul(toBalance).div(fromBalance.add(amount));
-            // outAmounts[i] = mooniswap.getReturn(
-            //     inToken.isETH() ? UniversalERC20.ZERO_ADDRESS : inToken,
-            //     outToken.isETH() ? UniversalERC20.ZERO_ADDRESS : outToken,
-            //     inAmounts[i]
-            // );
         }
 
         return (outAmounts, (inToken.isETH() || outToken.isETH()) ? 80_000 : 110_000);

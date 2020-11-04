@@ -545,8 +545,8 @@ library UniversalERC20 {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
-    IERC20 private constant ZERO_ADDRESS = IERC20(0x0000000000000000000000000000000000000000);
-    IERC20 private constant ETH_ADDRESS = IERC20(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
+    IERC20 internal constant ZERO_ADDRESS = IERC20(0x0000000000000000000000000000000000000000);
+    IERC20 internal constant ETH_ADDRESS = IERC20(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
 
     function universalTransfer(
         IERC20 token,
@@ -737,6 +737,29 @@ library Flags {
     uint256 internal constant FLAG_DISABLE_CURVE_SBTC = 1 << 14;
     uint256 internal constant FLAG_DISABLE_OASIS = 1 << 15;
     uint256 internal constant FLAG_DISABLE_UNISWAP = 1 << 16;
+    // add SushiSwap
+    uint256 internal constant FLAG_DISABLE_SUSHISWAP_ALL = 1 << 17;
+    uint256 internal constant FLAG_DISABLE_SUSHISWAP = 1 << 18;
+    uint256 internal constant FLAG_DISABLE_SUSHISWAP_ETH = 1 << 19;
+    uint256 internal constant FLAG_DISABLE_SUSHISWAP_DAI = 1 << 20;
+    uint256 internal constant FLAG_DISABLE_SUSHISWAP_USDC = 1 << 21;
+    // add Mooniswap
+    uint256 internal constant FLAG_DISABLE_MOONISWAP_ALL = 1 << 22;
+    uint256 internal constant FLAG_DISABLE_MOONISWAP = 1 << 23;
+    uint256 internal constant FLAG_DISABLE_MOONISWAP_ETH = 1 << 24;
+    uint256 internal constant FLAG_DISABLE_MOONISWAP_DAI = 1 << 25;
+    uint256 internal constant FLAG_DISABLE_MOONISWAP_USDC = 1 << 26;
+    // add Balancer
+    uint256 internal constant FLAG_DISABLE_BALANCER_ALL = 1 << 27;
+    uint256 internal constant FLAG_DISABLE_BALANCER_1 = 1 << 28;
+    uint256 internal constant FLAG_DISABLE_BALANCER_2 = 1 << 29;
+    uint256 internal constant FLAG_DISABLE_BALANCER_3 = 1 << 30;
+    // add Kyber
+    uint256 internal constant FLAG_DISABLE_KYBER_ALL = 1 << 31;
+    uint256 internal constant FLAG_DISABLE_KYBER_1 = 1 << 32;
+    uint256 internal constant FLAG_DISABLE_KYBER_2 = 1 << 33;
+    uint256 internal constant FLAG_DISABLE_KYBER_3 = 1 << 34;
+    uint256 internal constant FLAG_DISABLE_KYBER_4 = 1 << 35;
 
     function on(uint256 flags, uint256 flag) internal pure returns (bool) {
         return (flags & flag) != 0;
@@ -831,7 +854,7 @@ library IUniswapV2PairExtension {
     using SafeMath for uint256;
     using UniversalERC20 for IERC20;
 
-    address private constant SKIM_TARGET = 0x68a17B587CAF4f9329f0e372e3A78D23A46De6b5;
+    address private constant SKIM_TARGET = 0x5bDCE812ce8409442ac3FBbd10565F9B17A6C49D;
 
     /**
      * @notice Use Uniswap's constant product formula to calculate expected swap return.
@@ -1369,37 +1392,38 @@ library IUniswapExchangeExtension {
     using SafeMath for uint256;
     using UniversalERC20 for IERC20;
 
-    function calculateToEthSwapReturn(
-        IUniswapExchange exchange,
-        IERC20 token,
-        uint256 amount
-    ) internal view returns (uint256) {
-        if (token.isETH()) {
-            return amount;
-        }
-        uint256 inReserve = token.universalBalanceOf(address(exchange));
-        uint256 outReserve = address(exchange).balance;
-        return doCalculate(inReserve, outReserve, amount);
-    }
+    // function calculateToEthSwapReturn(
+    //     IUniswapExchange exchange,
+    //     IERC20 token,
+    //     uint256 amount
+    // ) internal view returns (uint256) {
+    //     if (token.isETH()) {
+    //         return amount;
+    //     }
+    //     uint256 inReserve = token.universalBalanceOf(address(exchange));
+    //     uint256 outReserve = address(exchange).balance;
+    //     return doCalculate(exchange, inReserve, outReserve, amount);
+    // }
 
-    function calculateFromEthSwapReturn(
-        IUniswapExchange exchange,
-        IERC20 token,
-        uint256 amount
-    ) internal view returns (uint256) {
-        if (token.isETH()) {
-            return amount;
-        }
-        uint256 inReserve = address(exchange).balance;
-        uint256 outReserve = token.universalBalanceOf(address(exchange));
-        return doCalculate(inReserve, outReserve, amount);
-    }
+    // function calculateFromEthSwapReturn(
+    //     IUniswapExchange exchange,
+    //     IERC20 token,
+    //     uint256 amount
+    // ) internal view returns (uint256) {
+    //     if (token.isETH()) {
+    //         return amount;
+    //     }
+    //     uint256 inReserve = address(exchange).balance;
+    //     uint256 outReserve = token.universalBalanceOf(address(exchange));
+    //     return doCalculate(exchange, inReserve, outReserve, amount);
+    // }
 
-    function doCalculate(
+    function calculate(
+        IUniswapExchange, /* exchange */
         uint256 inReserve,
         uint256 outReserve,
         uint256 amount
-    ) private pure returns (uint256) {
+    ) internal pure returns (uint256) {
         uint256 inAmountWithFee = amount.mul(997); // Uniswap now requires fixed 0.3% swap fee
         uint256 numerator = inAmountWithFee.mul(outReserve);
         uint256 denominator = inReserve.mul(1000).add(inAmountWithFee);
@@ -1421,15 +1445,21 @@ library IUniswapFactoryExtension {
         IERC20 outToken,
         uint256[] memory inAmounts
     ) internal view returns (uint256[] memory outAmounts, uint256 gas) {
-        outAmounts = inAmounts;
+        outAmounts = new uint256[](inAmounts.length);
+        for (uint256 i = 0; i < inAmounts.length; i++) {
+            outAmounts[i] = inAmounts[i];
+        }
 
         if (!inToken.isETH()) {
             IUniswapExchange exchange = factory.getExchange(inToken);
             if (exchange == IUniswapExchange(0)) {
                 return (new uint256[](inAmounts.length), 0);
             }
+
+            uint256 inReserve = inToken.universalBalanceOf(address(exchange));
+            uint256 outReserve = address(exchange).balance;
             for (uint256 i = 0; i < outAmounts.length; i++) {
-                outAmounts[i] = exchange.calculateToEthSwapReturn(inToken, outAmounts[i]);
+                outAmounts[i] = exchange.calculate(inReserve, outReserve, outAmounts[i]);
             }
         }
         if (!outToken.isETH()) {
@@ -1437,8 +1467,11 @@ library IUniswapFactoryExtension {
             if (exchange == IUniswapExchange(0)) {
                 return (new uint256[](inAmounts.length), 0);
             }
+
+            uint256 inReserve = address(exchange).balance;
+            uint256 outReserve = outToken.universalBalanceOf(address(exchange));
             for (uint256 i = 0; i < outAmounts.length; i++) {
-                outAmounts[i] = exchange.calculateFromEthSwapReturn(outToken, outAmounts[i]);
+                outAmounts[i] = exchange.calculate(inReserve, outReserve, outAmounts[i]);
             }
         }
 
@@ -1472,10 +1505,689 @@ library IUniswapFactoryExtension {
     }
 }
 
+// File: contracts/dexes/ISushiSwap.sol
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.6.0;
+
+
+
+
+
+
+/**
+ * @notice Uniswap V2 factory contract interface. See https://uniswap.org/docs/v2/smart-contracts/factory/
+ */
+interface ISushiSwapFactory {
+    function getPair(IERC20 tokenA, IERC20 tokenB) external view returns (ISushiSwapPair pair);
+}
+
+/**
+ * @notice Uniswap V2 pair pool interface. See https://uniswap.org/docs/v2/smart-contracts/pair/
+ */
+interface ISushiSwapPair {
+    function swap(
+        uint256 amount0Out,
+        uint256 amount1Out,
+        address to,
+        bytes calldata data
+    ) external;
+
+    function getReserves()
+        external
+        view
+        returns (
+            uint112 reserve0,
+            uint112 reserve1,
+            uint32 blockTimestampLast
+        );
+
+    function skim(address to) external;
+
+    function sync() external;
+}
+
+library ISushiSwapPairExtension {
+    using SafeMath for uint256;
+    using UniversalERC20 for IERC20;
+
+    address private constant SKIM_TARGET = 0x5bDCE812ce8409442ac3FBbd10565F9B17A6C49D;
+
+    /**
+     * @notice Use Uniswap's constant product formula to calculate expected swap return.
+     * See https://github.com/runtimeverification/verified-smart-contracts/blob/uniswap/uniswap/x-y-k.pdf
+     */
+    function calculateSwapReturn(
+        ISushiSwapPair pair,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256 amount
+    ) internal view returns (uint256) {
+        if (amount == 0) {
+            return 0;
+        }
+        uint256 inReserve = inToken.universalBalanceOf(address(pair));
+        uint256 outReserve = outToken.universalBalanceOf(address(pair));
+        return doCalculate(inReserve, outReserve, amount);
+    }
+
+    function calculateRealSwapReturn(
+        ISushiSwapPair pair,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256 amount
+    ) internal returns (uint256) {
+        uint256 inReserve = inToken.universalBalanceOf(address(pair));
+        uint256 outReserve = outToken.universalBalanceOf(address(pair));
+
+        (uint112 reserve0, uint112 reserve1, ) = pair.getReserves();
+        if (inToken > outToken) {
+            (reserve0, reserve1) = (reserve1, reserve0);
+        }
+        if (inReserve < reserve0 || outReserve < reserve1) {
+            pair.sync();
+        } else if (inReserve > reserve0 || outReserve > reserve1) {
+            pair.skim(SKIM_TARGET);
+        }
+
+        return doCalculate(Math.min(inReserve, reserve0), Math.min(outReserve, reserve1), amount);
+    }
+
+    function doCalculate(
+        uint256 inReserve,
+        uint256 outReserve,
+        uint256 amount
+    ) private pure returns (uint256) {
+        uint256 inAmountWithFee = amount.mul(997); // Uniswap V2 now requires fixed 0.3% swap fee
+        uint256 numerator = inAmountWithFee.mul(outReserve);
+        uint256 denominator = inReserve.mul(1000).add(inAmountWithFee);
+        return (denominator == 0) ? 0 : numerator.div(denominator);
+    }
+}
+
+library ISushiSwapFactoryExtension {
+    using SafeMath for uint256;
+    using UniversalERC20 for IERC20;
+    using ISushiSwapPairExtension for ISushiSwapPair;
+    using Tokens for IERC20;
+
+    function calculateSwapReturn(
+        ISushiSwapFactory factory,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256[] memory inAmounts
+    ) internal view returns (uint256[] memory outAmounts, uint256 gas) {
+        outAmounts = new uint256[](inAmounts.length);
+
+        IERC20 realInToken = inToken.wrapETH();
+        IERC20 realOutToken = outToken.wrapETH();
+        ISushiSwapPair pair = factory.getPair(realInToken, realOutToken);
+        if (pair != ISushiSwapPair(0)) {
+            for (uint256 i = 0; i < inAmounts.length; i++) {
+                outAmounts[i] = pair.calculateSwapReturn(realInToken, realOutToken, inAmounts[i]);
+            }
+            return (outAmounts, 50_000);
+        }
+    }
+
+    function calculateTransitionalSwapReturn(
+        ISushiSwapFactory factory,
+        IERC20 inToken,
+        IERC20 transitionToken,
+        IERC20 outToken,
+        uint256[] memory inAmounts
+    ) internal view returns (uint256[] memory outAmounts, uint256 gas) {
+        IERC20 realInToken = inToken.wrapETH();
+        IERC20 realTransitionToken = transitionToken.wrapETH();
+        IERC20 realOutToken = outToken.wrapETH();
+
+        if (realInToken == realTransitionToken || realOutToken == realTransitionToken) {
+            return (new uint256[](inAmounts.length), 0);
+        }
+        uint256 firstGas;
+        uint256 secondGas;
+        (outAmounts, firstGas) = calculateSwapReturn(factory, realInToken, realTransitionToken, inAmounts);
+        (outAmounts, secondGas) = calculateSwapReturn(factory, realTransitionToken, realOutToken, outAmounts);
+        return (outAmounts, firstGas + secondGas);
+    }
+
+    function swap(
+        ISushiSwapFactory factory,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256 inAmount
+    ) internal returns (uint256 outAmount) {
+        inToken.depositToWETH(inAmount);
+
+        IERC20 realInToken = inToken.wrapETH();
+        IERC20 realOutToken = outToken.wrapETH();
+        ISushiSwapPair pair = factory.getPair(realInToken, realOutToken);
+
+        outAmount = pair.calculateRealSwapReturn(realInToken, realOutToken, inAmount);
+
+        realInToken.universalTransfer(address(pair), inAmount);
+        if (uint256(address(realInToken)) < uint256(address(realOutToken))) {
+            pair.swap(0, outAmount, address(this), "");
+        } else {
+            pair.swap(outAmount, 0, address(this), "");
+        }
+
+        outToken.withdrawFromWETH();
+    }
+
+    function swapTransitional(
+        ISushiSwapFactory factory,
+        IERC20 inToken,
+        IERC20 transitionToken,
+        IERC20 outToken,
+        uint256 inAmount
+    ) internal {
+        swap(factory, transitionToken, outToken, swap(factory, inToken, transitionToken, inAmount));
+    }
+}
+
+// File: contracts/dexes/IMooniswap.sol
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.6.0;
+
+
+
+
+interface IMooniswapRegistry {
+    function pools(IERC20 token1, IERC20 token2) external view returns (IMooniswap);
+
+    function isPool(address addr) external view returns (bool);
+}
+
+interface IMooniswap {
+    function fee() external view returns (uint256);
+
+    function tokens(uint256 i) external view returns (IERC20);
+
+    function deposit(uint256[] calldata amounts, uint256[] calldata minAmounts) external payable returns (uint256 fairSupply);
+
+    function withdraw(uint256 amount, uint256[] calldata minReturns) external;
+
+    function getBalanceForAddition(IERC20 token) external view returns (uint256);
+
+    function getBalanceForRemoval(IERC20 token) external view returns (uint256);
+
+    function getReturn(
+        IERC20 fromToken,
+        IERC20 destToken,
+        uint256 amount
+    ) external view returns (uint256 returnAmount);
+
+    function swap(
+        IERC20 fromToken,
+        IERC20 destToken,
+        uint256 amount,
+        uint256 minReturn,
+        address referral
+    ) external payable returns (uint256 returnAmount);
+}
+
+library IMooniswapExtenstion {
+    using SafeMath for uint256;
+    using UniversalERC20 for IERC20;
+
+    function calculateOutAmounts(
+        IMooniswap mooniswap,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256[] memory inAmounts
+    ) internal view returns (uint256[] memory outAmounts, uint256 gas) {
+        outAmounts = new uint256[](inAmounts.length);
+
+        uint256 fee = mooniswap.fee();
+        uint256 fromBalance = mooniswap.getBalanceForAddition(inToken.isETH() ? UniversalERC20.ZERO_ADDRESS : inToken);
+        uint256 toBalance = mooniswap.getBalanceForRemoval(outToken.isETH() ? UniversalERC20.ZERO_ADDRESS : outToken);
+        if (fromBalance == 0 || toBalance == 0) {
+            return (outAmounts, 0);
+        }
+
+        for (uint256 i = 0; i < inAmounts.length; i++) {
+            uint256 amount = inAmounts[i].sub(inAmounts[i].mul(fee).div(1e18));
+            outAmounts[i] = amount.mul(toBalance).div(fromBalance.add(amount));
+        }
+
+        return (outAmounts, (inToken.isETH() || outToken.isETH()) ? 80_000 : 110_000);
+    }
+}
+
+library IMooniswapRegistryExtension {
+    using IMooniswapExtenstion for IMooniswap;
+    using SafeMath for uint256;
+    using UniversalERC20 for IERC20;
+
+    function calculateSwapReturn(
+        IMooniswapRegistry registry,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256[] memory inAmounts
+    ) internal view returns (uint256[] memory outAmounts, uint256 gas) {
+        IMooniswap mooniswap = registry.pools(
+            inToken.isETH() ? UniversalERC20.ZERO_ADDRESS : inToken,
+            outToken.isETH() ? UniversalERC20.ZERO_ADDRESS : outToken
+        );
+        if (mooniswap == IMooniswap(0)) {
+            return (new uint256[](inAmounts.length), 0);
+        }
+
+        return mooniswap.calculateOutAmounts(inToken, outToken, inAmounts);
+    }
+
+    function calculateTransitionalSwapReturn(
+        IMooniswapRegistry registry,
+        IERC20 inToken,
+        IERC20 transitionToken,
+        IERC20 outToken,
+        uint256[] memory inAmounts
+    ) internal view returns (uint256[] memory outAmounts, uint256 gas) {
+        if (transitionToken.isETH()) {
+            if (inToken.isETH() || outToken.isETH()) {
+                return (new uint256[](inAmounts.length), 0);
+            }
+        } else if (inToken == transitionToken || outToken == transitionToken) {
+            return (new uint256[](inAmounts.length), 0);
+        }
+
+        (uint256[] memory outAmounts1, uint256 gas1) = calculateSwapReturn(
+            registry,
+            inToken,
+            transitionToken.isETH() ? UniversalERC20.ZERO_ADDRESS : transitionToken,
+            inAmounts
+        );
+        (outAmounts, gas) = calculateSwapReturn(
+            registry,
+            transitionToken.isETH() ? UniversalERC20.ZERO_ADDRESS : transitionToken,
+            outToken,
+            outAmounts1
+        );
+        gas = gas.add(gas1);
+    }
+
+    function swap(
+        IMooniswapRegistry registry,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256 inAmount
+    ) internal {
+        IMooniswap mooniswap = registry.pools(
+            inToken.isETH() ? UniversalERC20.ZERO_ADDRESS : inToken,
+            outToken.isETH() ? UniversalERC20.ZERO_ADDRESS : outToken
+        );
+        if (mooniswap == IMooniswap(0)) {
+            return;
+        }
+
+        inToken.universalApprove(address(mooniswap), inAmount);
+
+        mooniswap.swap{value: inToken.isETH() ? inAmount : 0}(
+            inToken.isETH() ? UniversalERC20.ZERO_ADDRESS : inToken,
+            outToken.isETH() ? UniversalERC20.ZERO_ADDRESS : outToken,
+            inAmount,
+            0,
+            0x5bDCE812ce8409442ac3FBbd10565F9B17A6C49D
+        );
+    }
+
+    function swapTransitional(
+        IMooniswapRegistry registry,
+        IERC20 inToken,
+        IERC20 transitionToken,
+        IERC20 outToken,
+        uint256 inAmount
+    ) internal {
+        swap(registry, inToken, transitionToken.isETH() ? UniversalERC20.ZERO_ADDRESS : transitionToken, inAmount);
+        swap(
+            registry,
+            transitionToken.isETH() ? UniversalERC20.ZERO_ADDRESS : transitionToken,
+            outToken,
+            transitionToken.universalBalanceOf(address(this))
+        );
+    }
+}
+
+// File: contracts/dexes/IBalancer.sol
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.6.0;
+
+
+
+
+interface IBalancerRegistry {
+    function getBestPoolsWithLimit(
+        address fromToken,
+        address destToken,
+        uint256 limit
+    ) external view returns (address[] memory pools);
+}
+
+interface IBalancerPool {
+    function swapExactAmountIn(
+        IERC20 tokenIn,
+        uint256 tokenAmountIn,
+        IERC20 tokenOut,
+        uint256 minAmountOut,
+        uint256 maxPrice
+    ) external returns (uint256 tokenAmountOut, uint256 spotPriceAfter);
+}
+
+interface IBalancerHelper {
+    function getReturns(
+        IBalancerPool pool,
+        IERC20 fromToken,
+        IERC20 destToken,
+        uint256[] calldata amounts
+    ) external view returns (uint256[] memory rets);
+}
+
+library IBalancerRegistryExtension {
+    using UniversalERC20 for IERC20;
+    using Tokens for IERC20;
+
+    IBalancerHelper internal constant balancerHelper = IBalancerHelper(0xA961672E8Db773be387e775bc4937C678F3ddF9a);
+
+    function calculateSwapReturn(
+        IBalancerRegistry registry,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256[] memory inAmounts,
+        uint256 poolIndex
+    ) internal view returns (uint256[] memory outAmounts, uint256 gas) {
+        IERC20 realInToken = inToken.wrapETH();
+        IERC20 realOutToken = outToken.wrapETH();
+        address[] memory pools = registry.getBestPoolsWithLimit(address(realInToken), address(realOutToken), poolIndex + 1);
+        if (poolIndex >= pools.length) {
+            return (new uint256[](inAmounts.length), 0);
+        }
+
+        outAmounts = balancerHelper.getReturns(IBalancerPool(pools[poolIndex]), realInToken, realOutToken, inAmounts);
+        gas = 75_000 + (inToken.isETH() || outToken.isETH() ? 0 : 65_000);
+    }
+
+    function swap(
+        IBalancerRegistry registry,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256 inAmount,
+        uint256 poolIndex
+    ) internal {
+        IERC20 realInToken = inToken.wrapETH();
+        IERC20 realOutToken = outToken.wrapETH();
+        address[] memory pools = registry.getBestPoolsWithLimit(address(realInToken), address(realOutToken), poolIndex + 1);
+        if (poolIndex >= pools.length) {
+            return;
+        }
+
+        inToken.depositToWETH(inAmount);
+
+        address pool = pools[poolIndex];
+        realInToken.universalApprove(pool, inAmount);
+        IBalancerPool(pool).swapExactAmountIn(realInToken, inAmount, realOutToken, 0, uint256(-1));
+
+        outToken.withdrawFromWETH();
+    }
+}
+
+// File: contracts/dexes/IKyber.sol
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.6.0;
+
+
+
+interface IKyberHint {
+    enum TradeType {BestOfAll, MaskIn, MaskOut, Split}
+
+    function buildTokenToEthHint(
+        IERC20 tokenSrc,
+        TradeType tokenToEthType,
+        bytes32[] calldata tokenToEthReserveIds,
+        uint256[] calldata tokenToEthSplits
+    ) external view returns (bytes memory hint);
+
+    function buildEthToTokenHint(
+        IERC20 tokenDest,
+        TradeType ethToTokenType,
+        bytes32[] calldata ethToTokenReserveIds,
+        uint256[] calldata ethToTokenSplits
+    ) external view returns (bytes memory hint);
+}
+
+interface IKyberNetworkProxy {
+    function getExpectedRateAfterFee(
+        IERC20 src,
+        IERC20 dest,
+        uint256 srcQty,
+        uint256 platformFeeBps,
+        bytes calldata hint
+    ) external view returns (uint256 expectedRate);
+
+    function tradeWithHintAndFee(
+        IERC20 src,
+        uint256 srcAmount,
+        IERC20 dest,
+        address payable destAddress,
+        uint256 maxDestAmount,
+        uint256 minConversionRate,
+        address payable platformWallet,
+        uint256 platformFeeBps,
+        bytes calldata hint
+    ) external payable returns (uint256 destAmount);
+}
+
+interface IKyberStorage {
+    function getReserveIdsPerTokenSrc(IERC20 token) external view returns (bytes32[] memory);
+}
+
+library IKyberStorageExtension {
+    using UniversalERC20 for IERC20;
+
+    function getReserveIdByTokens(
+        IKyberStorage kyberStorage,
+        IERC20 inToken,
+        IERC20 outToken
+    ) internal view returns (bytes32) {
+        if (!inToken.isETH() && !outToken.isETH()) {
+            return 0;
+        }
+
+        bytes32[] memory reserveIds = kyberStorage.getReserveIdsPerTokenSrc(inToken.isETH() ? outToken : inToken);
+
+        for (uint256 i = 0; i < reserveIds.length; i++) {
+            bytes32 reserveId = reserveIds[i];
+            if (
+                (uint256(reserveId) >> 248) != 0xBB && // Bridge
+                reserveId != 0xff4b796265722046707200000000000000000000000000000000000000000000 && // Reserve 1
+                reserveId != 0xffabcd0000000000000000000000000000000000000000000000000000000000 && // Reserve 2
+                reserveId != 0xff4f6e65426974205175616e7400000000000000000000000000000000000000 // Reserve 3
+            ) {
+                return reserveId;
+            }
+        }
+
+        return 0;
+    }
+}
+
+library IKyberHintExtension {
+    function getFromHint(
+        IKyberHint kyberHint,
+        IERC20 token,
+        bytes32 reserveId
+    ) internal view returns (bytes memory hint) {
+        bytes32[] memory reserveIds = new bytes32[](1);
+        reserveIds[0] = reserveId;
+
+        (bool success, bytes memory data) = address(kyberHint).staticcall(
+            abi.encodeWithSelector(
+                kyberHint.buildTokenToEthHint.selector,
+                token,
+                IKyberHint.TradeType.MaskIn,
+                reserveIds,
+                new uint256[](0)
+            )
+        );
+        hint = success ? abi.decode(data, (bytes)) : bytes("");
+    }
+
+    function getToHint(
+        IKyberHint kyberHint,
+        IERC20 token,
+        bytes32 reserveId
+    ) internal view returns (bytes memory hint) {
+        bytes32[] memory reserveIds = new bytes32[](1);
+        reserveIds[0] = reserveId;
+
+        (bool success, bytes memory data) = address(kyberHint).staticcall(
+            abi.encodeWithSelector(
+                kyberHint.buildEthToTokenHint.selector,
+                token,
+                IKyberHint.TradeType.MaskIn,
+                reserveIds,
+                new uint256[](0)
+            )
+        );
+        hint = success ? abi.decode(data, (bytes)) : bytes("");
+    }
+}
+
+library IKyberNetworkProxyExtension {
+    using SafeMath for uint256;
+    using UniversalERC20 for IERC20;
+
+    IKyberStorage internal constant kyberStorage = IKyberStorage(0xC8fb12402cB16970F3C5F4b48Ff68Eb9D1289301);
+    using IKyberStorageExtension for IKyberStorage;
+
+    IKyberHint internal constant kyberHint = IKyberHint(0xa1C0Fa73c39CFBcC11ec9Eb1Afc665aba9996E2C);
+    using IKyberHintExtension for IKyberHint;
+
+    function calculateSwapReturn(
+        IKyberNetworkProxy proxy,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256[] memory inAmounts,
+        uint256 flags,
+        bytes32 reserveId
+    ) internal view returns (uint256[] memory outAmounts, uint256 gas) {
+        if (reserveId == 0) {
+            reserveId = kyberStorage.getReserveIdByTokens(inToken, outToken);
+            if (reserveId == 0) {
+                return (new uint256[](inAmounts.length), 0);
+            }
+        }
+
+        bytes memory fromHint = kyberHint.getFromHint(inToken, reserveId);
+        bytes memory toHint = kyberHint.getToHint(outToken, reserveId);
+
+        uint256 inTokenDecimals = 10**inToken.universalDecimals();
+        uint256 outTokenDecimals = 10**outToken.universalDecimals();
+        outAmounts = new uint256[](inAmounts.length);
+
+        for (uint256 i = 0; i < inAmounts.length; i++) {
+            if (i > 0 && outAmounts[i - 1] == 0) {
+                break;
+            }
+            outAmounts[i] = inAmounts[i];
+
+            if (!inToken.isETH()) {
+                if (fromHint.length == 0) {
+                    outAmounts[i] = 0;
+                    break;
+                }
+                uint256 rate = getRate(proxy, inToken, UniversalERC20.ETH_ADDRESS, outAmounts[i], flags, fromHint);
+                outAmounts[i] = rate.mul(outAmounts[i]).div(inTokenDecimals);
+            }
+
+            if (!outToken.isETH() && outAmounts[i] > 0) {
+                if (toHint.length == 0) {
+                    outAmounts[i] = 0;
+                    break;
+                }
+                uint256 rate = getRate(proxy, UniversalERC20.ETH_ADDRESS, outToken, outAmounts[i], 10, toHint);
+                outAmounts[i] = rate.mul(outAmounts[i]).mul(outTokenDecimals).div(1e36);
+            }
+        }
+
+        return (outAmounts, 100_000);
+    }
+
+    function swap(
+        IKyberNetworkProxy proxy,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256 inAmount,
+        uint256 flags,
+        bytes32 reserveId
+    ) internal {
+        if (reserveId == 0) {
+            reserveId = kyberStorage.getReserveIdByTokens(inToken, outToken);
+            if (reserveId == 0) {
+                return;
+            }
+        }
+        uint256 outAmount = inAmount;
+
+        if (!inToken.isETH()) {
+            bytes memory fromHint = kyberHint.getFromHint(inToken, reserveId);
+            inToken.universalApprove(address(proxy), inAmount);
+            outAmount = proxy.tradeWithHintAndFee(
+                inToken,
+                outAmount,
+                UniversalERC20.ETH_ADDRESS,
+                payable(address(this)),
+                uint256(-1),
+                0,
+                0x5bDCE812ce8409442ac3FBbd10565F9B17A6C49D,
+                (flags >> 255) * 10,
+                fromHint
+            );
+        }
+
+        if (!outToken.isETH()) {
+            bytes memory toHint = kyberHint.getToHint(outToken, reserveId);
+            outAmount = proxy.tradeWithHintAndFee{value: outAmount}(
+                UniversalERC20.ETH_ADDRESS,
+                outAmount,
+                outToken,
+                payable(address(this)),
+                uint256(-1),
+                0,
+                0x5bDCE812ce8409442ac3FBbd10565F9B17A6C49D,
+                (flags >> 255) * 10,
+                toHint
+            );
+        }
+    }
+
+    function getRate(
+        IKyberNetworkProxy proxy,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256 amount,
+        uint256 flags,
+        bytes memory hint
+    ) private view returns (uint256) {
+        (, bytes memory data) = address(proxy).staticcall(
+            abi.encodeWithSelector(proxy.getExpectedRateAfterFee.selector, inToken, outToken, amount, (flags >> 255) * 10, hint)
+        );
+
+        return (data.length == 32) ? abi.decode(data, (uint256)) : 0;
+    }
+}
+
 // File: contracts/dexes/Dexes.sol
 
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.6.0;
+
+
+
+
 
 
 
@@ -1503,6 +2215,27 @@ enum Dex {
     Oasis,
     Uniswap,
     Curve,
+    // add Mooniswap
+    Mooniswap,
+    MooniswapETH,
+    MooniswapDAI,
+    MooniswapUSDC,
+    // add SushiSwap
+    SushiSwap,
+    SushiSwapETH,
+    SushiSwapDAI,
+    SushiSwapUSDC,
+    // add Balancer
+    Balancer,
+    Balancer1,
+    Balancer2,
+    Balancer3,
+    // add Kyber
+    Kyber,
+    Kyber1,
+    Kyber2,
+    Kyber3,
+    Kyber4,
     // bottom mark
     NoDex
 }
@@ -1522,6 +2255,18 @@ library Dexes {
 
     IUniswapFactory internal constant uniswap = IUniswapFactory(0xc0a47dFe034B400B47bDaD5FecDa2621de6c4d95);
     using IUniswapFactoryExtension for IUniswapFactory;
+
+    ISushiSwapFactory internal constant sushiswap = ISushiSwapFactory(0xC0AEe478e3658e2610c5F7A4A2E1777cE9e4f2Ac);
+    using ISushiSwapFactoryExtension for ISushiSwapFactory;
+
+    IMooniswapRegistry internal constant mooniswap = IMooniswapRegistry(0x71CD6666064C3A1354a3B4dca5fA1E2D3ee7D303);
+    using IMooniswapRegistryExtension for IMooniswapRegistry;
+
+    IBalancerRegistry internal constant balancer = IBalancerRegistry(0x65e67cbc342712DF67494ACEfc06fe951EE93982);
+    using IBalancerRegistryExtension for IBalancerRegistry;
+
+    IKyberNetworkProxy internal constant kyber = IKyberNetworkProxy(0x9AAb3f75489902f3a48495025729a0AF77d4b11e);
+    using IKyberNetworkProxyExtension for IKyberNetworkProxy;
 
     function allDexes() internal pure returns (Dex[] memory dexes) {
         uint256 dexCount = uint256(Dex.NoDex);
@@ -1583,6 +2328,76 @@ library Dexes {
         if (dex == Dex.Uniswap && !flags.on(Flags.FLAG_DISABLE_UNISWAP)) {
             return uniswap.calculateSwapReturn(inToken, outToken, inAmounts);
         }
+        // add SushiSwap
+        if (dex == Dex.SushiSwap && !flags.or(Flags.FLAG_DISABLE_SUSHISWAP_ALL, Flags.FLAG_DISABLE_SUSHISWAP)) {
+            return sushiswap.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+        if (dex == Dex.SushiSwapETH && !flags.or(Flags.FLAG_DISABLE_SUSHISWAP_ALL, Flags.FLAG_DISABLE_SUSHISWAP_ETH)) {
+            return sushiswap.calculateTransitionalSwapReturn(inToken, Tokens.WETH, outToken, inAmounts);
+        }
+        if (dex == Dex.SushiSwapDAI && !flags.or(Flags.FLAG_DISABLE_SUSHISWAP_ALL, Flags.FLAG_DISABLE_SUSHISWAP_DAI)) {
+            return sushiswap.calculateTransitionalSwapReturn(inToken, Tokens.DAI, outToken, inAmounts);
+        }
+        if (dex == Dex.SushiSwapUSDC && !flags.or(Flags.FLAG_DISABLE_SUSHISWAP_ALL, Flags.FLAG_DISABLE_SUSHISWAP_USDC)) {
+            return sushiswap.calculateTransitionalSwapReturn(inToken, Tokens.USDC, outToken, inAmounts);
+        }
+        // add Mooniswap
+        if (dex == Dex.Mooniswap && !flags.or(Flags.FLAG_DISABLE_MOONISWAP_ALL, Flags.FLAG_DISABLE_MOONISWAP)) {
+            return mooniswap.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+        if (dex == Dex.MooniswapETH && !flags.or(Flags.FLAG_DISABLE_MOONISWAP_ALL, Flags.FLAG_DISABLE_MOONISWAP_ETH)) {
+            return mooniswap.calculateTransitionalSwapReturn(inToken, UniversalERC20.ETH_ADDRESS, outToken, inAmounts);
+        }
+        if (dex == Dex.MooniswapDAI && !flags.or(Flags.FLAG_DISABLE_MOONISWAP_ALL, Flags.FLAG_DISABLE_MOONISWAP_DAI)) {
+            return mooniswap.calculateTransitionalSwapReturn(inToken, Tokens.DAI, outToken, inAmounts);
+        }
+        if (dex == Dex.MooniswapUSDC && !flags.or(Flags.FLAG_DISABLE_MOONISWAP_ALL, Flags.FLAG_DISABLE_MOONISWAP_USDC)) {
+            return mooniswap.calculateTransitionalSwapReturn(inToken, Tokens.USDC, outToken, inAmounts);
+        }
+        // add Balancer
+        if (dex == Dex.Balancer1 && !flags.or(Flags.FLAG_DISABLE_BALANCER_ALL, Flags.FLAG_DISABLE_BALANCER_1)) {
+            return balancer.calculateSwapReturn(inToken, outToken, inAmounts, 0);
+        }
+        if (dex == Dex.Balancer2 && !flags.or(Flags.FLAG_DISABLE_BALANCER_ALL, Flags.FLAG_DISABLE_BALANCER_2)) {
+            return balancer.calculateSwapReturn(inToken, outToken, inAmounts, 1);
+        }
+        if (dex == Dex.Balancer3 && !flags.or(Flags.FLAG_DISABLE_BALANCER_ALL, Flags.FLAG_DISABLE_BALANCER_3)) {
+            return balancer.calculateSwapReturn(inToken, outToken, inAmounts, 2);
+        }
+        // add Kyber
+        if (dex == Dex.Kyber1 && !flags.or(Flags.FLAG_DISABLE_KYBER_ALL, Flags.FLAG_DISABLE_KYBER_1)) {
+            return
+                kyber.calculateSwapReturn(
+                    inToken,
+                    outToken,
+                    inAmounts,
+                    flags,
+                    0xff4b796265722046707200000000000000000000000000000000000000000000
+                );
+        }
+        if (dex == Dex.Kyber2 && !flags.or(Flags.FLAG_DISABLE_KYBER_ALL, Flags.FLAG_DISABLE_KYBER_2)) {
+            return
+                kyber.calculateSwapReturn(
+                    inToken,
+                    outToken,
+                    inAmounts,
+                    flags,
+                    0xffabcd0000000000000000000000000000000000000000000000000000000000
+                );
+        }
+        if (dex == Dex.Kyber3 && !flags.or(Flags.FLAG_DISABLE_KYBER_ALL, Flags.FLAG_DISABLE_KYBER_3)) {
+            return
+                kyber.calculateSwapReturn(
+                    inToken,
+                    outToken,
+                    inAmounts,
+                    flags,
+                    0xff4f6e65426974205175616e7400000000000000000000000000000000000000
+                );
+        }
+        if (dex == Dex.Kyber4 && !flags.or(Flags.FLAG_DISABLE_KYBER_ALL, Flags.FLAG_DISABLE_KYBER_4)) {
+            return kyber.calculateSwapReturn(inToken, outToken, inAmounts, flags, 0);
+        }
         // fallback
         return (new uint256[](inAmounts.length), 0);
     }
@@ -1638,6 +2453,55 @@ library Dexes {
         }
         if (dex == Dex.Uniswap && !flags.on(Flags.FLAG_DISABLE_UNISWAP)) {
             uniswap.swap(inToken, outToken, amount);
+        }
+        // add SushiSwap
+        if (dex == Dex.SushiSwap && !flags.or(Flags.FLAG_DISABLE_SUSHISWAP_ALL, Flags.FLAG_DISABLE_SUSHISWAP)) {
+            sushiswap.swap(inToken, outToken, amount);
+        }
+        if (dex == Dex.SushiSwapETH && !flags.or(Flags.FLAG_DISABLE_SUSHISWAP_ALL, Flags.FLAG_DISABLE_SUSHISWAP_ETH)) {
+            sushiswap.swapTransitional(inToken, Tokens.WETH, outToken, amount);
+        }
+        if (dex == Dex.SushiSwapDAI && !flags.or(Flags.FLAG_DISABLE_SUSHISWAP_ALL, Flags.FLAG_DISABLE_SUSHISWAP_DAI)) {
+            sushiswap.swapTransitional(inToken, Tokens.DAI, outToken, amount);
+        }
+        if (dex == Dex.SushiSwapUSDC && !flags.or(Flags.FLAG_DISABLE_SUSHISWAP_ALL, Flags.FLAG_DISABLE_SUSHISWAP_USDC)) {
+            sushiswap.swapTransitional(inToken, Tokens.USDC, outToken, amount);
+        }
+        // add Mooniswap
+        if (dex == Dex.Mooniswap && !flags.or(Flags.FLAG_DISABLE_MOONISWAP_ALL, Flags.FLAG_DISABLE_MOONISWAP)) {
+            mooniswap.swap(inToken, outToken, amount);
+        }
+        if (dex == Dex.MooniswapETH && !flags.or(Flags.FLAG_DISABLE_MOONISWAP_ALL, Flags.FLAG_DISABLE_MOONISWAP_ETH)) {
+            mooniswap.swapTransitional(inToken, UniversalERC20.ETH_ADDRESS, outToken, amount);
+        }
+        if (dex == Dex.MooniswapDAI && !flags.or(Flags.FLAG_DISABLE_MOONISWAP_ALL, Flags.FLAG_DISABLE_MOONISWAP_DAI)) {
+            mooniswap.swapTransitional(inToken, Tokens.DAI, outToken, amount);
+        }
+        if (dex == Dex.MooniswapUSDC && !flags.or(Flags.FLAG_DISABLE_MOONISWAP_ALL, Flags.FLAG_DISABLE_MOONISWAP_USDC)) {
+            mooniswap.swapTransitional(inToken, Tokens.USDC, outToken, amount);
+        }
+        // add Balancer
+        if (dex == Dex.Balancer1 && !flags.or(Flags.FLAG_DISABLE_BALANCER_ALL, Flags.FLAG_DISABLE_BALANCER_1)) {
+            balancer.swap(inToken, outToken, amount, 0);
+        }
+        if (dex == Dex.Balancer2 && !flags.or(Flags.FLAG_DISABLE_BALANCER_ALL, Flags.FLAG_DISABLE_BALANCER_2)) {
+            balancer.swap(inToken, outToken, amount, 1);
+        }
+        if (dex == Dex.Balancer3 && !flags.or(Flags.FLAG_DISABLE_BALANCER_ALL, Flags.FLAG_DISABLE_BALANCER_3)) {
+            balancer.swap(inToken, outToken, amount, 2);
+        }
+        // add Kyber
+        if (dex == Dex.Kyber1 && !flags.or(Flags.FLAG_DISABLE_KYBER_ALL, Flags.FLAG_DISABLE_KYBER_1)) {
+            return kyber.swap(inToken, outToken, amount, flags, 0xff4b796265722046707200000000000000000000000000000000000000000000);
+        }
+        if (dex == Dex.Kyber2 && !flags.or(Flags.FLAG_DISABLE_KYBER_ALL, Flags.FLAG_DISABLE_KYBER_2)) {
+            return kyber.swap(inToken, outToken, amount, flags, 0xffabcd0000000000000000000000000000000000000000000000000000000000);
+        }
+        if (dex == Dex.Kyber3 && !flags.or(Flags.FLAG_DISABLE_KYBER_ALL, Flags.FLAG_DISABLE_KYBER_3)) {
+            return kyber.swap(inToken, outToken, amount, flags, 0xff4f6e65426974205175616e7400000000000000000000000000000000000000);
+        }
+        if (dex == Dex.Kyber4 && !flags.or(Flags.FLAG_DISABLE_KYBER_ALL, Flags.FLAG_DISABLE_KYBER_4)) {
+            return kyber.swap(inToken, outToken, amount, flags, 0);
         }
     }
 }

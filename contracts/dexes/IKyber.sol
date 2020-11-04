@@ -190,6 +190,9 @@ library IKyberNetworkProxyExtension {
     ) internal {
         if (reserveId == 0) {
             reserveId = kyberStorage.getReserveIdByTokens(inToken, outToken);
+            if (reserveId == 0) {
+                return;
+            }
         }
         uint256 outAmount = inAmount;
 
@@ -227,14 +230,14 @@ library IKyberNetworkProxyExtension {
 
     function getRate(
         IKyberNetworkProxy proxy,
-        IERC20 fromToken,
-        IERC20 destToken,
+        IERC20 inToken,
+        IERC20 outToken,
         uint256 amount,
         uint256 flags,
         bytes memory hint
     ) private view returns (uint256) {
         (, bytes memory data) = address(proxy).staticcall(
-            abi.encodeWithSelector(proxy.getExpectedRateAfterFee.selector, fromToken, destToken, amount, (flags >> 255) * 10, hint)
+            abi.encodeWithSelector(proxy.getExpectedRateAfterFee.selector, inToken, outToken, amount, (flags >> 255) * 10, hint)
         );
 
         return (data.length == 32) ? abi.decode(data, (uint256)) : 0;
