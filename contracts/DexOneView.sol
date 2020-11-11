@@ -148,8 +148,8 @@ contract DexOneView {
                 if (amount == MIN_VALUE) {
                     amount = 0;
                 }
-                uint256 gas = param.gases[i].mul(param.outTokenEthPriceTimesGasPrice).div(1e18);
-                outAmount = outAmount.add(uint256(amount)).add(gas);
+                int256 gas = int256(param.gases[i].mul(param.outTokenEthPriceTimesGasPrice).div(1e18));
+                outAmount = outAmount.add(uint256(amount + gas));
             }
         }
     }
