@@ -32,6 +32,9 @@ library Tokens {
     // IWETH internal constant WETH = IWETH(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
     IWETH internal constant WETH = IWETH(0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c);
 
+    // BURGER Token
+    IERC20 internal constant DGAS = IERC20(0xAe9269f27437f0fcBC232d39Ec814844a51d6b8f);
+
     /**
      * @notice Wrap the ETH token to meet the ERC20 standard.
      * @param token token to wrap

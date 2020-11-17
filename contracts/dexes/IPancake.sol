@@ -90,7 +90,7 @@ library IPancakePairExtension {
         uint256 outReserve,
         uint256 amount
     ) private pure returns (uint256) {
-        uint256 inAmountWithFee = amount.mul(997); // Uniswap V2 now requires fixed 0.3% swap fee
+        uint256 inAmountWithFee = amount.mul(998); // Pancake now requires fixed 0.2% swap fee
         uint256 numerator = inAmountWithFee.mul(outReserve);
         uint256 denominator = inReserve.mul(1000).add(inAmountWithFee);
         return (denominator == 0) ? 0 : numerator.div(denominator);
@@ -98,7 +98,6 @@ library IPancakePairExtension {
 }
 
 library IPancakeFactoryExtension {
-    using SafeMath for uint256;
     using UniversalERC20 for IERC20;
     using IPancakePairExtension for IPancakePair;
     using Tokens for IERC20;

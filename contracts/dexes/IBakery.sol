@@ -97,7 +97,6 @@ library IBakeryPairExtension {
 }
 
 library IBakeryFactoryExtension {
-    using SafeMath for uint256;
     using UniversalERC20 for IERC20;
     using IBakeryPairExtension for IBakeryPair;
     using Tokens for IERC20;

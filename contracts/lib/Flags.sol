@@ -48,11 +48,19 @@ library Flags {
     uint256 internal constant FLAG_DISABLE_PANCAKE_ETH = 1 << 2;
     uint256 internal constant FLAG_DISABLE_PANCAKE_DAI = 1 << 3;
     uint256 internal constant FLAG_DISABLE_PANCAKE_USDC = 1 << 4;
-    uint256 internal constant FLAG_DISABLE_BAKERY_ALL = 1 << 5;
-    uint256 internal constant FLAG_DISABLE_BAKERY = 1 << 6;
-    uint256 internal constant FLAG_DISABLE_BAKERY_ETH = 1 << 7;
-    uint256 internal constant FLAG_DISABLE_BAKERY_DAI = 1 << 8;
-    uint256 internal constant FLAG_DISABLE_BAKERY_USDC = 1 << 9;
+    uint256 internal constant FLAG_DISABLE_PANCAKE_USDT = 1 << 5;
+    // Bakery
+    uint256 internal constant FLAG_DISABLE_BAKERY_ALL = 1 << 6;
+    uint256 internal constant FLAG_DISABLE_BAKERY = 1 << 7;
+    uint256 internal constant FLAG_DISABLE_BAKERY_ETH = 1 << 8;
+    uint256 internal constant FLAG_DISABLE_BAKERY_DAI = 1 << 9;
+    uint256 internal constant FLAG_DISABLE_BAKERY_USDC = 1 << 10;
+    uint256 internal constant FLAG_DISABLE_BAKERY_USDT = 1 << 11;
+    // Burger
+    uint256 internal constant FLAG_DISABLE_BURGER_ALL = 1 << 12;
+    uint256 internal constant FLAG_DISABLE_BURGER = 1 << 13;
+    uint256 internal constant FLAG_DISABLE_BURGER_ETH = 1 << 14;
+    uint256 internal constant FLAG_DISABLE_BURGER_DGAS = 1 << 15;
 
     function on(uint256 flags, uint256 flag) internal pure returns (bool) {
         return (flags & flag) != 0;
