@@ -18,7 +18,7 @@ interface IDemaxFactory {
  * @notice Uniswap V2 pair pool interface. See https://uniswap.org/docs/v2/smart-contracts/pair/
  */
 interface IDemaxPair {
-    function CONFIG() external view returns (IDemaxConfig);
+    // function CONFIG() external view returns (IDemaxConfig);
 
     function swap(
         uint256 amount0Out,
@@ -61,13 +61,13 @@ interface IDemaxPlatform {
         address to,
         uint256 deadline
     ) external returns (uint256[] memory amounts);
+
+    function getAmountsOut(uint256 amountIn, address[] memory path) external view returns (uint256[] memory amounts);
 }
 
 library IDemaxPairExtension {
     using SafeMath for uint256;
     using UniversalERC20 for IERC20;
-
-    bytes32 private constant SWAP_FEE_PERCENT = bytes32("SWAP_FEE_PERCENT");
 
     /**
      * @notice Use Uniswap's constant product formula to calculate expected swap return.
@@ -77,25 +77,21 @@ library IDemaxPairExtension {
         IDemaxPair pair,
         IERC20 inToken,
         IERC20 outToken,
-        uint256 amount
+        uint256 amount,
+        uint256 feePercent,
+        uint256 percentDenominator
     ) internal view returns (uint256) {
         if (amount == 0) {
             return 0;
         }
-        uint256 inReserve = inToken.universalBalanceOf(address(pair));
-        uint256 outReserve = outToken.universalBalanceOf(address(pair));
-        return doCalculate(pair, inReserve, outReserve, amount);
-    }
 
-    function doCalculate(
-        IDemaxPair pair,
-        uint256 inReserve,
-        uint256 outReserve,
-        uint256 amount
-    ) private view returns (uint256) {
-        IDemaxConfig config = pair.CONFIG();
-        uint256 feePercent = config.getConfigValue(SWAP_FEE_PERCENT);
-        uint256 percentDenominator = config.PERCENT_DENOMINATOR();
+        uint256 inReserve = 0;
+        uint256 outReserve = 0;
+        if (address(inToken) < address(outToken)) {
+            (inReserve, outReserve, ) = pair.getReserves();
+        } else {
+            (outReserve, inReserve, ) = pair.getReserves();
+        }
 
         uint256 inAmountWithFee = amount.mul(percentDenominator.sub(feePercent)).div(percentDenominator);
         uint256 numerator = inAmountWithFee.mul(outReserve);
@@ -104,73 +100,12 @@ library IDemaxPairExtension {
     }
 }
 
-library IDemaxFactoryExtension {
-    using IDemaxPairExtension for IDemaxPair;
-    using Tokens for IERC20;
-
-    function calculateSwapReturn(
-        IDemaxFactory factory,
-        IERC20 inToken,
-        IERC20 outToken,
-        uint256[] memory inAmounts
-    ) internal view returns (uint256[] memory outAmounts, uint256 gas) {
-        outAmounts = new uint256[](inAmounts.length);
-
-        IERC20 realInToken = inToken.wrapETH();
-        IERC20 realOutToken = outToken.wrapETH();
-        IDemaxPair pair = getSwapPair(factory, realInToken, realOutToken);
-        if (pair != IDemaxPair(0)) {
-            for (uint256 i = 0; i < inAmounts.length; i++) {
-                outAmounts[i] = pair.calculateSwapReturn(realInToken, realOutToken, inAmounts[i]);
-            }
-            return (outAmounts, 50_000);
-        }
-    }
-
-    function calculateTransitionalSwapReturn(
-        IDemaxFactory factory,
-        IERC20 inToken,
-        IERC20 transitionToken,
-        IERC20 outToken,
-        uint256[] memory inAmounts
-    ) internal view returns (uint256[] memory outAmounts, uint256 gas) {
-        IERC20 realInToken = inToken.wrapETH();
-        IERC20 realTransitionToken = transitionToken.wrapETH();
-        IERC20 realOutToken = outToken.wrapETH();
-
-        if (realInToken == realTransitionToken || realOutToken == realTransitionToken) {
-            return (new uint256[](inAmounts.length), 0);
-        }
-        uint256 firstGas;
-        uint256 secondGas;
-        (outAmounts, firstGas) = calculateSwapReturn(factory, realInToken, realTransitionToken, inAmounts);
-        (outAmounts, secondGas) = calculateSwapReturn(factory, realTransitionToken, realOutToken, outAmounts);
-        return (outAmounts, firstGas + secondGas);
-    }
-
-    function getSwapPair(
-        IDemaxFactory factory,
-        IERC20 inToken,
-        IERC20 outToken
-    ) private view returns (IDemaxPair pair) {
-        if (inToken != Tokens.WETH && inToken != Tokens.DGAS) {
-            if (factory.getPair(inToken, Tokens.DGAS) == IDemaxPair(0)) {
-                return IDemaxPair(0);
-            }
-        }
-        if (outToken != Tokens.WETH && outToken != Tokens.DGAS) {
-            if (factory.getPair(Tokens.DGAS, outToken) == IDemaxPair(0)) {
-                return IDemaxPair(0);
-            }
-        }
-        return factory.getPair(inToken, outToken);
-    }
-}
-
 library IDemaxPlatformExtension {
     using UniversalERC20 for IERC20;
     using Tokens for IERC20;
     using IDemaxPairExtension for IDemaxPair;
+
+    bytes32 private constant SWAP_FEE_PERCENT = bytes32("SWAP_FEE_PERCENT");
 
     function calculateSwapReturn(
         IDemaxPlatform platform,
@@ -187,8 +122,17 @@ library IDemaxPlatformExtension {
             IDemaxFactory factory = platform.FACTORY();
             IDemaxPair pair = factory.getPair(realInToken, realOutToken);
             if (pair != IDemaxPair(0)) {
+                IDemaxConfig config = platform.CONFIG();
+                uint256 feePercent = config.getConfigValue(SWAP_FEE_PERCENT);
+                uint256 percentDenominator = config.PERCENT_DENOMINATOR();
                 for (uint256 i = 0; i < inAmounts.length; i++) {
-                    outAmounts[i] = pair.calculateSwapReturn(realInToken, realOutToken, inAmounts[i]);
+                    outAmounts[i] = pair.calculateSwapReturn(
+                        realInToken,
+                        realOutToken,
+                        inAmounts[i],
+                        feePercent,
+                        percentDenominator
+                    );
                 }
                 return (outAmounts, 50_000);
             }

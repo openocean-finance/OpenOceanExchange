@@ -111,9 +111,7 @@ library Dexes {
     IBakeryFactory internal constant bakery = IBakeryFactory(0x01bF7C66c6BD861915CdaaE475042d3c4BaE16A7);
     using IBakeryFactoryExtension for IBakeryFactory;
 
-    IDemaxFactory internal constant burgerFactory = IDemaxFactory(0x8a1E9d3aEbBBd5bA2A64d3355A48dD5E9b511256);
-    using IDemaxFactoryExtension for IDemaxFactory;
-    IDemaxPlatform internal constant burgerPlatform = IDemaxPlatform(0xBf6527834dBB89cdC97A79FCD62E6c08B19F8ec0);
+    IDemaxPlatform internal constant burger = IDemaxPlatform(0xBf6527834dBB89cdC97A79FCD62E6c08B19F8ec0);
     using IDemaxPlatformExtension for IDemaxPlatform;
 
     function allDexes() internal pure returns (Dex[] memory dexes) {
@@ -281,13 +279,13 @@ library Dexes {
         }
         // Burger
         if (dex == Dex.Burger && !flags.or(Flags.FLAG_DISABLE_BURGER_ALL, Flags.FLAG_DISABLE_BURGER)) {
-            return burgerPlatform.calculateSwapReturn(inToken, outToken, inAmounts);
+            return burger.calculateSwapReturn(inToken, outToken, inAmounts);
         }
         if (dex == Dex.BurgerETH && !flags.or(Flags.FLAG_DISABLE_BURGER_ALL, Flags.FLAG_DISABLE_BURGER_ETH)) {
-            return burgerPlatform.calculateTransitionalSwapReturn(inToken, Tokens.WETH, outToken, inAmounts);
+            return burger.calculateTransitionalSwapReturn(inToken, Tokens.WETH, outToken, inAmounts);
         }
         if (dex == Dex.BurgerDGAS && !flags.or(Flags.FLAG_DISABLE_BURGER_ALL, Flags.FLAG_DISABLE_BURGER_DGAS)) {
-            return burgerPlatform.calculateTransitionalSwapReturn(inToken, Tokens.DGAS, outToken, inAmounts);
+            return burger.calculateTransitionalSwapReturn(inToken, Tokens.DGAS, outToken, inAmounts);
         }
         // fallback
         return (new uint256[](inAmounts.length), 0);
@@ -429,13 +427,13 @@ library Dexes {
         }
         // Burger
         if (dex == Dex.Burger && !flags.or(Flags.FLAG_DISABLE_BURGER_ALL, Flags.FLAG_DISABLE_BURGER)) {
-            burgerPlatform.swap(inToken, outToken, amount);
+            burger.swap(inToken, outToken, amount);
         }
         if (dex == Dex.BurgerETH && !flags.or(Flags.FLAG_DISABLE_BURGER_ALL, Flags.FLAG_DISABLE_BURGER_ETH)) {
-            burgerPlatform.swapTransitional(inToken, Tokens.WETH, outToken, amount);
+            burger.swapTransitional(inToken, Tokens.WETH, outToken, amount);
         }
         if (dex == Dex.BurgerDGAS && !flags.or(Flags.FLAG_DISABLE_BURGER_ALL, Flags.FLAG_DISABLE_BURGER_DGAS)) {
-            burgerPlatform.swapTransitional(inToken, Tokens.DGAS, outToken, amount);
+            burger.swapTransitional(inToken, Tokens.DGAS, outToken, amount);
         }
     }
 }
