@@ -14,7 +14,7 @@ module.exports = {
         },
         test: {
             host: "47.242.20.196",
-            port: 8545,
+            port: 18545,
             network_id: "56",
             networkCheckTimeout: 100000000
         }
