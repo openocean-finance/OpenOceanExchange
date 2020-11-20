@@ -1327,7 +1327,7 @@ library IDemaxPlatformExtension {
                         percentDenominator
                     );
                 }
-                return (outAmounts, 50_000);
+                return (outAmounts, 200_000);
             }
         }
     }
