@@ -61,6 +61,13 @@ library Flags {
     uint256 internal constant FLAG_DISABLE_BURGER = 1 << 13;
     uint256 internal constant FLAG_DISABLE_BURGER_ETH = 1 << 14;
     uint256 internal constant FLAG_DISABLE_BURGER_DGAS = 1 << 15;
+    // Thugswap
+    uint256 internal constant FLAG_DISABLE_THUGSWAP_ALL = 1 << 16;
+    uint256 internal constant FLAG_DISABLE_THUGSWAP = 1 << 17;
+    uint256 internal constant FLAG_DISABLE_THUGSWAP_ETH = 1 << 18;
+    uint256 internal constant FLAG_DISABLE_THUGSWAP_DAI = 1 << 19;
+    uint256 internal constant FLAG_DISABLE_THUGSWAP_USDC = 1 << 20;
+    uint256 internal constant FLAG_DISABLE_THUGSWAP_USDT = 1 << 21;
 
     function on(uint256 flags, uint256 flag) internal pure returns (bool) {
         return (flags & flag) != 0;

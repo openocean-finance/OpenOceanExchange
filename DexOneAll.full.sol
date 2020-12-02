@@ -677,6 +677,7 @@ library Tokens {
     IERC20 internal constant DAI = IERC20(0x1AF3F329e8BE154074D8769D1FFa4eE058B1DBc3);
     IERC20 internal constant USDC = IERC20(0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d);
     IERC20 internal constant USDT = IERC20(0x55d398326f99059fF775485246999027B3197955);
+
     IERC20 internal constant TUSD = IERC20(0x0000000000085d4780B73119b644AE5ecd22b376);
     IERC20 internal constant BUSD = IERC20(0x4Fabb145d64652a948d72533023f6E7A623C7C53);
     IERC20 internal constant SUSD = IERC20(0x57Ab1ec28D129707052df4dF418D58a2D46d5f51);
@@ -783,6 +784,13 @@ library Flags {
     uint256 internal constant FLAG_DISABLE_BURGER = 1 << 13;
     uint256 internal constant FLAG_DISABLE_BURGER_ETH = 1 << 14;
     uint256 internal constant FLAG_DISABLE_BURGER_DGAS = 1 << 15;
+    // Thugswap
+    uint256 internal constant FLAG_DISABLE_THUGSWAP_ALL = 1 << 16;
+    uint256 internal constant FLAG_DISABLE_THUGSWAP = 1 << 17;
+    uint256 internal constant FLAG_DISABLE_THUGSWAP_ETH = 1 << 18;
+    uint256 internal constant FLAG_DISABLE_THUGSWAP_DAI = 1 << 19;
+    uint256 internal constant FLAG_DISABLE_THUGSWAP_USDC = 1 << 20;
+    uint256 internal constant FLAG_DISABLE_THUGSWAP_USDT = 1 << 21;
 
     function on(uint256 flags, uint256 flag) internal pure returns (bool) {
         return (flags & flag) != 0;
@@ -1394,6 +1402,186 @@ library IDemaxPlatformExtension {
     }
 }
 
+// File: contracts/dexes/IThugswap.sol
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.6.0;
+
+
+
+
+
+
+/**
+ * @notice Uniswap V2 factory contract interface. See https://uniswap.org/docs/v2/smart-contracts/factory/
+ */
+interface IThugswapFactory {
+    function getPair(IERC20 tokenA, IERC20 tokenB) external view returns (IThugswapPair pair);
+}
+
+/**
+ * @notice Uniswap V2 pair pool interface. See https://uniswap.org/docs/v2/smart-contracts/pair/
+ */
+interface IThugswapPair {
+    function swap(
+        uint256 amount0Out,
+        uint256 amount1Out,
+        address to,
+        bytes calldata data
+    ) external;
+
+    function getReserves()
+        external
+        view
+        returns (
+            uint112 reserve0,
+            uint112 reserve1,
+            uint32 blockTimestampLast
+        );
+
+    function skim(address to) external;
+
+    function sync() external;
+}
+
+library IThugswapPairExtension {
+    using SafeMath for uint256;
+    using UniversalERC20 for IERC20;
+
+    address private constant SKIM_TARGET = 0x5bDCE812ce8409442ac3FBbd10565F9B17A6C49D;
+
+    /**
+     * @notice Use Uniswap's constant product formula to calculate expected swap return.
+     * See https://github.com/runtimeverification/verified-smart-contracts/blob/uniswap/uniswap/x-y-k.pdf
+     */
+    function calculateSwapReturn(
+        IThugswapPair pair,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256 amount
+    ) internal view returns (uint256) {
+        if (amount == 0) {
+            return 0;
+        }
+        uint256 inReserve = inToken.universalBalanceOf(address(pair));
+        uint256 outReserve = outToken.universalBalanceOf(address(pair));
+        return doCalculate(inReserve, outReserve, amount);
+    }
+
+    function calculateRealSwapReturn(
+        IThugswapPair pair,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256 amount
+    ) internal returns (uint256) {
+        uint256 inReserve = inToken.universalBalanceOf(address(pair));
+        uint256 outReserve = outToken.universalBalanceOf(address(pair));
+
+        (uint112 reserve0, uint112 reserve1, ) = pair.getReserves();
+        if (inToken > outToken) {
+            (reserve0, reserve1) = (reserve1, reserve0);
+        }
+        if (inReserve < reserve0 || outReserve < reserve1) {
+            pair.sync();
+        } else if (inReserve > reserve0 || outReserve > reserve1) {
+            pair.skim(SKIM_TARGET);
+        }
+
+        return doCalculate(Math.min(inReserve, reserve0), Math.min(outReserve, reserve1), amount);
+    }
+
+    function doCalculate(
+        uint256 inReserve,
+        uint256 outReserve,
+        uint256 amount
+    ) private pure returns (uint256) {
+        uint256 inAmountWithFee = amount.mul(997); // Thugswap requires fixed 0.3% swap fee
+        uint256 numerator = inAmountWithFee.mul(outReserve);
+        uint256 denominator = inReserve.mul(1000).add(inAmountWithFee);
+        return (denominator == 0) ? 0 : numerator.div(denominator);
+    }
+}
+
+library IThugswapFactoryExtension {
+    using UniversalERC20 for IERC20;
+    using IThugswapPairExtension for IThugswapPair;
+    using Tokens for IERC20;
+
+    function calculateSwapReturn(
+        IThugswapFactory factory,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256[] memory inAmounts
+    ) internal view returns (uint256[] memory outAmounts, uint256 gas) {
+        outAmounts = new uint256[](inAmounts.length);
+
+        IERC20 realInToken = inToken.wrapETH();
+        IERC20 realOutToken = outToken.wrapETH();
+        IThugswapPair pair = factory.getPair(realInToken, realOutToken);
+        if (pair != IThugswapPair(0)) {
+            for (uint256 i = 0; i < inAmounts.length; i++) {
+                outAmounts[i] = pair.calculateSwapReturn(realInToken, realOutToken, inAmounts[i]);
+            }
+            return (outAmounts, 50_000);
+        }
+    }
+
+    function calculateTransitionalSwapReturn(
+        IThugswapFactory factory,
+        IERC20 inToken,
+        IERC20 transitionToken,
+        IERC20 outToken,
+        uint256[] memory inAmounts
+    ) internal view returns (uint256[] memory outAmounts, uint256 gas) {
+        IERC20 realInToken = inToken.wrapETH();
+        IERC20 realTransitionToken = transitionToken.wrapETH();
+        IERC20 realOutToken = outToken.wrapETH();
+
+        if (realInToken == realTransitionToken || realOutToken == realTransitionToken) {
+            return (new uint256[](inAmounts.length), 0);
+        }
+        uint256 firstGas;
+        uint256 secondGas;
+        (outAmounts, firstGas) = calculateSwapReturn(factory, realInToken, realTransitionToken, inAmounts);
+        (outAmounts, secondGas) = calculateSwapReturn(factory, realTransitionToken, realOutToken, outAmounts);
+        return (outAmounts, firstGas + secondGas);
+    }
+
+    function swap(
+        IThugswapFactory factory,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256 inAmount
+    ) internal returns (uint256 outAmount) {
+        inToken.depositToWETH(inAmount);
+
+        IERC20 realInToken = inToken.wrapETH();
+        IERC20 realOutToken = outToken.wrapETH();
+        IThugswapPair pair = factory.getPair(realInToken, realOutToken);
+
+        outAmount = pair.calculateRealSwapReturn(realInToken, realOutToken, inAmount);
+
+        realInToken.universalTransfer(address(pair), inAmount);
+        if (uint256(address(realInToken)) < uint256(address(realOutToken))) {
+            pair.swap(0, outAmount, address(this), "");
+        } else {
+            pair.swap(outAmount, 0, address(this), "");
+        }
+
+        outToken.withdrawFromWETH();
+    }
+
+    function swapTransitional(
+        IThugswapFactory factory,
+        IERC20 inToken,
+        IERC20 transitionToken,
+        IERC20 outToken,
+        uint256 inAmount
+    ) internal {
+        swap(factory, transitionToken, outToken, swap(factory, inToken, transitionToken, inAmount));
+    }
+}
+
 // File: contracts/dexes/Dexes.sol
 
 // SPDX-License-Identifier: MIT
@@ -1411,6 +1599,7 @@ pragma solidity ^0.6.0;
 // import "./IMooniswap.sol";
 // import "./IBalancer.sol";
 // import "./IKyber.sol";
+
 
 
 
@@ -1470,6 +1659,12 @@ enum Dex {
     Burger,
     BurgerETH,
     BurgerDGAS,
+    // Thugswap
+    Thugswap,
+    ThugswapETH,
+    ThugswapDAI,
+    ThugswapUSDC,
+    ThugswapUSDT,
     // bottom mark
     NoDex
 }
@@ -1510,6 +1705,9 @@ library Dexes {
 
     IDemaxPlatform internal constant burger = IDemaxPlatform(0xBf6527834dBB89cdC97A79FCD62E6c08B19F8ec0);
     using IDemaxPlatformExtension for IDemaxPlatform;
+
+    IThugswapFactory internal constant thugswap = IThugswapFactory(0xaC653cE27E04C6ac565FD87F18128aD33ca03Ba2);
+    using IThugswapFactoryExtension for IThugswapFactory;
 
     function allDexes() internal pure returns (Dex[] memory dexes) {
         uint256 dexCount = uint256(Dex.NoDex);
@@ -1684,6 +1882,22 @@ library Dexes {
         if (dex == Dex.BurgerDGAS && !flags.or(Flags.FLAG_DISABLE_BURGER_ALL, Flags.FLAG_DISABLE_BURGER_DGAS)) {
             return burger.calculateTransitionalSwapReturn(inToken, Tokens.DGAS, outToken, inAmounts);
         }
+        // Thugswap
+        if (dex == Dex.Thugswap && !flags.or(Flags.FLAG_DISABLE_THUGSWAP_ALL, Flags.FLAG_DISABLE_THUGSWAP)) {
+            return thugswap.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+        if (dex == Dex.ThugswapETH && !flags.or(Flags.FLAG_DISABLE_THUGSWAP_ALL, Flags.FLAG_DISABLE_THUGSWAP_ETH)) {
+            return thugswap.calculateTransitionalSwapReturn(inToken, Tokens.WETH, outToken, inAmounts);
+        }
+        if (dex == Dex.ThugswapDAI && !flags.or(Flags.FLAG_DISABLE_THUGSWAP_ALL, Flags.FLAG_DISABLE_THUGSWAP_DAI)) {
+            return thugswap.calculateTransitionalSwapReturn(inToken, Tokens.DAI, outToken, inAmounts);
+        }
+        if (dex == Dex.ThugswapUSDC && !flags.or(Flags.FLAG_DISABLE_THUGSWAP_ALL, Flags.FLAG_DISABLE_THUGSWAP_USDC)) {
+            return thugswap.calculateTransitionalSwapReturn(inToken, Tokens.USDC, outToken, inAmounts);
+        }
+        if (dex == Dex.ThugswapUSDT && !flags.or(Flags.FLAG_DISABLE_THUGSWAP_ALL, Flags.FLAG_DISABLE_THUGSWAP_USDT)) {
+            return thugswap.calculateTransitionalSwapReturn(inToken, Tokens.USDT, outToken, inAmounts);
+        }
         // fallback
         return (new uint256[](inAmounts.length), 0);
     }
@@ -1831,6 +2045,22 @@ library Dexes {
         }
         if (dex == Dex.BurgerDGAS && !flags.or(Flags.FLAG_DISABLE_BURGER_ALL, Flags.FLAG_DISABLE_BURGER_DGAS)) {
             burger.swapTransitional(inToken, Tokens.DGAS, outToken, amount);
+        }
+        // Thugswap
+        if (dex == Dex.Thugswap && !flags.or(Flags.FLAG_DISABLE_THUGSWAP_ALL, Flags.FLAG_DISABLE_THUGSWAP)) {
+            thugswap.swap(inToken, outToken, amount);
+        }
+        if (dex == Dex.ThugswapETH && !flags.or(Flags.FLAG_DISABLE_THUGSWAP_ALL, Flags.FLAG_DISABLE_THUGSWAP_ETH)) {
+            thugswap.swapTransitional(inToken, Tokens.WETH, outToken, amount);
+        }
+        if (dex == Dex.ThugswapDAI && !flags.or(Flags.FLAG_DISABLE_THUGSWAP_ALL, Flags.FLAG_DISABLE_THUGSWAP_DAI)) {
+            thugswap.swapTransitional(inToken, Tokens.DAI, outToken, amount);
+        }
+        if (dex == Dex.ThugswapUSDC && !flags.or(Flags.FLAG_DISABLE_THUGSWAP_ALL, Flags.FLAG_DISABLE_THUGSWAP_USDC)) {
+            thugswap.swapTransitional(inToken, Tokens.USDC, outToken, amount);
+        }
+        if (dex == Dex.ThugswapUSDT && !flags.or(Flags.FLAG_DISABLE_THUGSWAP_ALL, Flags.FLAG_DISABLE_THUGSWAP_USDT)) {
+            thugswap.swapTransitional(inToken, Tokens.USDT, outToken, amount);
         }
     }
 }

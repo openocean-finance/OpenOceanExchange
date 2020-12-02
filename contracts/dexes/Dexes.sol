@@ -17,6 +17,7 @@ import "../lib/Flags.sol";
 import "./IPancake.sol";
 import "./IBakery.sol";
 import "./IBurger.sol";
+import "./IThugswap.sol";
 
 enum Dex {
     // UniswapV2,
@@ -73,6 +74,12 @@ enum Dex {
     Burger,
     BurgerETH,
     BurgerDGAS,
+    // Thugswap
+    Thugswap,
+    ThugswapETH,
+    ThugswapDAI,
+    ThugswapUSDC,
+    ThugswapUSDT,
     // bottom mark
     NoDex
 }
@@ -113,6 +120,9 @@ library Dexes {
 
     IDemaxPlatform internal constant burger = IDemaxPlatform(0xBf6527834dBB89cdC97A79FCD62E6c08B19F8ec0);
     using IDemaxPlatformExtension for IDemaxPlatform;
+
+    IThugswapFactory internal constant thugswap = IThugswapFactory(0xaC653cE27E04C6ac565FD87F18128aD33ca03Ba2);
+    using IThugswapFactoryExtension for IThugswapFactory;
 
     function allDexes() internal pure returns (Dex[] memory dexes) {
         uint256 dexCount = uint256(Dex.NoDex);
@@ -287,6 +297,22 @@ library Dexes {
         if (dex == Dex.BurgerDGAS && !flags.or(Flags.FLAG_DISABLE_BURGER_ALL, Flags.FLAG_DISABLE_BURGER_DGAS)) {
             return burger.calculateTransitionalSwapReturn(inToken, Tokens.DGAS, outToken, inAmounts);
         }
+        // Thugswap
+        if (dex == Dex.Thugswap && !flags.or(Flags.FLAG_DISABLE_THUGSWAP_ALL, Flags.FLAG_DISABLE_THUGSWAP)) {
+            return thugswap.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+        if (dex == Dex.ThugswapETH && !flags.or(Flags.FLAG_DISABLE_THUGSWAP_ALL, Flags.FLAG_DISABLE_THUGSWAP_ETH)) {
+            return thugswap.calculateTransitionalSwapReturn(inToken, Tokens.WETH, outToken, inAmounts);
+        }
+        if (dex == Dex.ThugswapDAI && !flags.or(Flags.FLAG_DISABLE_THUGSWAP_ALL, Flags.FLAG_DISABLE_THUGSWAP_DAI)) {
+            return thugswap.calculateTransitionalSwapReturn(inToken, Tokens.DAI, outToken, inAmounts);
+        }
+        if (dex == Dex.ThugswapUSDC && !flags.or(Flags.FLAG_DISABLE_THUGSWAP_ALL, Flags.FLAG_DISABLE_THUGSWAP_USDC)) {
+            return thugswap.calculateTransitionalSwapReturn(inToken, Tokens.USDC, outToken, inAmounts);
+        }
+        if (dex == Dex.ThugswapUSDT && !flags.or(Flags.FLAG_DISABLE_THUGSWAP_ALL, Flags.FLAG_DISABLE_THUGSWAP_USDT)) {
+            return thugswap.calculateTransitionalSwapReturn(inToken, Tokens.USDT, outToken, inAmounts);
+        }
         // fallback
         return (new uint256[](inAmounts.length), 0);
     }
@@ -434,6 +460,22 @@ library Dexes {
         }
         if (dex == Dex.BurgerDGAS && !flags.or(Flags.FLAG_DISABLE_BURGER_ALL, Flags.FLAG_DISABLE_BURGER_DGAS)) {
             burger.swapTransitional(inToken, Tokens.DGAS, outToken, amount);
+        }
+        // Thugswap
+        if (dex == Dex.Thugswap && !flags.or(Flags.FLAG_DISABLE_THUGSWAP_ALL, Flags.FLAG_DISABLE_THUGSWAP)) {
+            thugswap.swap(inToken, outToken, amount);
+        }
+        if (dex == Dex.ThugswapETH && !flags.or(Flags.FLAG_DISABLE_THUGSWAP_ALL, Flags.FLAG_DISABLE_THUGSWAP_ETH)) {
+            thugswap.swapTransitional(inToken, Tokens.WETH, outToken, amount);
+        }
+        if (dex == Dex.ThugswapDAI && !flags.or(Flags.FLAG_DISABLE_THUGSWAP_ALL, Flags.FLAG_DISABLE_THUGSWAP_DAI)) {
+            thugswap.swapTransitional(inToken, Tokens.DAI, outToken, amount);
+        }
+        if (dex == Dex.ThugswapUSDC && !flags.or(Flags.FLAG_DISABLE_THUGSWAP_ALL, Flags.FLAG_DISABLE_THUGSWAP_USDC)) {
+            thugswap.swapTransitional(inToken, Tokens.USDC, outToken, amount);
+        }
+        if (dex == Dex.ThugswapUSDT && !flags.or(Flags.FLAG_DISABLE_THUGSWAP_ALL, Flags.FLAG_DISABLE_THUGSWAP_USDT)) {
+            thugswap.swapTransitional(inToken, Tokens.USDT, outToken, amount);
         }
     }
 }
