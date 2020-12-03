@@ -80,6 +80,10 @@ enum Dex {
     ThugswapDAI,
     ThugswapUSDC,
     ThugswapUSDT,
+    // BUSD transitional
+    PancakeBUSD,
+    BakeryBUSD,
+    ThugswapBUSD,
     // bottom mark
     NoDex
 }
@@ -271,6 +275,9 @@ library Dexes {
         if (dex == Dex.PancakeUSDT && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL, Flags.FLAG_DISABLE_PANCAKE_USDT)) {
             return pancake.calculateTransitionalSwapReturn(inToken, Tokens.USDT, outToken, inAmounts);
         }
+        if (dex == Dex.PancakeBUSD && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL, Flags.FLAG_DISABLE_PANCAKE_BUSD)) {
+            return pancake.calculateTransitionalSwapReturn(inToken, Tokens.BUSD, outToken, inAmounts);
+        }
         // Bakery
         if (dex == Dex.Bakery && !flags.or(Flags.FLAG_DISABLE_BAKERY_ALL, Flags.FLAG_DISABLE_BAKERY)) {
             return bakery.calculateSwapReturn(inToken, outToken, inAmounts);
@@ -286,6 +293,9 @@ library Dexes {
         }
         if (dex == Dex.BakeryUSDT && !flags.or(Flags.FLAG_DISABLE_BAKERY_ALL, Flags.FLAG_DISABLE_BAKERY_USDT)) {
             return bakery.calculateTransitionalSwapReturn(inToken, Tokens.USDT, outToken, inAmounts);
+        }
+        if (dex == Dex.BakeryBUSD && !flags.or(Flags.FLAG_DISABLE_BAKERY_ALL, Flags.FLAG_DISABLE_BAKERY_BUSD)) {
+            return bakery.calculateTransitionalSwapReturn(inToken, Tokens.BUSD, outToken, inAmounts);
         }
         // Burger
         if (dex == Dex.Burger && !flags.or(Flags.FLAG_DISABLE_BURGER_ALL, Flags.FLAG_DISABLE_BURGER)) {
@@ -312,6 +322,9 @@ library Dexes {
         }
         if (dex == Dex.ThugswapUSDT && !flags.or(Flags.FLAG_DISABLE_THUGSWAP_ALL, Flags.FLAG_DISABLE_THUGSWAP_USDT)) {
             return thugswap.calculateTransitionalSwapReturn(inToken, Tokens.USDT, outToken, inAmounts);
+        }
+        if (dex == Dex.ThugswapBUSD && !flags.or(Flags.FLAG_DISABLE_THUGSWAP_ALL, Flags.FLAG_DISABLE_THUGSWAP_BUSD)) {
+            return thugswap.calculateTransitionalSwapReturn(inToken, Tokens.BUSD, outToken, inAmounts);
         }
         // fallback
         return (new uint256[](inAmounts.length), 0);
@@ -435,6 +448,9 @@ library Dexes {
         if (dex == Dex.PancakeUSDT && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL, Flags.FLAG_DISABLE_PANCAKE_USDT)) {
             pancake.swapTransitional(inToken, Tokens.USDT, outToken, amount);
         }
+        if (dex == Dex.PancakeBUSD && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL, Flags.FLAG_DISABLE_PANCAKE_BUSD)) {
+            pancake.swapTransitional(inToken, Tokens.BUSD, outToken, amount);
+        }
         // Bakery
         if (dex == Dex.Bakery && !flags.or(Flags.FLAG_DISABLE_BAKERY_ALL, Flags.FLAG_DISABLE_BAKERY)) {
             bakery.swap(inToken, outToken, amount);
@@ -450,6 +466,9 @@ library Dexes {
         }
         if (dex == Dex.BakeryUSDT && !flags.or(Flags.FLAG_DISABLE_BAKERY_ALL, Flags.FLAG_DISABLE_BAKERY_USDT)) {
             bakery.swapTransitional(inToken, Tokens.USDT, outToken, amount);
+        }
+        if (dex == Dex.BakeryBUSD && !flags.or(Flags.FLAG_DISABLE_BAKERY_ALL, Flags.FLAG_DISABLE_BAKERY_BUSD)) {
+            bakery.swapTransitional(inToken, Tokens.BUSD, outToken, amount);
         }
         // Burger
         if (dex == Dex.Burger && !flags.or(Flags.FLAG_DISABLE_BURGER_ALL, Flags.FLAG_DISABLE_BURGER)) {
@@ -476,6 +495,9 @@ library Dexes {
         }
         if (dex == Dex.ThugswapUSDT && !flags.or(Flags.FLAG_DISABLE_THUGSWAP_ALL, Flags.FLAG_DISABLE_THUGSWAP_USDT)) {
             thugswap.swapTransitional(inToken, Tokens.USDT, outToken, amount);
+        }
+        if (dex == Dex.ThugswapBUSD && !flags.or(Flags.FLAG_DISABLE_THUGSWAP_ALL, Flags.FLAG_DISABLE_THUGSWAP_BUSD)) {
+            thugswap.swapTransitional(inToken, Tokens.BUSD, outToken, amount);
         }
     }
 }

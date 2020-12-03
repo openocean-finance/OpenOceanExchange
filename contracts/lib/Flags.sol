@@ -68,6 +68,10 @@ library Flags {
     uint256 internal constant FLAG_DISABLE_THUGSWAP_DAI = 1 << 19;
     uint256 internal constant FLAG_DISABLE_THUGSWAP_USDC = 1 << 20;
     uint256 internal constant FLAG_DISABLE_THUGSWAP_USDT = 1 << 21;
+    // BUSD transitional token
+    uint256 internal constant FLAG_DISABLE_PANCAKE_BUSD = 1 << 22;
+    uint256 internal constant FLAG_DISABLE_BAKERY_BUSD = 1 << 23;
+    uint256 internal constant FLAG_DISABLE_THUGSWAP_BUSD = 1 << 24;
 
     function on(uint256 flags, uint256 flag) internal pure returns (bool) {
         return (flags & flag) != 0;
