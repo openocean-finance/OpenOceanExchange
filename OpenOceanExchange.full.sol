@@ -609,7 +609,8 @@ library UniversalERC20 {
         }
 
         if (isETH(token)) {
-            address(uint160(to)).transfer(amount);
+            payable(to).transfer(amount);
+            return true;
         } else {
             token.safeTransfer(to, amount);
             return true;
