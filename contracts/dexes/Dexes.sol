@@ -18,6 +18,7 @@ import "./IPancake.sol";
 import "./IBakery.sol";
 import "./IBurger.sol";
 import "./IThugswap.sol";
+import "./IStablex.sol";
 
 enum Dex {
     // UniswapV2,
@@ -84,6 +85,13 @@ enum Dex {
     PancakeBUSD,
     BakeryBUSD,
     ThugswapBUSD,
+    // StableX
+    Stablex,
+    StablexDAI,
+    StablexBUSD,
+    StablexQUSD,
+    StablexUSDC,
+    StablexUSDT,
     // bottom mark
     NoDex
 }
@@ -127,6 +135,9 @@ library Dexes {
 
     IThugswapFactory internal constant thugswap = IThugswapFactory(0xaC653cE27E04C6ac565FD87F18128aD33ca03Ba2);
     using IThugswapFactoryExtension for IThugswapFactory;
+
+    IStablexFactory internal constant stablex = IStablexFactory(0x918d7e714243F7d9d463C37e106235dCde294ffC);
+    using IStablexFactoryExtension for IStablexFactory;
 
     function allDexes() internal pure returns (Dex[] memory dexes) {
         uint256 dexCount = uint256(Dex.NoDex);
@@ -326,6 +337,25 @@ library Dexes {
         if (dex == Dex.ThugswapBUSD && !flags.or(Flags.FLAG_DISABLE_THUGSWAP_ALL, Flags.FLAG_DISABLE_THUGSWAP_BUSD)) {
             return thugswap.calculateTransitionalSwapReturn(inToken, Tokens.BUSD, outToken, inAmounts);
         }
+        // Stablex
+        if (dex == Dex.Stablex && !flags.or(Flags.FLAG_DISABLE_STABLEX_ALL, Flags.FLAG_DISABLE_STABLEX)) {
+            return stablex.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+        if (dex == Dex.StablexQUSD && !flags.or(Flags.FLAG_DISABLE_STABLEX_ALL, Flags.FLAG_DISABLE_STABLEX_QUSD)) {
+            return stablex.calculateTransitionalSwapReturn(inToken, Tokens.QUSD, outToken, inAmounts);
+        }
+        if (dex == Dex.StablexDAI && !flags.or(Flags.FLAG_DISABLE_STABLEX_ALL, Flags.FLAG_DISABLE_STABLEX_DAI)) {
+            return stablex.calculateTransitionalSwapReturn(inToken, Tokens.DAI, outToken, inAmounts);
+        }
+        if (dex == Dex.StablexUSDC && !flags.or(Flags.FLAG_DISABLE_STABLEX_ALL, Flags.FLAG_DISABLE_STABLEX_USDC)) {
+            return stablex.calculateTransitionalSwapReturn(inToken, Tokens.USDC, outToken, inAmounts);
+        }
+        if (dex == Dex.StablexUSDT && !flags.or(Flags.FLAG_DISABLE_STABLEX_ALL, Flags.FLAG_DISABLE_STABLEX_USDT)) {
+            return stablex.calculateTransitionalSwapReturn(inToken, Tokens.USDT, outToken, inAmounts);
+        }
+        if (dex == Dex.StablexBUSD && !flags.or(Flags.FLAG_DISABLE_STABLEX_ALL, Flags.FLAG_DISABLE_STABLEX_BUSD)) {
+            return stablex.calculateTransitionalSwapReturn(inToken, Tokens.BUSD, outToken, inAmounts);
+        }
         // fallback
         return (new uint256[](inAmounts.length), 0);
     }
@@ -498,6 +528,25 @@ library Dexes {
         }
         if (dex == Dex.ThugswapBUSD && !flags.or(Flags.FLAG_DISABLE_THUGSWAP_ALL, Flags.FLAG_DISABLE_THUGSWAP_BUSD)) {
             thugswap.swapTransitional(inToken, Tokens.BUSD, outToken, amount);
+        }
+        // Stablex
+        if (dex == Dex.Stablex && !flags.or(Flags.FLAG_DISABLE_STABLEX_ALL, Flags.FLAG_DISABLE_STABLEX)) {
+            stablex.swap(inToken, outToken, amount);
+        }
+        if (dex == Dex.StablexQUSD && !flags.or(Flags.FLAG_DISABLE_STABLEX_ALL, Flags.FLAG_DISABLE_STABLEX_QUSD)) {
+            stablex.swapTransitional(inToken, Tokens.QUSD, outToken, amount);
+        }
+        if (dex == Dex.StablexDAI && !flags.or(Flags.FLAG_DISABLE_STABLEX_ALL, Flags.FLAG_DISABLE_STABLEX_DAI)) {
+            stablex.swapTransitional(inToken, Tokens.DAI, outToken, amount);
+        }
+        if (dex == Dex.StablexUSDC && !flags.or(Flags.FLAG_DISABLE_STABLEX_ALL, Flags.FLAG_DISABLE_STABLEX_USDC)) {
+            stablex.swapTransitional(inToken, Tokens.USDC, outToken, amount);
+        }
+        if (dex == Dex.StablexUSDT && !flags.or(Flags.FLAG_DISABLE_STABLEX_ALL, Flags.FLAG_DISABLE_STABLEX_USDT)) {
+            stablex.swapTransitional(inToken, Tokens.USDT, outToken, amount);
+        }
+        if (dex == Dex.StablexBUSD && !flags.or(Flags.FLAG_DISABLE_STABLEX_ALL, Flags.FLAG_DISABLE_STABLEX_BUSD)) {
+            stablex.swapTransitional(inToken, Tokens.BUSD, outToken, amount);
         }
     }
 }

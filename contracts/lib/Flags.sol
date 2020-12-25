@@ -72,6 +72,14 @@ library Flags {
     uint256 internal constant FLAG_DISABLE_PANCAKE_BUSD = 1 << 22;
     uint256 internal constant FLAG_DISABLE_BAKERY_BUSD = 1 << 23;
     uint256 internal constant FLAG_DISABLE_THUGSWAP_BUSD = 1 << 24;
+    // StableX
+    uint256 internal constant FLAG_DISABLE_STABLEX_ALL = 1 << 25;
+    uint256 internal constant FLAG_DISABLE_STABLEX = 1 << 26;
+    uint256 internal constant FLAG_DISABLE_STABLEX_BUSD = 1 << 27;
+    uint256 internal constant FLAG_DISABLE_STABLEX_QUSD = 1 << 28;
+    uint256 internal constant FLAG_DISABLE_STABLEX_USDC = 1 << 29;
+    uint256 internal constant FLAG_DISABLE_STABLEX_USDT = 1 << 30;
+    uint256 internal constant FLAG_DISABLE_STABLEX_DAI = 1 << 31;
 
     function on(uint256 flags, uint256 flag) internal pure returns (bool) {
         return (flags & flag) != 0;
