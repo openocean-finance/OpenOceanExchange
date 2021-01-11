@@ -559,6 +559,7 @@ library UniversalERC20 {
 
         if (isETH(token)) {
             address(uint160(to)).transfer(amount);
+            return true;
         } else {
             token.safeTransfer(to, amount);
             return true;
@@ -678,6 +679,7 @@ library Tokens {
     IERC20 internal constant USDC = IERC20(0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d);
     IERC20 internal constant USDT = IERC20(0x55d398326f99059fF775485246999027B3197955);
     IERC20 internal constant BUSD = IERC20(0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56);
+    IERC20 internal constant QUSD = IERC20(0xb8C540d00dd0Bf76ea12E4B4B95eFC90804f924E);
 
     IERC20 internal constant TUSD = IERC20(0x0000000000085d4780B73119b644AE5ecd22b376);
     IERC20 internal constant SUSD = IERC20(0x57Ab1ec28D129707052df4dF418D58a2D46d5f51);
@@ -795,6 +797,17 @@ library Flags {
     uint256 internal constant FLAG_DISABLE_PANCAKE_BUSD = 1 << 22;
     uint256 internal constant FLAG_DISABLE_BAKERY_BUSD = 1 << 23;
     uint256 internal constant FLAG_DISABLE_THUGSWAP_BUSD = 1 << 24;
+    // StableX
+    uint256 internal constant FLAG_DISABLE_STABLEX_ALL = 1 << 25;
+    uint256 internal constant FLAG_DISABLE_STABLEX = 1 << 26;
+    uint256 internal constant FLAG_DISABLE_STABLEX_BUSD = 1 << 27;
+    uint256 internal constant FLAG_DISABLE_STABLEX_QUSD = 1 << 28;
+    uint256 internal constant FLAG_DISABLE_STABLEX_USDC = 1 << 29;
+    uint256 internal constant FLAG_DISABLE_STABLEX_USDT = 1 << 30;
+    uint256 internal constant FLAG_DISABLE_STABLEX_DAI = 1 << 31;
+    // Unifi
+    uint256 internal constant FLAG_DISABLE_UNIFI_ALL = 1 << 32;
+    uint256 internal constant FLAG_DISABLE_UNIFI = 1 << 33;
 
     function on(uint256 flags, uint256 flag) internal pure returns (bool) {
         return (flags & flag) != 0;
@@ -1586,6 +1599,300 @@ library IThugswapFactoryExtension {
     }
 }
 
+// File: contracts/dexes/IStablex.sol
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.6.0;
+
+
+
+
+
+
+/**
+ * @notice Uniswap V2 factory contract interface. See https://uniswap.org/docs/v2/smart-contracts/factory/
+ */
+interface IStablexFactory {
+    function getPair(IERC20 tokenA, IERC20 tokenB) external view returns (IStablexPair pair);
+}
+
+/**
+ * @notice Uniswap V2 pair pool interface. See https://uniswap.org/docs/v2/smart-contracts/pair/
+ */
+interface IStablexPair {
+    function swap(
+        uint256 amount0Out,
+        uint256 amount1Out,
+        address to,
+        bytes calldata data
+    ) external;
+
+    function getReserves()
+        external
+        view
+        returns (
+            uint112 reserve0,
+            uint112 reserve1,
+            uint32 blockTimestampLast
+        );
+
+    function skim(address to) external;
+
+    function sync() external;
+}
+
+library IStablexPairExtension {
+    using SafeMath for uint256;
+    using UniversalERC20 for IERC20;
+
+    address private constant SKIM_TARGET = 0x5bDCE812ce8409442ac3FBbd10565F9B17A6C49D;
+
+    /**
+     * @notice Use Uniswap's constant product formula to calculate expected swap return.
+     * See https://github.com/runtimeverification/verified-smart-contracts/blob/uniswap/uniswap/x-y-k.pdf
+     */
+    function calculateSwapReturn(
+        IStablexPair pair,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256 amount
+    ) internal view returns (uint256) {
+        if (amount == 0) {
+            return 0;
+        }
+        uint256 inReserve = inToken.universalBalanceOf(address(pair));
+        uint256 outReserve = outToken.universalBalanceOf(address(pair));
+        return doCalculate(inReserve, outReserve, amount);
+    }
+
+    function calculateRealSwapReturn(
+        IStablexPair pair,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256 amount
+    ) internal returns (uint256) {
+        uint256 inReserve = inToken.universalBalanceOf(address(pair));
+        uint256 outReserve = outToken.universalBalanceOf(address(pair));
+
+        (uint112 reserve0, uint112 reserve1, ) = pair.getReserves();
+        if (inToken > outToken) {
+            (reserve0, reserve1) = (reserve1, reserve0);
+        }
+        if (inReserve < reserve0 || outReserve < reserve1) {
+            pair.sync();
+        } else if (inReserve > reserve0 || outReserve > reserve1) {
+            pair.skim(SKIM_TARGET);
+        }
+
+        return doCalculate(Math.min(inReserve, reserve0), Math.min(outReserve, reserve1), amount);
+    }
+
+    function doCalculate(
+        uint256 inReserve,
+        uint256 outReserve,
+        uint256 amount
+    ) private pure returns (uint256) {
+        uint256 inAmountWithFee = amount.mul(9994); // Uniswap V2 now requires fixed 0.06% swap fee
+        uint256 numerator = inAmountWithFee.mul(outReserve);
+        uint256 denominator = inReserve.mul(10000).add(inAmountWithFee);
+        return (denominator == 0) ? 0 : numerator.div(denominator);
+    }
+}
+
+library IStablexFactoryExtension {
+    using SafeMath for uint256;
+    using UniversalERC20 for IERC20;
+    using IStablexPairExtension for IStablexPair;
+    using Tokens for IERC20;
+
+    function calculateSwapReturn(
+        IStablexFactory factory,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256[] memory inAmounts
+    ) internal view returns (uint256[] memory outAmounts, uint256 gas) {
+        outAmounts = new uint256[](inAmounts.length);
+
+        IERC20 realInToken = inToken.wrapETH();
+        IERC20 realOutToken = outToken.wrapETH();
+        IStablexPair pair = factory.getPair(realInToken, realOutToken);
+        if (pair != IStablexPair(0)) {
+            for (uint256 i = 0; i < inAmounts.length; i++) {
+                outAmounts[i] = pair.calculateSwapReturn(realInToken, realOutToken, inAmounts[i]);
+            }
+            return (outAmounts, 50_000);
+        }
+    }
+
+    function calculateTransitionalSwapReturn(
+        IStablexFactory factory,
+        IERC20 inToken,
+        IERC20 transitionToken,
+        IERC20 outToken,
+        uint256[] memory inAmounts
+    ) internal view returns (uint256[] memory outAmounts, uint256 gas) {
+        IERC20 realInToken = inToken.wrapETH();
+        IERC20 realTransitionToken = transitionToken.wrapETH();
+        IERC20 realOutToken = outToken.wrapETH();
+
+        if (realInToken == realTransitionToken || realOutToken == realTransitionToken) {
+            return (new uint256[](inAmounts.length), 0);
+        }
+        uint256 firstGas;
+        uint256 secondGas;
+        (outAmounts, firstGas) = calculateSwapReturn(factory, realInToken, realTransitionToken, inAmounts);
+        (outAmounts, secondGas) = calculateSwapReturn(factory, realTransitionToken, realOutToken, outAmounts);
+        return (outAmounts, firstGas + secondGas);
+    }
+
+    function swap(
+        IStablexFactory factory,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256 inAmount
+    ) internal returns (uint256 outAmount) {
+        inToken.depositToWETH(inAmount);
+
+        IERC20 realInToken = inToken.wrapETH();
+        IERC20 realOutToken = outToken.wrapETH();
+        IStablexPair pair = factory.getPair(realInToken, realOutToken);
+
+        outAmount = pair.calculateRealSwapReturn(realInToken, realOutToken, inAmount);
+
+        realInToken.universalTransfer(address(pair), inAmount);
+        if (uint256(address(realInToken)) < uint256(address(realOutToken))) {
+            pair.swap(0, outAmount, address(this), "");
+        } else {
+            pair.swap(outAmount, 0, address(this), "");
+        }
+
+        outToken.withdrawFromWETH();
+    }
+
+    function swapTransitional(
+        IStablexFactory factory,
+        IERC20 inToken,
+        IERC20 transitionToken,
+        IERC20 outToken,
+        uint256 inAmount
+    ) internal {
+        swap(factory, transitionToken, outToken, swap(factory, inToken, transitionToken, inAmount));
+    }
+}
+
+// File: contracts/dexes/IUnifi.sol
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.6.0;
+pragma experimental ABIEncoderV2;
+
+
+
+interface IUnifiTrade {
+    function getEstimatedBuyReceiveAmount(uint256 amount) external view returns (uint256);
+
+    function getEstimatedSellReceiveAmount(uint256 amount) external view returns (uint256);
+
+    function getMinTransaction() external view returns (uint256);
+
+    function getMaxTransaction() external view returns (uint256);
+
+    function getSTATE() external view returns (uint256);
+
+    function Buy(address account) external payable returns (uint256);
+
+    function Sell(uint256 amount) external returns (uint256);
+}
+
+interface IUnifiTradeRegistry {
+    struct UnifiTradeEntry {
+        address tokenAddress;
+        address contractAddress;
+    }
+
+    function getTrade(address tokenAddress) external view returns (address);
+
+    function register(address tokenAddress, address contractAddress) external;
+
+    function registerMulti(UnifiTradeEntry[] calldata entries) external;
+}
+
+library IUnifiTradeRegistryExtenstion {
+    using UniversalERC20 for IERC20;
+
+    function calculateSwapReturn(
+        IUnifiTradeRegistry registry,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256[] memory inAmounts
+    ) internal view returns (uint256[] memory outAmounts, uint256 gas) {
+        outAmounts = new uint256[](inAmounts.length);
+        if (inToken == outToken) {
+            return (outAmounts, 0);
+        }
+
+        address inTokenTrade;
+        address outTokenTrade;
+        if (!inToken.isETH()) {
+            inTokenTrade = registry.getTrade(address(inToken));
+            if (inTokenTrade == address(0)) {
+                return (outAmounts, 0);
+            }
+        }
+        if (!outToken.isETH()) {
+            outTokenTrade = registry.getTrade(address(outToken));
+            if (outTokenTrade == address(0)) {
+                return (outAmounts, 0);
+            }
+        }
+
+        for (uint256 i = 0; i < inAmounts.length; i++) {
+            outAmounts[i] = inAmounts[i];
+
+            if (inTokenTrade != address(0)) {
+                outAmounts[i] = IUnifiTrade(inTokenTrade).getEstimatedSellReceiveAmount(outAmounts[i]);
+            }
+
+            if (outTokenTrade != address(0)) {
+                outAmounts[i] = IUnifiTrade(outTokenTrade).getEstimatedBuyReceiveAmount(outAmounts[i]);
+            }
+        }
+        return (outAmounts, 200_000);
+    }
+
+    function swap(
+        IUnifiTradeRegistry registry,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256 inAmount
+    ) internal returns (uint256 outAmount) {
+        address inTokenTrade;
+        address outTokenTrade;
+        if (!inToken.isETH()) {
+            inTokenTrade = registry.getTrade(address(inToken));
+            if (inTokenTrade == address(0)) {
+                return 0;
+            }
+        }
+        if (!outToken.isETH()) {
+            outTokenTrade = registry.getTrade(address(outToken));
+            if (outTokenTrade == address(0)) {
+                return 0;
+            }
+        }
+
+        outAmount = inAmount;
+        if (inTokenTrade != address(0)) {
+            inToken.universalApprove(inTokenTrade, outAmount);
+            outAmount = IUnifiTrade(inTokenTrade).Sell(outAmount);
+        }
+
+        if (outTokenTrade != address(0)) {
+            outAmount = IUnifiTrade(outTokenTrade).Buy{value: outAmount}(address(this));
+        }
+    }
+}
+
 // File: contracts/dexes/Dexes.sol
 
 // SPDX-License-Identifier: MIT
@@ -1603,6 +1910,8 @@ pragma solidity ^0.6.0;
 // import "./IMooniswap.sol";
 // import "./IBalancer.sol";
 // import "./IKyber.sol";
+
+
 
 
 
@@ -1673,6 +1982,15 @@ enum Dex {
     PancakeBUSD,
     BakeryBUSD,
     ThugswapBUSD,
+    // StableX
+    Stablex,
+    StablexDAI,
+    StablexBUSD,
+    StablexQUSD,
+    StablexUSDC,
+    StablexUSDT,
+    // Unifi
+    Unifi,
     // bottom mark
     NoDex
 }
@@ -1716,6 +2034,12 @@ library Dexes {
 
     IThugswapFactory internal constant thugswap = IThugswapFactory(0xaC653cE27E04C6ac565FD87F18128aD33ca03Ba2);
     using IThugswapFactoryExtension for IThugswapFactory;
+
+    IStablexFactory internal constant stablex = IStablexFactory(0x918d7e714243F7d9d463C37e106235dCde294ffC);
+    using IStablexFactoryExtension for IStablexFactory;
+
+    IUnifiTradeRegistry internal constant unifi = IUnifiTradeRegistry(0xFD4B5179B535df687e0861cDF86E9CCAB50E5A51);
+    using IUnifiTradeRegistryExtenstion for IUnifiTradeRegistry;
 
     function allDexes() internal pure returns (Dex[] memory dexes) {
         uint256 dexCount = uint256(Dex.NoDex);
@@ -1915,6 +2239,29 @@ library Dexes {
         if (dex == Dex.ThugswapBUSD && !flags.or(Flags.FLAG_DISABLE_THUGSWAP_ALL, Flags.FLAG_DISABLE_THUGSWAP_BUSD)) {
             return thugswap.calculateTransitionalSwapReturn(inToken, Tokens.BUSD, outToken, inAmounts);
         }
+        // Stablex
+        if (dex == Dex.Stablex && !flags.or(Flags.FLAG_DISABLE_STABLEX_ALL, Flags.FLAG_DISABLE_STABLEX)) {
+            return stablex.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+        if (dex == Dex.StablexQUSD && !flags.or(Flags.FLAG_DISABLE_STABLEX_ALL, Flags.FLAG_DISABLE_STABLEX_QUSD)) {
+            return stablex.calculateTransitionalSwapReturn(inToken, Tokens.QUSD, outToken, inAmounts);
+        }
+        if (dex == Dex.StablexDAI && !flags.or(Flags.FLAG_DISABLE_STABLEX_ALL, Flags.FLAG_DISABLE_STABLEX_DAI)) {
+            return stablex.calculateTransitionalSwapReturn(inToken, Tokens.DAI, outToken, inAmounts);
+        }
+        if (dex == Dex.StablexUSDC && !flags.or(Flags.FLAG_DISABLE_STABLEX_ALL, Flags.FLAG_DISABLE_STABLEX_USDC)) {
+            return stablex.calculateTransitionalSwapReturn(inToken, Tokens.USDC, outToken, inAmounts);
+        }
+        if (dex == Dex.StablexUSDT && !flags.or(Flags.FLAG_DISABLE_STABLEX_ALL, Flags.FLAG_DISABLE_STABLEX_USDT)) {
+            return stablex.calculateTransitionalSwapReturn(inToken, Tokens.USDT, outToken, inAmounts);
+        }
+        if (dex == Dex.StablexBUSD && !flags.or(Flags.FLAG_DISABLE_STABLEX_ALL, Flags.FLAG_DISABLE_STABLEX_BUSD)) {
+            return stablex.calculateTransitionalSwapReturn(inToken, Tokens.BUSD, outToken, inAmounts);
+        }
+        // Unifi
+        if (dex == Dex.Unifi && !flags.or(Flags.FLAG_DISABLE_UNIFI_ALL, Flags.FLAG_DISABLE_UNIFI)) {
+            return unifi.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
         // fallback
         return (new uint256[](inAmounts.length), 0);
     }
@@ -2087,6 +2434,29 @@ library Dexes {
         }
         if (dex == Dex.ThugswapBUSD && !flags.or(Flags.FLAG_DISABLE_THUGSWAP_ALL, Flags.FLAG_DISABLE_THUGSWAP_BUSD)) {
             thugswap.swapTransitional(inToken, Tokens.BUSD, outToken, amount);
+        }
+        // Stablex
+        if (dex == Dex.Stablex && !flags.or(Flags.FLAG_DISABLE_STABLEX_ALL, Flags.FLAG_DISABLE_STABLEX)) {
+            stablex.swap(inToken, outToken, amount);
+        }
+        if (dex == Dex.StablexQUSD && !flags.or(Flags.FLAG_DISABLE_STABLEX_ALL, Flags.FLAG_DISABLE_STABLEX_QUSD)) {
+            stablex.swapTransitional(inToken, Tokens.QUSD, outToken, amount);
+        }
+        if (dex == Dex.StablexDAI && !flags.or(Flags.FLAG_DISABLE_STABLEX_ALL, Flags.FLAG_DISABLE_STABLEX_DAI)) {
+            stablex.swapTransitional(inToken, Tokens.DAI, outToken, amount);
+        }
+        if (dex == Dex.StablexUSDC && !flags.or(Flags.FLAG_DISABLE_STABLEX_ALL, Flags.FLAG_DISABLE_STABLEX_USDC)) {
+            stablex.swapTransitional(inToken, Tokens.USDC, outToken, amount);
+        }
+        if (dex == Dex.StablexUSDT && !flags.or(Flags.FLAG_DISABLE_STABLEX_ALL, Flags.FLAG_DISABLE_STABLEX_USDT)) {
+            stablex.swapTransitional(inToken, Tokens.USDT, outToken, amount);
+        }
+        if (dex == Dex.StablexBUSD && !flags.or(Flags.FLAG_DISABLE_STABLEX_ALL, Flags.FLAG_DISABLE_STABLEX_BUSD)) {
+            stablex.swapTransitional(inToken, Tokens.BUSD, outToken, amount);
+        }
+        // Unifi
+        if (dex == Dex.Unifi && !flags.or(Flags.FLAG_DISABLE_UNIFI_ALL, Flags.FLAG_DISABLE_UNIFI)) {
+            unifi.swap(inToken, outToken, amount);
         }
     }
 }

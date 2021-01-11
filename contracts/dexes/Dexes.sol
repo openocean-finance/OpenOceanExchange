@@ -19,6 +19,7 @@ import "./IBakery.sol";
 import "./IBurger.sol";
 import "./IThugswap.sol";
 import "./IStablex.sol";
+import "./IUnifi.sol";
 
 enum Dex {
     // UniswapV2,
@@ -92,6 +93,8 @@ enum Dex {
     StablexQUSD,
     StablexUSDC,
     StablexUSDT,
+    // Unifi
+    Unifi,
     // bottom mark
     NoDex
 }
@@ -138,6 +141,9 @@ library Dexes {
 
     IStablexFactory internal constant stablex = IStablexFactory(0x918d7e714243F7d9d463C37e106235dCde294ffC);
     using IStablexFactoryExtension for IStablexFactory;
+
+    IUnifiTradeRegistry internal constant unifi = IUnifiTradeRegistry(0xFD4B5179B535df687e0861cDF86E9CCAB50E5A51);
+    using IUnifiTradeRegistryExtenstion for IUnifiTradeRegistry;
 
     function allDexes() internal pure returns (Dex[] memory dexes) {
         uint256 dexCount = uint256(Dex.NoDex);
@@ -356,6 +362,10 @@ library Dexes {
         if (dex == Dex.StablexBUSD && !flags.or(Flags.FLAG_DISABLE_STABLEX_ALL, Flags.FLAG_DISABLE_STABLEX_BUSD)) {
             return stablex.calculateTransitionalSwapReturn(inToken, Tokens.BUSD, outToken, inAmounts);
         }
+        // Unifi
+        if (dex == Dex.Unifi && !flags.or(Flags.FLAG_DISABLE_UNIFI_ALL, Flags.FLAG_DISABLE_UNIFI)) {
+            return unifi.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
         // fallback
         return (new uint256[](inAmounts.length), 0);
     }
@@ -547,6 +557,10 @@ library Dexes {
         }
         if (dex == Dex.StablexBUSD && !flags.or(Flags.FLAG_DISABLE_STABLEX_ALL, Flags.FLAG_DISABLE_STABLEX_BUSD)) {
             stablex.swapTransitional(inToken, Tokens.BUSD, outToken, amount);
+        }
+        // Unifi
+        if (dex == Dex.Unifi && !flags.or(Flags.FLAG_DISABLE_UNIFI_ALL, Flags.FLAG_DISABLE_UNIFI)) {
+            unifi.swap(inToken, outToken, amount);
         }
     }
 }

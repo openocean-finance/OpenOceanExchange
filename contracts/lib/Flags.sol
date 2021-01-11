@@ -80,6 +80,9 @@ library Flags {
     uint256 internal constant FLAG_DISABLE_STABLEX_USDC = 1 << 29;
     uint256 internal constant FLAG_DISABLE_STABLEX_USDT = 1 << 30;
     uint256 internal constant FLAG_DISABLE_STABLEX_DAI = 1 << 31;
+    // Unifi
+    uint256 internal constant FLAG_DISABLE_UNIFI_ALL = 1 << 32;
+    uint256 internal constant FLAG_DISABLE_UNIFI = 1 << 33;
 
     function on(uint256 flags, uint256 flag) internal pure returns (bool) {
         return (flags & flag) != 0;
