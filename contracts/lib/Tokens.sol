@@ -8,7 +8,7 @@ import "./UniversalERC20.sol";
  * @dev Wrapper of ETH. See https://weth.io/
  */
 abstract contract IWETH is IERC20 {
-    function deposit() external virtual payable;
+    function deposit() external payable virtual;
 
     function withdraw(uint256 amount) external virtual;
 }
@@ -57,7 +57,7 @@ library Tokens {
         }
     }
 
-    function isWETH(IERC20 token) private pure returns (bool) {
+    function isWETH(IERC20 token) internal pure returns (bool) {
         return address(token) == address(WETH);
     }
 }

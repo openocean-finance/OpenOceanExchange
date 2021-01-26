@@ -20,6 +20,8 @@ import "./IBurger.sol";
 import "./IThugswap.sol";
 import "./IStablex.sol";
 import "./IUnifi.sol";
+import "./IWETH.sol";
+import "./IJulswap.sol";
 
 enum Dex {
     // UniswapV2,
@@ -95,6 +97,15 @@ enum Dex {
     StablexUSDT,
     // Unifi
     Unifi,
+    // WETH
+    WETH,
+    // Julswap
+    Julswap,
+    JulswapETH,
+    JulswapDAI,
+    JulswapUSDC,
+    JulswapUSDT,
+    JulswapBUSD,
     // bottom mark
     NoDex
 }
@@ -144,6 +155,12 @@ library Dexes {
 
     IUnifiTradeRegistry internal constant unifi = IUnifiTradeRegistry(0xFD4B5179B535df687e0861cDF86E9CCAB50E5A51);
     using IUnifiTradeRegistryExtenstion for IUnifiTradeRegistry;
+
+    IWETH internal constant weth = IWETH(0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c);
+    using IWETHExtension for IWETH;
+
+    IJulswapFactory internal constant julswap = IJulswapFactory(0x553990F2CBA90272390f62C5BDb1681fFc899675);
+    using IJulswapFactoryExtension for IJulswapFactory;
 
     function allDexes() internal pure returns (Dex[] memory dexes) {
         uint256 dexCount = uint256(Dex.NoDex);
@@ -366,6 +383,29 @@ library Dexes {
         if (dex == Dex.Unifi && !flags.or(Flags.FLAG_DISABLE_UNIFI_ALL, Flags.FLAG_DISABLE_UNIFI)) {
             return unifi.calculateSwapReturn(inToken, outToken, inAmounts);
         }
+        // WETH
+        if (dex == Dex.WETH && !flags.on(Flags.FLAG_DISABLE_WETH)) {
+            return weth.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+        // Julswap
+        if (dex == Dex.Julswap && !flags.or(Flags.FLAG_DISABLE_JULSWAP_ALL, Flags.FLAG_DISABLE_JULSWAP)) {
+            return julswap.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+        if (dex == Dex.JulswapETH && !flags.or(Flags.FLAG_DISABLE_JULSWAP_ALL, Flags.FLAG_DISABLE_JULSWAP_ETH)) {
+            return julswap.calculateTransitionalSwapReturn(inToken, Tokens.WETH, outToken, inAmounts);
+        }
+        if (dex == Dex.JulswapDAI && !flags.or(Flags.FLAG_DISABLE_JULSWAP_ALL, Flags.FLAG_DISABLE_JULSWAP_DAI)) {
+            return julswap.calculateTransitionalSwapReturn(inToken, Tokens.DAI, outToken, inAmounts);
+        }
+        if (dex == Dex.JulswapUSDC && !flags.or(Flags.FLAG_DISABLE_JULSWAP_ALL, Flags.FLAG_DISABLE_JULSWAP_USDC)) {
+            return julswap.calculateTransitionalSwapReturn(inToken, Tokens.USDC, outToken, inAmounts);
+        }
+        if (dex == Dex.JulswapUSDT && !flags.or(Flags.FLAG_DISABLE_JULSWAP_ALL, Flags.FLAG_DISABLE_JULSWAP_USDT)) {
+            return julswap.calculateTransitionalSwapReturn(inToken, Tokens.USDT, outToken, inAmounts);
+        }
+        if (dex == Dex.JulswapBUSD && !flags.or(Flags.FLAG_DISABLE_JULSWAP_ALL, Flags.FLAG_DISABLE_JULSWAP_BUSD)) {
+            return julswap.calculateTransitionalSwapReturn(inToken, Tokens.BUSD, outToken, inAmounts);
+        }
         // fallback
         return (new uint256[](inAmounts.length), 0);
     }
@@ -561,6 +601,29 @@ library Dexes {
         // Unifi
         if (dex == Dex.Unifi && !flags.or(Flags.FLAG_DISABLE_UNIFI_ALL, Flags.FLAG_DISABLE_UNIFI)) {
             unifi.swap(inToken, outToken, amount);
+        }
+        // WETH
+        if (dex == Dex.WETH && !flags.on(Flags.FLAG_DISABLE_WETH)) {
+            weth.swap(inToken, outToken, amount);
+        }
+        // Julswap
+        if (dex == Dex.Julswap && !flags.or(Flags.FLAG_DISABLE_JULSWAP_ALL, Flags.FLAG_DISABLE_JULSWAP)) {
+            julswap.swap(inToken, outToken, amount);
+        }
+        if (dex == Dex.JulswapETH && !flags.or(Flags.FLAG_DISABLE_JULSWAP_ALL, Flags.FLAG_DISABLE_JULSWAP_ETH)) {
+            julswap.swapTransitional(inToken, Tokens.WETH, outToken, amount);
+        }
+        if (dex == Dex.JulswapDAI && !flags.or(Flags.FLAG_DISABLE_JULSWAP_ALL, Flags.FLAG_DISABLE_JULSWAP_DAI)) {
+            julswap.swapTransitional(inToken, Tokens.DAI, outToken, amount);
+        }
+        if (dex == Dex.JulswapUSDC && !flags.or(Flags.FLAG_DISABLE_JULSWAP_ALL, Flags.FLAG_DISABLE_JULSWAP_USDC)) {
+            julswap.swapTransitional(inToken, Tokens.USDC, outToken, amount);
+        }
+        if (dex == Dex.JulswapUSDT && !flags.or(Flags.FLAG_DISABLE_JULSWAP_ALL, Flags.FLAG_DISABLE_JULSWAP_USDT)) {
+            julswap.swapTransitional(inToken, Tokens.USDT, outToken, amount);
+        }
+        if (dex == Dex.JulswapBUSD && !flags.or(Flags.FLAG_DISABLE_JULSWAP_ALL, Flags.FLAG_DISABLE_JULSWAP_BUSD)) {
+            julswap.swapTransitional(inToken, Tokens.BUSD, outToken, amount);
         }
     }
 }

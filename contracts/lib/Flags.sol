@@ -83,6 +83,16 @@ library Flags {
     // Unifi
     uint256 internal constant FLAG_DISABLE_UNIFI_ALL = 1 << 32;
     uint256 internal constant FLAG_DISABLE_UNIFI = 1 << 33;
+    // WETH
+    uint256 internal constant FLAG_DISABLE_WETH = 1 << 34;
+    // Julswap
+    uint256 internal constant FLAG_DISABLE_JULSWAP_ALL = 1 << 35;
+    uint256 internal constant FLAG_DISABLE_JULSWAP = 1 << 36;
+    uint256 internal constant FLAG_DISABLE_JULSWAP_ETH = 1 << 37;
+    uint256 internal constant FLAG_DISABLE_JULSWAP_DAI = 1 << 38;
+    uint256 internal constant FLAG_DISABLE_JULSWAP_USDC = 1 << 39;
+    uint256 internal constant FLAG_DISABLE_JULSWAP_USDT = 1 << 40;
+    uint256 internal constant FLAG_DISABLE_JULSWAP_BUSD = 1 << 41;
 
     function on(uint256 flags, uint256 flag) internal pure returns (bool) {
         return (flags & flag) != 0;
