@@ -22,6 +22,7 @@ import "./IStablex.sol";
 import "./IUnifi.sol";
 import "./IWETH.sol";
 import "./IJulswap.sol";
+import "./IAcryptos.sol";
 
 enum Dex {
     // UniswapV2,
@@ -106,6 +107,14 @@ enum Dex {
     JulswapUSDC,
     JulswapUSDT,
     JulswapBUSD,
+    // Pancake DOT
+    PancakeDOT,
+    // Acrytos
+    Acryptos,
+    AcryptosUSD,
+    AcryptosVAI,
+    AcryptosUST,
+    AcryptosQUSD,
     // bottom mark
     NoDex
 }
@@ -161,6 +170,8 @@ library Dexes {
 
     IJulswapFactory internal constant julswap = IJulswapFactory(0x553990F2CBA90272390f62C5BDb1681fFc899675);
     using IJulswapFactoryExtension for IJulswapFactory;
+
+    using IAcryptosPoolExtension for IAcryptosPool;
 
     function allDexes() internal pure returns (Dex[] memory dexes) {
         uint256 dexCount = uint256(Dex.NoDex);
@@ -312,6 +323,9 @@ library Dexes {
         if (dex == Dex.PancakeBUSD && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL, Flags.FLAG_DISABLE_PANCAKE_BUSD)) {
             return pancake.calculateTransitionalSwapReturn(inToken, Tokens.BUSD, outToken, inAmounts);
         }
+        if (dex == Dex.PancakeDOT && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL, Flags.FLAG_DISABLE_PANCAKE_DOT)) {
+            return pancake.calculateTransitionalSwapReturn(inToken, Tokens.DOT, outToken, inAmounts);
+        }
         // Bakery
         if (dex == Dex.Bakery && !flags.or(Flags.FLAG_DISABLE_BAKERY_ALL, Flags.FLAG_DISABLE_BAKERY)) {
             return bakery.calculateSwapReturn(inToken, outToken, inAmounts);
@@ -405,6 +419,19 @@ library Dexes {
         }
         if (dex == Dex.JulswapBUSD && !flags.or(Flags.FLAG_DISABLE_JULSWAP_ALL, Flags.FLAG_DISABLE_JULSWAP_BUSD)) {
             return julswap.calculateTransitionalSwapReturn(inToken, Tokens.BUSD, outToken, inAmounts);
+        }
+        // Acryptos
+        if (dex == Dex.AcryptosUSD && !flags.or(Flags.FLAG_DISABLE_ACRYPTOS_ALL, Flags.FLAG_DISABLE_ACRYPTOS_USD)) {
+            return IAcryptosPoolExtension.ACRYPTOS_USD.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+        if (dex == Dex.AcryptosVAI && !flags.or(Flags.FLAG_DISABLE_ACRYPTOS_ALL, Flags.FLAG_DISABLE_ACRYPTOS_VAI)) {
+            return IAcryptosPoolExtension.ACRYPTOS_VAI.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+        if (dex == Dex.AcryptosUST && !flags.or(Flags.FLAG_DISABLE_ACRYPTOS_ALL, Flags.FLAG_DISABLE_ACRYPTOS_UST)) {
+            return IAcryptosPoolExtension.ACRYPTOS_UST.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+        if (dex == Dex.AcryptosQUSD && !flags.or(Flags.FLAG_DISABLE_ACRYPTOS_ALL, Flags.FLAG_DISABLE_ACRYPTOS_QUSD)) {
+            return IAcryptosPoolExtension.ACRYPTOS_QUSD.calculateSwapReturn(inToken, outToken, inAmounts);
         }
         // fallback
         return (new uint256[](inAmounts.length), 0);
@@ -531,6 +558,9 @@ library Dexes {
         if (dex == Dex.PancakeBUSD && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL, Flags.FLAG_DISABLE_PANCAKE_BUSD)) {
             pancake.swapTransitional(inToken, Tokens.BUSD, outToken, amount);
         }
+        if (dex == Dex.PancakeDOT && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL, Flags.FLAG_DISABLE_PANCAKE_DOT)) {
+            pancake.swapTransitional(inToken, Tokens.DOT, outToken, amount);
+        }
         // Bakery
         if (dex == Dex.Bakery && !flags.or(Flags.FLAG_DISABLE_BAKERY_ALL, Flags.FLAG_DISABLE_BAKERY)) {
             bakery.swap(inToken, outToken, amount);
@@ -624,6 +654,19 @@ library Dexes {
         }
         if (dex == Dex.JulswapBUSD && !flags.or(Flags.FLAG_DISABLE_JULSWAP_ALL, Flags.FLAG_DISABLE_JULSWAP_BUSD)) {
             julswap.swapTransitional(inToken, Tokens.BUSD, outToken, amount);
+        }
+        // Acryptos
+        if (dex == Dex.AcryptosUSD && !flags.or(Flags.FLAG_DISABLE_ACRYPTOS_ALL, Flags.FLAG_DISABLE_ACRYPTOS_USD)) {
+            IAcryptosPoolExtension.ACRYPTOS_USD.swap(inToken, outToken, amount);
+        }
+        if (dex == Dex.AcryptosVAI && !flags.or(Flags.FLAG_DISABLE_ACRYPTOS_ALL, Flags.FLAG_DISABLE_ACRYPTOS_VAI)) {
+            IAcryptosPoolExtension.ACRYPTOS_VAI.swap(inToken, outToken, amount);
+        }
+        if (dex == Dex.AcryptosUST && !flags.or(Flags.FLAG_DISABLE_ACRYPTOS_ALL, Flags.FLAG_DISABLE_ACRYPTOS_UST)) {
+            IAcryptosPoolExtension.ACRYPTOS_UST.swap(inToken, outToken, amount);
+        }
+        if (dex == Dex.AcryptosQUSD && !flags.or(Flags.FLAG_DISABLE_ACRYPTOS_ALL, Flags.FLAG_DISABLE_ACRYPTOS_QUSD)) {
+            IAcryptosPoolExtension.ACRYPTOS_QUSD.swap(inToken, outToken, amount);
         }
     }
 }

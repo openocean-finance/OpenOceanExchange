@@ -680,6 +680,10 @@ library Tokens {
     IERC20 internal constant USDT = IERC20(0x55d398326f99059fF775485246999027B3197955);
     IERC20 internal constant BUSD = IERC20(0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56);
     IERC20 internal constant QUSD = IERC20(0xb8C540d00dd0Bf76ea12E4B4B95eFC90804f924E);
+    IERC20 internal constant DOT = IERC20(0x7083609fCE4d1d8Dc0C979AAb8c869Ea2C873402);
+
+    IERC20 internal constant VAI = IERC20(0x4BD17003473389A42DAF6a0a729f6Fdb328BbBd7);
+    IERC20 internal constant UST = IERC20(0x23396cF899Ca06c4472205fC903bDB4de249D6fC);
 
     IERC20 internal constant TUSD = IERC20(0x0000000000085d4780B73119b644AE5ecd22b376);
     IERC20 internal constant SUSD = IERC20(0x57Ab1ec28D129707052df4dF418D58a2D46d5f51);
@@ -818,6 +822,14 @@ library Flags {
     uint256 internal constant FLAG_DISABLE_JULSWAP_USDC = 1 << 39;
     uint256 internal constant FLAG_DISABLE_JULSWAP_USDT = 1 << 40;
     uint256 internal constant FLAG_DISABLE_JULSWAP_BUSD = 1 << 41;
+    // Pancake DOT
+    uint256 internal constant FLAG_DISABLE_PANCAKE_DOT = 1 << 42;
+    // Acryptos
+    uint256 internal constant FLAG_DISABLE_ACRYPTOS_ALL = 1 << 43;
+    uint256 internal constant FLAG_DISABLE_ACRYPTOS_USD = 1 << 44;
+    uint256 internal constant FLAG_DISABLE_ACRYPTOS_VAI = 1 << 45;
+    uint256 internal constant FLAG_DISABLE_ACRYPTOS_UST = 1 << 46;
+    uint256 internal constant FLAG_DISABLE_ACRYPTOS_QUSD = 1 << 47;
 
     function on(uint256 flags, uint256 flag) internal pure returns (bool) {
         return (flags & flag) != 0;
@@ -2123,6 +2135,178 @@ library IJulswapFactoryExtension {
     }
 }
 
+// File: contracts/dexes/IAcryptos.sol
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.6.0;
+
+
+
+
+
+/**
+ * @notice Pool contracts of curve.fi
+ * See https://github.com/curvefi/curve-vue/blob/master/src/docs/README.md#how-to-integrate-curve-smart-contracts
+ */
+interface IAcryptosPool {
+    function get_dy_underlying(
+        int128 i,
+        int128 j,
+        uint256 dx
+    ) external view returns (uint256 dy);
+
+    function get_dy(
+        int128 i,
+        int128 j,
+        uint256 dx
+    ) external view returns (uint256 dy);
+
+    function exchange_underlying(
+        int128 i,
+        int128 j,
+        uint256 dx,
+        uint256 minDy
+    ) external;
+
+    function exchange(
+        int128 i,
+        int128 j,
+        uint256 dx,
+        uint256 minDy
+    ) external;
+}
+
+library IAcryptosPoolExtension {
+    using UniversalERC20 for IERC20;
+
+    IAcryptosPool internal constant ACRYPTOS_USD = IAcryptosPool(0xb3F0C9ea1F05e312093Fdb031E789A756659B0AC);
+    IAcryptosPool internal constant ACRYPTOS_VAI = IAcryptosPool(0x191409D5A4EfFe25b0f4240557BA2192D18a191e);
+    IAcryptosPool internal constant ACRYPTOS_UST = IAcryptosPool(0x99c92765EfC472a9709Ced86310D64C4573c4b77);
+    IAcryptosPool internal constant ACRYPTOS_QUSD = IAcryptosPool(0x3919874C7bc0699cF59c981C5eb668823FA4f958);
+
+    function calculateSwapReturn(
+        IAcryptosPool pool,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256[] memory inAmounts
+    ) internal view returns (uint256[] memory outAmounts, uint256 gas) {
+        outAmounts = new uint256[](inAmounts.length);
+        IERC20[] memory tokens;
+        bool underlying;
+        (tokens, underlying, gas) = getPoolConfig(pool);
+
+        (int128 i, int128 j) = determineTokenIndex(inToken, outToken, tokens);
+        if (i == -1 || j == -1) {
+            return (outAmounts, 0);
+        }
+        if (underlying && i != 0 && j != 0) {
+            return (outAmounts, 0);
+        }
+
+        for (uint256 k = 0; k < inAmounts.length; k++) {
+            if (underlying) {
+                outAmounts[k] = pool.get_dy_underlying(i, j, inAmounts[k]);
+            } else {
+                outAmounts[k] = pool.get_dy(i, j, inAmounts[k]);
+            }
+        }
+    }
+
+    function swap(
+        IAcryptosPool pool,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256 inAmount
+    ) internal {
+        (IERC20[] memory tokens, bool underlying, ) = getPoolConfig(pool);
+
+        (int128 i, int128 j) = determineTokenIndex(inToken, outToken, tokens);
+        if (i == -1 || j == -1) {
+            return;
+        }
+        if (underlying && i != 0 && j != 0) {
+            return;
+        }
+
+        inToken.universalApprove(address(pool), inAmount);
+        if (underlying) {
+            pool.exchange_underlying(i, j, inAmount, 0);
+        } else {
+            pool.exchange(i, j, inAmount, 0);
+        }
+    }
+
+    function determineTokenIndex(
+        IERC20 inToken,
+        IERC20 outToken,
+        IERC20[] memory tokens
+    ) private pure returns (int128, int128) {
+        int128 i = -1;
+        int128 j = -1;
+        for (uint256 k = 0; k < tokens.length; k++) {
+            IERC20 token = tokens[k];
+            if (inToken == token) {
+                i = int128(k);
+            }
+            if (outToken == token) {
+                j = int128(k);
+            }
+        }
+        return (i, j);
+    }
+
+    /**
+     * @notice Build calculation arguments.
+     * See https://github.com/curvefi/curve-vue/blob/master/src/docs/README.md
+     */
+    function getPoolConfig(IAcryptosPool pool)
+        private
+        pure
+        returns (
+            IERC20[] memory tokens,
+            bool underlying,
+            uint256 gas
+        )
+    {
+        if (pool == ACRYPTOS_USD) {
+            tokens = new IERC20[](4);
+            tokens[0] = Tokens.BUSD;
+            tokens[1] = Tokens.USDT;
+            tokens[2] = Tokens.DAI;
+            tokens[3] = Tokens.USDC;
+            underlying = false;
+            gas = 720_000;
+        } else if (pool == ACRYPTOS_VAI) {
+            tokens = new IERC20[](5);
+            tokens[0] = Tokens.VAI;
+            tokens[1] = Tokens.BUSD;
+            tokens[2] = Tokens.USDT;
+            tokens[3] = Tokens.DAI;
+            tokens[4] = Tokens.USDC;
+            underlying = true;
+            gas = 1_400_000;
+        } else if (pool == ACRYPTOS_UST) {
+            tokens = new IERC20[](5);
+            tokens[0] = Tokens.UST;
+            tokens[1] = Tokens.BUSD;
+            tokens[2] = Tokens.USDT;
+            tokens[3] = Tokens.DAI;
+            tokens[4] = Tokens.USDC;
+            underlying = true;
+            gas = 1_400_000;
+        } else if (pool == ACRYPTOS_QUSD) {
+            tokens = new IERC20[](5);
+            tokens[0] = Tokens.QUSD;
+            tokens[1] = Tokens.BUSD;
+            tokens[2] = Tokens.USDT;
+            tokens[3] = Tokens.DAI;
+            tokens[4] = Tokens.USDC;
+            underlying = true;
+            gas = 1_400_000;
+        }
+    }
+}
+
 // File: contracts/dexes/Dexes.sol
 
 // SPDX-License-Identifier: MIT
@@ -2140,6 +2324,7 @@ pragma solidity ^0.6.0;
 // import "./IMooniswap.sol";
 // import "./IBalancer.sol";
 // import "./IKyber.sol";
+
 
 
 
@@ -2232,6 +2417,14 @@ enum Dex {
     JulswapUSDC,
     JulswapUSDT,
     JulswapBUSD,
+    // Pancake DOT
+    PancakeDOT,
+    // Acrytos
+    Acryptos,
+    AcryptosUSD,
+    AcryptosVAI,
+    AcryptosUST,
+    AcryptosQUSD,
     // bottom mark
     NoDex
 }
@@ -2287,6 +2480,8 @@ library Dexes {
 
     IJulswapFactory internal constant julswap = IJulswapFactory(0x553990F2CBA90272390f62C5BDb1681fFc899675);
     using IJulswapFactoryExtension for IJulswapFactory;
+
+    using IAcryptosPoolExtension for IAcryptosPool;
 
     function allDexes() internal pure returns (Dex[] memory dexes) {
         uint256 dexCount = uint256(Dex.NoDex);
@@ -2438,6 +2633,9 @@ library Dexes {
         if (dex == Dex.PancakeBUSD && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL, Flags.FLAG_DISABLE_PANCAKE_BUSD)) {
             return pancake.calculateTransitionalSwapReturn(inToken, Tokens.BUSD, outToken, inAmounts);
         }
+        if (dex == Dex.PancakeDOT && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL, Flags.FLAG_DISABLE_PANCAKE_DOT)) {
+            return pancake.calculateTransitionalSwapReturn(inToken, Tokens.DOT, outToken, inAmounts);
+        }
         // Bakery
         if (dex == Dex.Bakery && !flags.or(Flags.FLAG_DISABLE_BAKERY_ALL, Flags.FLAG_DISABLE_BAKERY)) {
             return bakery.calculateSwapReturn(inToken, outToken, inAmounts);
@@ -2531,6 +2729,19 @@ library Dexes {
         }
         if (dex == Dex.JulswapBUSD && !flags.or(Flags.FLAG_DISABLE_JULSWAP_ALL, Flags.FLAG_DISABLE_JULSWAP_BUSD)) {
             return julswap.calculateTransitionalSwapReturn(inToken, Tokens.BUSD, outToken, inAmounts);
+        }
+        // Acryptos
+        if (dex == Dex.AcryptosUSD && !flags.or(Flags.FLAG_DISABLE_ACRYPTOS_ALL, Flags.FLAG_DISABLE_ACRYPTOS_USD)) {
+            return IAcryptosPoolExtension.ACRYPTOS_USD.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+        if (dex == Dex.AcryptosVAI && !flags.or(Flags.FLAG_DISABLE_ACRYPTOS_ALL, Flags.FLAG_DISABLE_ACRYPTOS_VAI)) {
+            return IAcryptosPoolExtension.ACRYPTOS_VAI.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+        if (dex == Dex.AcryptosUST && !flags.or(Flags.FLAG_DISABLE_ACRYPTOS_ALL, Flags.FLAG_DISABLE_ACRYPTOS_UST)) {
+            return IAcryptosPoolExtension.ACRYPTOS_UST.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+        if (dex == Dex.AcryptosQUSD && !flags.or(Flags.FLAG_DISABLE_ACRYPTOS_ALL, Flags.FLAG_DISABLE_ACRYPTOS_QUSD)) {
+            return IAcryptosPoolExtension.ACRYPTOS_QUSD.calculateSwapReturn(inToken, outToken, inAmounts);
         }
         // fallback
         return (new uint256[](inAmounts.length), 0);
@@ -2657,6 +2868,9 @@ library Dexes {
         if (dex == Dex.PancakeBUSD && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL, Flags.FLAG_DISABLE_PANCAKE_BUSD)) {
             pancake.swapTransitional(inToken, Tokens.BUSD, outToken, amount);
         }
+        if (dex == Dex.PancakeDOT && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL, Flags.FLAG_DISABLE_PANCAKE_DOT)) {
+            pancake.swapTransitional(inToken, Tokens.DOT, outToken, amount);
+        }
         // Bakery
         if (dex == Dex.Bakery && !flags.or(Flags.FLAG_DISABLE_BAKERY_ALL, Flags.FLAG_DISABLE_BAKERY)) {
             bakery.swap(inToken, outToken, amount);
@@ -2750,6 +2964,19 @@ library Dexes {
         }
         if (dex == Dex.JulswapBUSD && !flags.or(Flags.FLAG_DISABLE_JULSWAP_ALL, Flags.FLAG_DISABLE_JULSWAP_BUSD)) {
             julswap.swapTransitional(inToken, Tokens.BUSD, outToken, amount);
+        }
+        // Acryptos
+        if (dex == Dex.AcryptosUSD && !flags.or(Flags.FLAG_DISABLE_ACRYPTOS_ALL, Flags.FLAG_DISABLE_ACRYPTOS_USD)) {
+            IAcryptosPoolExtension.ACRYPTOS_USD.swap(inToken, outToken, amount);
+        }
+        if (dex == Dex.AcryptosVAI && !flags.or(Flags.FLAG_DISABLE_ACRYPTOS_ALL, Flags.FLAG_DISABLE_ACRYPTOS_VAI)) {
+            IAcryptosPoolExtension.ACRYPTOS_VAI.swap(inToken, outToken, amount);
+        }
+        if (dex == Dex.AcryptosUST && !flags.or(Flags.FLAG_DISABLE_ACRYPTOS_ALL, Flags.FLAG_DISABLE_ACRYPTOS_UST)) {
+            IAcryptosPoolExtension.ACRYPTOS_UST.swap(inToken, outToken, amount);
+        }
+        if (dex == Dex.AcryptosQUSD && !flags.or(Flags.FLAG_DISABLE_ACRYPTOS_ALL, Flags.FLAG_DISABLE_ACRYPTOS_QUSD)) {
+            IAcryptosPoolExtension.ACRYPTOS_QUSD.swap(inToken, outToken, amount);
         }
     }
 }

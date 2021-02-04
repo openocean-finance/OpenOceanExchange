@@ -93,6 +93,14 @@ library Flags {
     uint256 internal constant FLAG_DISABLE_JULSWAP_USDC = 1 << 39;
     uint256 internal constant FLAG_DISABLE_JULSWAP_USDT = 1 << 40;
     uint256 internal constant FLAG_DISABLE_JULSWAP_BUSD = 1 << 41;
+    // Pancake DOT
+    uint256 internal constant FLAG_DISABLE_PANCAKE_DOT = 1 << 42;
+    // Acryptos
+    uint256 internal constant FLAG_DISABLE_ACRYPTOS_ALL = 1 << 43;
+    uint256 internal constant FLAG_DISABLE_ACRYPTOS_USD = 1 << 44;
+    uint256 internal constant FLAG_DISABLE_ACRYPTOS_VAI = 1 << 45;
+    uint256 internal constant FLAG_DISABLE_ACRYPTOS_UST = 1 << 46;
+    uint256 internal constant FLAG_DISABLE_ACRYPTOS_QUSD = 1 << 47;
 
     function on(uint256 flags, uint256 flag) internal pure returns (bool) {
         return (flags & flag) != 0;
