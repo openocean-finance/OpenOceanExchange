@@ -31,7 +31,7 @@ contract DexOneView {
         uint256 inAmount,
         uint256 partition,
         uint256 flags
-    ) public virtual view returns (uint256 outAmount, uint256[] memory distribution) {
+    ) public view virtual returns (uint256 outAmount, uint256[] memory distribution) {
         (outAmount, , distribution) = calculateSwapReturnWithGas(inToken, outToken, inAmount, partition, flags, 0);
     }
 
@@ -44,8 +44,8 @@ contract DexOneView {
         uint256 outTokenEthPriceTimesGasPrice
     )
         public
-        virtual
         view
+        virtual
         returns (
             uint256 outAmount,
             uint256 estimateGasAmount,
@@ -166,7 +166,7 @@ contract DexOneView {
         IERC20 outToken,
         uint256 inAmount,
         uint256 flags
-    ) public virtual view returns (uint256[] memory outAmounts) {
+    ) public view virtual returns (uint256[] memory outAmounts) {
         Dex[] memory dexes = Dexes.allDexes();
         outAmounts = new uint256[](dexes.length);
         if (inToken == outToken) {

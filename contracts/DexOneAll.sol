@@ -30,7 +30,7 @@ contract DexOneAll is IDexOneTransitional {
         uint256 inAmount,
         uint256 partition,
         uint256 flags
-    ) public override view returns (uint256 outAmount, uint256[] memory distribution) {
+    ) public view override returns (uint256 outAmount, uint256[] memory distribution) {
         (outAmount, , distribution) = calculateSwapReturnWithGas(inToken, outToken, inAmount, partition, flags, 0);
     }
 
@@ -43,8 +43,8 @@ contract DexOneAll is IDexOneTransitional {
         uint256 outTokenEthPriceTimesGasPrice
     )
         public
-        override
         view
+        override
         returns (
             uint256 outAmount,
             uint256 estimateGasAmount,
@@ -59,7 +59,7 @@ contract DexOneAll is IDexOneTransitional {
         IERC20 outToken,
         uint256 inAmount,
         uint256 flags
-    ) public virtual view returns (uint256[] memory outAmounts) {
+    ) public view virtual returns (uint256[] memory outAmounts) {
         return dexOneView.calculateDexSwapReturns(inToken, outToken, inAmount, flags);
     }
 
@@ -70,7 +70,7 @@ contract DexOneAll is IDexOneTransitional {
         uint256 minOutAmount,
         uint256[] memory distribution,
         uint256 flags
-    ) public override payable returns (uint256 outAmount) {
+    ) public payable override returns (uint256 outAmount) {
         inToken.universalTransferFrom(msg.sender, address(this), inAmount);
         uint256 amount = inToken.universalBalanceOf(address(this));
         doSwap(inToken, outToken, amount, distribution, flags);
@@ -91,8 +91,8 @@ contract DexOneAll is IDexOneTransitional {
         uint256[] memory outTokenEthPriceTimesGasPrices
     )
         public
-        override
         view
+        override
         returns (
             uint256[] memory outAmounts,
             uint256 estimateGasAmount,
@@ -134,7 +134,7 @@ contract DexOneAll is IDexOneTransitional {
         uint256 minOutAmount,
         uint256[] memory distribution,
         uint256[] memory flags
-    ) public override payable returns (uint256 outAmount) {
+    ) public payable override returns (uint256 outAmount) {
         tokens[0].universalTransferFrom(msg.sender, address(this), inAmount);
         outAmount = tokens[0].universalBalanceOf(address(this));
 
@@ -166,6 +166,6 @@ contract DexOneAll is IDexOneTransitional {
         uint256 flags
     ) internal {
         inToken.universalApprove(address(dexOne), inAmount);
-        dexOne.swap{value: inToken.isETH() ? inAmount : 0}(inToken, outToken, inAmount, 0, distribution, flags);
+        dexOne.swap.value(inToken.isETH() ? inAmount : 0)(inToken, outToken, inAmount, 0, distribution, flags);
     }
 }

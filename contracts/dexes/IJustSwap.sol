@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../lib/UniversalERC20.sol";
 
-interface IUniswapExchange {
+interface IJustSwapExchange {
     function ethToTokenSwapInput(uint256 minTokens, uint256 deadline) external payable returns (uint256 tokensBought);
 
     function tokenToEthSwapInput(
@@ -15,12 +15,12 @@ interface IUniswapExchange {
     ) external returns (uint256 ethBought);
 }
 
-library IUniswapExchangeExtension {
+library IJustSwapExchangeExtension {
     using SafeMath for uint256;
     using UniversalERC20 for IERC20;
 
     // function calculateToEthSwapReturn(
-    //     IUniswapExchange exchange,
+    //     IJustSwapExchange exchange,
     //     IERC20 token,
     //     uint256 amount
     // ) internal view returns (uint256) {
@@ -33,7 +33,7 @@ library IUniswapExchangeExtension {
     // }
 
     // function calculateFromEthSwapReturn(
-    //     IUniswapExchange exchange,
+    //     IJustSwapExchange exchange,
     //     IERC20 token,
     //     uint256 amount
     // ) internal view returns (uint256) {
@@ -46,28 +46,28 @@ library IUniswapExchangeExtension {
     // }
 
     function calculate(
-        IUniswapExchange, /* exchange */
+        IJustSwapExchange, /* exchange */
         uint256 inReserve,
         uint256 outReserve,
         uint256 amount
     ) internal pure returns (uint256) {
-        uint256 inAmountWithFee = amount.mul(997); // Uniswap now requires fixed 0.3% swap fee
+        uint256 inAmountWithFee = amount.mul(997); // JustSwap now requires fixed 0.3% swap fee
         uint256 numerator = inAmountWithFee.mul(outReserve);
         uint256 denominator = inReserve.mul(1000).add(inAmountWithFee);
         return (denominator == 0) ? 0 : numerator.div(denominator);
     }
 }
 
-interface IUniswapFactory {
-    function getExchange(IERC20 token) external view returns (IUniswapExchange exchange);
+interface IJustSwapFactory {
+    function getExchange(IERC20 token) external view returns (IJustSwapExchange exchange);
 }
 
-library IUniswapFactoryExtension {
-    using IUniswapExchangeExtension for IUniswapExchange;
+library IJustSwapFactoryExtension {
+    using IJustSwapExchangeExtension for IJustSwapExchange;
     using UniversalERC20 for IERC20;
 
     function calculateSwapReturn(
-        IUniswapFactory factory,
+        IJustSwapFactory factory,
         IERC20 inToken,
         IERC20 outToken,
         uint256[] memory inAmounts
@@ -78,8 +78,8 @@ library IUniswapFactoryExtension {
         }
 
         if (!inToken.isETH()) {
-            IUniswapExchange exchange = factory.getExchange(inToken);
-            if (exchange == IUniswapExchange(0)) {
+            IJustSwapExchange exchange = factory.getExchange(inToken);
+            if (exchange == IJustSwapExchange(0)) {
                 return (new uint256[](inAmounts.length), 0);
             }
 
@@ -90,8 +90,8 @@ library IUniswapFactoryExtension {
             }
         }
         if (!outToken.isETH()) {
-            IUniswapExchange exchange = factory.getExchange(outToken);
-            if (exchange == IUniswapExchange(0)) {
+            IJustSwapExchange exchange = factory.getExchange(outToken);
+            if (exchange == IJustSwapExchange(0)) {
                 return (new uint256[](inAmounts.length), 0);
             }
 
@@ -106,7 +106,7 @@ library IUniswapFactoryExtension {
     }
 
     function swap(
-        IUniswapFactory factory,
+        IJustSwapFactory factory,
         IERC20 inToken,
         IERC20 outToken,
         uint256 inAmount
@@ -114,8 +114,8 @@ library IUniswapFactoryExtension {
         uint256 outAmount = inAmount;
 
         if (!inToken.isETH()) {
-            IUniswapExchange exchange = factory.getExchange(inToken);
-            if (exchange != IUniswapExchange(0)) {
+            IJustSwapExchange exchange = factory.getExchange(inToken);
+            if (exchange != IJustSwapExchange(0)) {
                 inToken.universalApprove(address(exchange), outAmount);
                 outAmount = exchange.tokenToEthSwapInput(outAmount, 1, now);
             } else {
@@ -124,9 +124,9 @@ library IUniswapFactoryExtension {
         }
 
         if (!outToken.isETH()) {
-            IUniswapExchange exchange = factory.getExchange(outToken);
-            if (exchange != IUniswapExchange(0)) {
-                outAmount = exchange.ethToTokenSwapInput{value: outAmount}(1, now);
+            IJustSwapExchange exchange = factory.getExchange(outToken);
+            if (exchange != IJustSwapExchange(0)) {
+                outAmount = exchange.ethToTokenSwapInput.value(outAmount)(1, now);
             }
         }
     }

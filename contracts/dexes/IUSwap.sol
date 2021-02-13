@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+
 pragma solidity ^0.6.0;
 
 import "@openzeppelin/contracts/math/Math.sol";
@@ -10,14 +11,14 @@ import "../lib/Tokens.sol";
 /**
  * @notice Uniswap V2 factory contract interface. See https://uniswap.org/docs/v2/smart-contracts/factory/
  */
-interface ISushiSwapFactory {
-    function getPair(IERC20 tokenA, IERC20 tokenB) external view returns (ISushiSwapPair pair);
+interface IUSwapFactory {
+    function getPair(IERC20 tokenA, IERC20 tokenB) external view returns (IUSwapPair pair);
 }
 
 /**
  * @notice Uniswap V2 pair pool interface. See https://uniswap.org/docs/v2/smart-contracts/pair/
  */
-interface ISushiSwapPair {
+interface IUSwapPair {
     function swap(
         uint256 amount0Out,
         uint256 amount1Out,
@@ -39,18 +40,18 @@ interface ISushiSwapPair {
     function sync() external;
 }
 
-library ISushiSwapPairExtension {
+library IUSwapPairExtension {
     using SafeMath for uint256;
     using UniversalERC20 for IERC20;
 
-    address private constant SKIM_TARGET = 0x5bDCE812ce8409442ac3FBbd10565F9B17A6C49D;
+    address private constant SKIM_TARGET = 0x7123FC158EEa14F829E391b0152dE97a6463b1d4;
 
     /**
      * @notice Use Uniswap's constant product formula to calculate expected swap return.
      * See https://github.com/runtimeverification/verified-smart-contracts/blob/uniswap/uniswap/x-y-k.pdf
      */
     function calculateSwapReturn(
-        ISushiSwapPair pair,
+        IUSwapPair pair,
         IERC20 inToken,
         IERC20 outToken,
         uint256 amount
@@ -64,7 +65,7 @@ library ISushiSwapPairExtension {
     }
 
     function calculateRealSwapReturn(
-        ISushiSwapPair pair,
+        IUSwapPair pair,
         IERC20 inToken,
         IERC20 outToken,
         uint256 amount
@@ -90,21 +91,20 @@ library ISushiSwapPairExtension {
         uint256 outReserve,
         uint256 amount
     ) private pure returns (uint256) {
-        uint256 inAmountWithFee = amount.mul(997); // Uniswap V2 now requires fixed 0.3% swap fee
+        uint256 inAmountWithFee = amount.mul(997); // USwap now requires fixed 0.3% swap fee
         uint256 numerator = inAmountWithFee.mul(outReserve);
         uint256 denominator = inReserve.mul(1000).add(inAmountWithFee);
         return (denominator == 0) ? 0 : numerator.div(denominator);
     }
 }
 
-library ISushiSwapFactoryExtension {
-    using SafeMath for uint256;
+library IUSwapFactoryExtension {
     using UniversalERC20 for IERC20;
-    using ISushiSwapPairExtension for ISushiSwapPair;
+    using IUSwapPairExtension for IUSwapPair;
     using Tokens for IERC20;
 
     function calculateSwapReturn(
-        ISushiSwapFactory factory,
+        IUSwapFactory factory,
         IERC20 inToken,
         IERC20 outToken,
         uint256[] memory inAmounts
@@ -113,8 +113,8 @@ library ISushiSwapFactoryExtension {
 
         IERC20 realInToken = inToken.wrapETH();
         IERC20 realOutToken = outToken.wrapETH();
-        ISushiSwapPair pair = factory.getPair(realInToken, realOutToken);
-        if (pair != ISushiSwapPair(0)) {
+        IUSwapPair pair = factory.getPair(realInToken, realOutToken);
+        if (pair != IUSwapPair(0)) {
             for (uint256 i = 0; i < inAmounts.length; i++) {
                 outAmounts[i] = pair.calculateSwapReturn(realInToken, realOutToken, inAmounts[i]);
             }
@@ -123,7 +123,7 @@ library ISushiSwapFactoryExtension {
     }
 
     function calculateTransitionalSwapReturn(
-        ISushiSwapFactory factory,
+        IUSwapFactory factory,
         IERC20 inToken,
         IERC20 transitionToken,
         IERC20 outToken,
@@ -144,7 +144,7 @@ library ISushiSwapFactoryExtension {
     }
 
     function swap(
-        ISushiSwapFactory factory,
+        IUSwapFactory factory,
         IERC20 inToken,
         IERC20 outToken,
         uint256 inAmount
@@ -153,7 +153,7 @@ library ISushiSwapFactoryExtension {
 
         IERC20 realInToken = inToken.wrapETH();
         IERC20 realOutToken = outToken.wrapETH();
-        ISushiSwapPair pair = factory.getPair(realInToken, realOutToken);
+        IUSwapPair pair = factory.getPair(realInToken, realOutToken);
 
         outAmount = pair.calculateRealSwapReturn(realInToken, realOutToken, inAmount);
 
@@ -168,7 +168,7 @@ library ISushiSwapFactoryExtension {
     }
 
     function swapTransitional(
-        ISushiSwapFactory factory,
+        IUSwapFactory factory,
         IERC20 inToken,
         IERC20 transitionToken,
         IERC20 outToken,

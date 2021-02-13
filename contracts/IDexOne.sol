@@ -10,7 +10,7 @@ abstract contract IDexOne {
         uint256 inAmount,
         uint256 partition,
         uint256 flags
-    ) public virtual view returns (uint256 outAmount, uint256[] memory distribution);
+    ) public view virtual returns (uint256 outAmount, uint256[] memory distribution);
 
     function calculateSwapReturnWithGas(
         IERC20 inToken,
@@ -21,8 +21,8 @@ abstract contract IDexOne {
         uint256 outTokenEthPriceTimesGasPrice
     )
         public
-        virtual
         view
+        virtual
         returns (
             uint256 outAmount,
             uint256 estimateGasAmount,
@@ -36,7 +36,7 @@ abstract contract IDexOne {
         uint256 minOutAmount,
         uint256[] memory distribution,
         uint256 flags
-    ) public virtual payable returns (uint256 outAmount);
+    ) public payable virtual returns (uint256 outAmount);
 }
 
 abstract contract IDexOneTransitional is IDexOne {
@@ -48,8 +48,8 @@ abstract contract IDexOneTransitional is IDexOne {
         uint256[] memory outTokenEthPriceTimesGasPrices
     )
         public
-        virtual
         view
+        virtual
         returns (
             uint256[] memory outAmounts,
             uint256 estimateGasAmount,
@@ -62,5 +62,5 @@ abstract contract IDexOneTransitional is IDexOne {
         uint256 minOutAmount,
         uint256[] memory distribution,
         uint256[] memory flags
-    ) public virtual payable returns (uint256 outAmount);
+    ) public payable virtual returns (uint256 outAmount);
 }

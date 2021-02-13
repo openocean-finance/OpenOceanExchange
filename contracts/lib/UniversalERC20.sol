@@ -106,9 +106,9 @@ library UniversalERC20 {
             return 18;
         }
 
-        (bool success, bytes memory data) = address(token).staticcall{gas: 10000}(abi.encodeWithSignature("decimals()"));
+        (bool success, bytes memory data) = address(token).staticcall.gas(10000)(abi.encodeWithSignature("decimals()"));
         if (!success || data.length == 0) {
-            (success, data) = address(token).staticcall{gas: 10000}(abi.encodeWithSignature("DECIMALS()"));
+            (success, data) = address(token).staticcall.gas(10000)(abi.encodeWithSignature("DECIMALS()"));
         }
 
         return (success && data.length > 0) ? abi.decode(data, (uint256)) : 18;
