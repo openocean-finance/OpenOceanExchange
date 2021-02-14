@@ -548,6 +548,19 @@ library UniversalERC20 {
     IERC20 internal constant ZERO_ADDRESS = IERC20(0x0000000000000000000000000000000000000000);
     IERC20 internal constant ETH_ADDRESS = IERC20(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
 
+    function _safeTransfer(
+        IERC20 token,
+        address to,
+        uint256 value
+    ) private {
+        (bool success, bytes memory data) = address(token).call(abi.encodeWithSelector(0xa9059cbb, to, value));
+        require(
+            success &&
+                (token == IERC20(0xa614f803B6FD780986A42c78Ec9c7f77e6DeD13C) || data.length == 0 || abi.decode(data, (bool))),
+            "UniversalERC20: transfer failed"
+        );
+    }
+
     function universalTransfer(
         IERC20 token,
         address to,
@@ -561,7 +574,7 @@ library UniversalERC20 {
             address(uint160(to)).transfer(amount);
             return true;
         } else {
-            token.safeTransfer(to, amount);
+            _safeTransfer(token, to, amount);
             return true;
         }
     }
@@ -985,9 +998,9 @@ pragma solidity ^0.6.0;
 
 
 interface IJustSwapExchange {
-    function ethToTokenSwapInput(uint256 minTokens, uint256 deadline) external payable returns (uint256 tokensBought);
+    function trxToTokenSwapInput(uint256 minTokens, uint256 deadline) external payable returns (uint256 tokensBought);
 
-    function tokenToEthSwapInput(
+    function tokenToTrxSwapInput(
         uint256 tokensSold,
         uint256 minEth,
         uint256 deadline
@@ -1096,7 +1109,7 @@ library IJustSwapFactoryExtension {
             IJustSwapExchange exchange = factory.getExchange(inToken);
             if (exchange != IJustSwapExchange(0)) {
                 inToken.universalApprove(address(exchange), outAmount);
-                outAmount = exchange.tokenToEthSwapInput(outAmount, 1, now);
+                outAmount = exchange.tokenToTrxSwapInput(outAmount, 1, now);
             } else {
                 return;
             }
@@ -1105,7 +1118,7 @@ library IJustSwapFactoryExtension {
         if (!outToken.isETH()) {
             IJustSwapExchange exchange = factory.getExchange(outToken);
             if (exchange != IJustSwapExchange(0)) {
-                outAmount = exchange.ethToTokenSwapInput.value(outAmount)(1, now);
+                outAmount = exchange.trxToTokenSwapInput.value(outAmount)(1, now);
             }
         }
     }
@@ -1188,7 +1201,7 @@ library Dexes {
             return uswap.calculateTransitionalSwapReturn(inToken, USDT, outToken, inAmounts);
         }
         // JustSwap
-        if (dex == Dex.justswap && !flags.on(Flags.FLAG_DISABLE_JUSTSWAP)) {
+        if (dex == Dex.JustSwap && !flags.on(FLAG_DISABLE_JUSTSWAP)) {
             return justswap.calculateSwapReturn(inToken, outToken, inAmounts);
         }
         // fallback
@@ -1216,7 +1229,7 @@ library Dexes {
             uswap.swapTransitional(inToken, USDT, outToken, amount);
         }
         // JustSwap
-        if (dex == Dex.JustSwap && !flags.on(Flags.FLAG_DISABLE_JUSTSWAP)) {
+        if (dex == Dex.JustSwap && !flags.on(FLAG_DISABLE_JUSTSWAP)) {
             justswap.swap(inToken, outToken, amount);
         }
     }

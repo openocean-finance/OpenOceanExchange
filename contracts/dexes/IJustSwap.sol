@@ -6,9 +6,9 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../lib/UniversalERC20.sol";
 
 interface IJustSwapExchange {
-    function ethToTokenSwapInput(uint256 minTokens, uint256 deadline) external payable returns (uint256 tokensBought);
+    function trxToTokenSwapInput(uint256 minTokens, uint256 deadline) external payable returns (uint256 tokensBought);
 
-    function tokenToEthSwapInput(
+    function tokenToTrxSwapInput(
         uint256 tokensSold,
         uint256 minEth,
         uint256 deadline
@@ -117,7 +117,7 @@ library IJustSwapFactoryExtension {
             IJustSwapExchange exchange = factory.getExchange(inToken);
             if (exchange != IJustSwapExchange(0)) {
                 inToken.universalApprove(address(exchange), outAmount);
-                outAmount = exchange.tokenToEthSwapInput(outAmount, 1, now);
+                outAmount = exchange.tokenToTrxSwapInput(outAmount, 1, now);
             } else {
                 return;
             }
@@ -126,7 +126,7 @@ library IJustSwapFactoryExtension {
         if (!outToken.isETH()) {
             IJustSwapExchange exchange = factory.getExchange(outToken);
             if (exchange != IJustSwapExchange(0)) {
-                outAmount = exchange.ethToTokenSwapInput.value(outAmount)(1, now);
+                outAmount = exchange.trxToTokenSwapInput.value(outAmount)(1, now);
             }
         }
     }

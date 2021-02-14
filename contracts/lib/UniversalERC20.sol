@@ -15,6 +15,19 @@ library UniversalERC20 {
     IERC20 internal constant ZERO_ADDRESS = IERC20(0x0000000000000000000000000000000000000000);
     IERC20 internal constant ETH_ADDRESS = IERC20(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
 
+    function _safeTransfer(
+        IERC20 token,
+        address to,
+        uint256 value
+    ) private {
+        (bool success, bytes memory data) = address(token).call(abi.encodeWithSelector(0xa9059cbb, to, value));
+        require(
+            success &&
+                (token == IERC20(0xa614f803B6FD780986A42c78Ec9c7f77e6DeD13C) || data.length == 0 || abi.decode(data, (bool))),
+            "UniversalERC20: transfer failed"
+        );
+    }
+
     function universalTransfer(
         IERC20 token,
         address to,
@@ -28,7 +41,7 @@ library UniversalERC20 {
             address(uint160(to)).transfer(amount);
             return true;
         } else {
-            token.safeTransfer(to, amount);
+            _safeTransfer(token, to, amount);
             return true;
         }
     }
