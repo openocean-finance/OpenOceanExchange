@@ -13,7 +13,7 @@ module.exports = {
             networkCheckTimeout: 100000000
         },
         test: {
-            host: "47.242.20.196",
+            host: "47.242.129.229",
             port: 8545,
             network_id: "1",
             networkCheckTimeout: 100000000
@@ -25,7 +25,7 @@ module.exports = {
             networkCheckTimeout: 100000000
         },
         test_bsc: {
-            host: "47.242.20.196",
+            host: "47.242.129.229",
             port: 18545,
             network_id: "56",
             networkCheckTimeout: 100000000

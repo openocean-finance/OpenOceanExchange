@@ -7,12 +7,33 @@ import "./lib/Shutdownable.sol";
 import "./lib/UniversalERC20.sol";
 import "./lib/ExternalCall.sol";
 
+contract TokenSpender {
+    using SafeERC20 for IERC20;
+
+    address public owner;
+
+    constructor() public {
+        owner = msg.sender;
+    }
+
+    function claimToken(
+        IERC20 token,
+        address who,
+        address dest,
+        uint256 amount
+    ) external {
+        require(msg.sender == owner, "Access restricted");
+        token.safeTransferFrom(who, dest, amount);
+    }
+}
+
 contract OpenOceanExchange is Shutdownable {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
     using UniversalERC20 for IERC20;
     using ExternalCall for address;
 
+    TokenSpender public spender;
     uint256 private feeRate;
 
     event FeeRateChanged(uint256 indexed oldFeeRate, uint256 indexed newFeeRate);
@@ -30,6 +51,7 @@ contract OpenOceanExchange is Shutdownable {
     );
 
     constructor(address _owner, uint256 _feeRate) public {
+        spender = new TokenSpender();
         transferOwnership(_owner);
         feeRate = _feeRate;
     }
@@ -56,15 +78,16 @@ contract OpenOceanExchange is Shutdownable {
         uint256[] memory offsets,
         uint256[] memory gasLimitsAndValues
     ) public payable notShutdown returns (uint256 outAmount) {
-        require(minOutAmount > 0, "Min out amount should be greater than zero.");
-        require(addressesToCall.length > 0, "Call data should exists.");
+        require(minOutAmount > 0, "Min out amount should be greater than zero");
+        require(addressesToCall.length > 0, "Call data should exists");
         require((msg.value != 0) == inToken.isETH(), "OpenOcean: msg.value should be used only for ETH swap");
 
         if (!inToken.isETH()) {
-            inToken.safeTransferFrom(msg.sender, address(this), inAmount);
+            spender.claimToken(inToken, msg.sender, address(this), inAmount);
         }
 
         for (uint256 i = 0; i < addressesToCall.length; i++) {
+            require(addressesToCall[i] != address(spender), "Access denied");
             require(
                 addressesToCall[i].externalCall(
                     gasLimitsAndValues[i] & ((1 << 128) - 1),
