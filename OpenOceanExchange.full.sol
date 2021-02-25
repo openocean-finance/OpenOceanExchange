@@ -780,9 +780,6 @@ contract OpenOceanExchange is Shutdownable {
     using ExternalCall for address;
 
     TokenSpender public spender;
-    uint256 private feeRate;
-
-    event FeeRateChanged(uint256 indexed oldFeeRate, uint256 indexed newFeeRate);
 
     event Order(address indexed sender, IERC20 indexed inToken, IERC20 indexed outToken, uint256 inAmount, uint256 outAmount);
 
@@ -796,16 +793,9 @@ contract OpenOceanExchange is Shutdownable {
         uint256 referrerFee
     );
 
-    constructor(address _owner, uint256 _feeRate) public {
+    constructor(address _owner) public {
         spender = new TokenSpender();
         transferOwnership(_owner);
-        feeRate = _feeRate;
-    }
-
-    function changeFeeRate(uint256 _feeRate) public onlyOwner {
-        uint256 oldFeeRate = feeRate;
-        feeRate = _feeRate;
-        emit FeeRateChanged(oldFeeRate, _feeRate);
     }
 
     receive() external payable notShutdown {
@@ -817,7 +807,7 @@ contract OpenOceanExchange is Shutdownable {
         IERC20 outToken,
         uint256 inAmount,
         uint256 minOutAmount,
-        uint256 guaranteedAmount,
+        uint256, /*guaranteedAmount*/
         address payable referrer,
         address[] memory addressesToCall,
         bytes memory dataToCall,
@@ -847,50 +837,11 @@ contract OpenOceanExchange is Shutdownable {
 
         inToken.universalTransfer(msg.sender, inToken.universalBalanceOf(address(this)));
         outAmount = outToken.universalBalanceOf(address(this));
-        uint256 fee;
-        uint256 referrerFee;
-        (outAmount, fee, referrerFee) = handleFees(outToken, outAmount, guaranteedAmount, referrer);
 
         require(outAmount >= minOutAmount, "Return amount less than the minimum required amount");
         outToken.universalTransfer(msg.sender, outAmount);
 
         emit Order(msg.sender, inToken, outToken, inAmount, outAmount);
-        emit Swapped(inToken, outToken, referrer, inAmount, outAmount, fee, referrerFee);
-    }
-
-    function handleFees(
-        IERC20 toToken,
-        uint256 outAmount,
-        uint256 guaranteedAmount,
-        address referrer
-    )
-        internal
-        returns (
-            uint256 realOutAmount,
-            uint256 fee,
-            uint256 referrerFee
-        )
-    {
-        if (outAmount <= guaranteedAmount || feeRate == 0) {
-            return (outAmount, 0, 0);
-        }
-
-        fee = outAmount.sub(guaranteedAmount).mul(feeRate).div(10000);
-
-        if (referrer != address(0) && referrer != msg.sender && referrer != tx.origin) {
-            referrerFee = fee.div(10);
-            if (toToken.universalTransfer(referrer, referrerFee)) {
-                outAmount = outAmount.sub(referrerFee);
-                fee = fee.sub(referrerFee);
-            } else {
-                referrerFee = 0;
-            }
-        }
-
-        if (toToken.universalTransfer(owner(), fee)) {
-            outAmount = outAmount.sub(fee);
-        }
-
-        return (outAmount, fee, referrerFee);
+        emit Swapped(inToken, outToken, referrer, inAmount, outAmount, 0, 0);
     }
 }
