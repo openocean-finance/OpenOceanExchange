@@ -13,8 +13,8 @@ module.exports = {
             networkCheckTimeout: 100000000
         },
         test: {
-            host: "47.242.129.229",
-            port: 18545,
+            url: "https://bsc-rpc.openocean.finance",
+            // port: 443,
             network_id: "1",
             networkCheckTimeout: 100000000
         }

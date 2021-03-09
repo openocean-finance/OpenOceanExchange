@@ -101,6 +101,13 @@ library Flags {
     uint256 internal constant FLAG_DISABLE_ACRYPTOS_VAI = 1 << 45;
     uint256 internal constant FLAG_DISABLE_ACRYPTOS_UST = 1 << 46;
     uint256 internal constant FLAG_DISABLE_ACRYPTOS_QUSD = 1 << 47;
+    // Apeswap
+    uint256 internal constant FLAG_DISABLE_APESWAP_ALL = 1 << 48;
+    uint256 internal constant FLAG_DISABLE_APESWAP = 1 << 49;
+    uint256 internal constant FLAG_DISABLE_APESWAP_ETH = 1 << 50;
+    uint256 internal constant FLAG_DISABLE_APESWAP_USDT = 1 << 51;
+    uint256 internal constant FLAG_DISABLE_APESWAP_BUSD = 1 << 52;
+    uint256 internal constant FLAG_DISABLE_APESWAP_BANANA = 1 << 53;
 
     function on(uint256 flags, uint256 flag) internal pure returns (bool) {
         return (flags & flag) != 0;

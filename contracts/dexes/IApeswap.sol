@@ -10,14 +10,14 @@ import "../lib/Tokens.sol";
 /**
  * @notice Uniswap V2 factory contract interface. See https://uniswap.org/docs/v2/smart-contracts/factory/
  */
-interface IThugswapFactory {
-    function getPair(IERC20 tokenA, IERC20 tokenB) external view returns (IThugswapPair pair);
+interface IApeswapFactory {
+    function getPair(IERC20 tokenA, IERC20 tokenB) external view returns (IApeswapPair pair);
 }
 
 /**
  * @notice Uniswap V2 pair pool interface. See https://uniswap.org/docs/v2/smart-contracts/pair/
  */
-interface IThugswapPair {
+interface IApeswapPair {
     function swap(
         uint256 amount0Out,
         uint256 amount1Out,
@@ -39,7 +39,7 @@ interface IThugswapPair {
     function sync() external;
 }
 
-library IThugswapPairExtension {
+library IApeswapPairExtension {
     using SafeMath for uint256;
     using UniversalERC20 for IERC20;
 
@@ -50,7 +50,7 @@ library IThugswapPairExtension {
      * See https://github.com/runtimeverification/verified-smart-contracts/blob/uniswap/uniswap/x-y-k.pdf
      */
     function calculateSwapReturn(
-        IThugswapPair pair,
+        IApeswapPair pair,
         IERC20 inToken,
         IERC20 outToken,
         uint256 amount
@@ -64,7 +64,7 @@ library IThugswapPairExtension {
     }
 
     function calculateRealSwapReturn(
-        IThugswapPair pair,
+        IApeswapPair pair,
         IERC20 inToken,
         IERC20 outToken,
         uint256 amount
@@ -90,20 +90,20 @@ library IThugswapPairExtension {
         uint256 outReserve,
         uint256 amount
     ) private pure returns (uint256) {
-        uint256 inAmountWithFee = amount.mul(997); // Thugswap requires fixed 0.3% swap fee
+        uint256 inAmountWithFee = amount.mul(998); // Apeswap now requires fixed 0.2% swap fee
         uint256 numerator = inAmountWithFee.mul(outReserve);
         uint256 denominator = inReserve.mul(1000).add(inAmountWithFee);
         return (denominator == 0) ? 0 : numerator.div(denominator);
     }
 }
 
-library IThugswapFactoryExtension {
+library IApeswapFactoryExtension {
     using UniversalERC20 for IERC20;
-    using IThugswapPairExtension for IThugswapPair;
+    using IApeswapPairExtension for IApeswapPair;
     using Tokens for IERC20;
 
     function calculateSwapReturn(
-        IThugswapFactory factory,
+        IApeswapFactory factory,
         IERC20 inToken,
         IERC20 outToken,
         uint256[] memory inAmounts
@@ -112,8 +112,8 @@ library IThugswapFactoryExtension {
 
         IERC20 realInToken = inToken.wrapETH();
         IERC20 realOutToken = outToken.wrapETH();
-        IThugswapPair pair = factory.getPair(realInToken, realOutToken);
-        if (pair != IThugswapPair(0)) {
+        IApeswapPair pair = factory.getPair(realInToken, realOutToken);
+        if (pair != IApeswapPair(0)) {
             for (uint256 i = 0; i < inAmounts.length; i++) {
                 outAmounts[i] = pair.calculateSwapReturn(realInToken, realOutToken, inAmounts[i]);
             }
@@ -122,7 +122,7 @@ library IThugswapFactoryExtension {
     }
 
     function calculateTransitionalSwapReturn(
-        IThugswapFactory factory,
+        IApeswapFactory factory,
         IERC20 inToken,
         IERC20 transitionToken,
         IERC20 outToken,
@@ -143,7 +143,7 @@ library IThugswapFactoryExtension {
     }
 
     function swap(
-        IThugswapFactory factory,
+        IApeswapFactory factory,
         IERC20 inToken,
         IERC20 outToken,
         uint256 inAmount
@@ -152,7 +152,7 @@ library IThugswapFactoryExtension {
 
         IERC20 realInToken = inToken.wrapETH();
         IERC20 realOutToken = outToken.wrapETH();
-        IThugswapPair pair = factory.getPair(realInToken, realOutToken);
+        IApeswapPair pair = factory.getPair(realInToken, realOutToken);
 
         outAmount = pair.calculateRealSwapReturn(realInToken, realOutToken, inAmount);
 
@@ -167,7 +167,7 @@ library IThugswapFactoryExtension {
     }
 
     function swapTransitional(
-        IThugswapFactory factory,
+        IApeswapFactory factory,
         IERC20 inToken,
         IERC20 transitionToken,
         IERC20 outToken,

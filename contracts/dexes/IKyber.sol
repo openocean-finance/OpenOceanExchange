@@ -87,15 +87,16 @@ library IKyberHintExtension {
         bytes32[] memory reserveIds = new bytes32[](1);
         reserveIds[0] = reserveId;
 
-        (bool success, bytes memory data) = address(kyberHint).staticcall(
-            abi.encodeWithSelector(
-                kyberHint.buildTokenToEthHint.selector,
-                token,
-                IKyberHint.TradeType.MaskIn,
-                reserveIds,
-                new uint256[](0)
-            )
-        );
+        (bool success, bytes memory data) =
+            address(kyberHint).staticcall(
+                abi.encodeWithSelector(
+                    kyberHint.buildTokenToEthHint.selector,
+                    token,
+                    IKyberHint.TradeType.MaskIn,
+                    reserveIds,
+                    new uint256[](0)
+                )
+            );
         hint = success ? abi.decode(data, (bytes)) : bytes("");
     }
 
@@ -107,15 +108,16 @@ library IKyberHintExtension {
         bytes32[] memory reserveIds = new bytes32[](1);
         reserveIds[0] = reserveId;
 
-        (bool success, bytes memory data) = address(kyberHint).staticcall(
-            abi.encodeWithSelector(
-                kyberHint.buildEthToTokenHint.selector,
-                token,
-                IKyberHint.TradeType.MaskIn,
-                reserveIds,
-                new uint256[](0)
-            )
-        );
+        (bool success, bytes memory data) =
+            address(kyberHint).staticcall(
+                abi.encodeWithSelector(
+                    kyberHint.buildEthToTokenHint.selector,
+                    token,
+                    IKyberHint.TradeType.MaskIn,
+                    reserveIds,
+                    new uint256[](0)
+                )
+            );
         hint = success ? abi.decode(data, (bytes)) : bytes("");
     }
 }
@@ -206,7 +208,7 @@ library IKyberNetworkProxyExtension {
                 payable(address(this)),
                 uint256(-1),
                 0,
-                0x5bDCE812ce8409442ac3FBbd10565F9B17A6C49D,
+                0xe523182610482b8C0DD65d5A08F1Bbd256B1EA0c,
                 (flags >> 255) * 10,
                 fromHint
             );
@@ -221,7 +223,7 @@ library IKyberNetworkProxyExtension {
                 payable(address(this)),
                 uint256(-1),
                 0,
-                0x5bDCE812ce8409442ac3FBbd10565F9B17A6C49D,
+                0xe523182610482b8C0DD65d5A08F1Bbd256B1EA0c,
                 (flags >> 255) * 10,
                 toHint
             );
@@ -236,9 +238,10 @@ library IKyberNetworkProxyExtension {
         uint256 flags,
         bytes memory hint
     ) private view returns (uint256) {
-        (, bytes memory data) = address(proxy).staticcall(
-            abi.encodeWithSelector(proxy.getExpectedRateAfterFee.selector, inToken, outToken, amount, (flags >> 255) * 10, hint)
-        );
+        (, bytes memory data) =
+            address(proxy).staticcall(
+                abi.encodeWithSelector(proxy.getExpectedRateAfterFee.selector, inToken, outToken, amount, (flags >> 255) * 10, hint)
+            );
 
         return (data.length == 32) ? abi.decode(data, (uint256)) : 0;
     }

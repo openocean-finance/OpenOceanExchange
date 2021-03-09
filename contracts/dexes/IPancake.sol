@@ -43,7 +43,7 @@ library IPancakePairExtension {
     using SafeMath for uint256;
     using UniversalERC20 for IERC20;
 
-    address private constant SKIM_TARGET = 0x5bDCE812ce8409442ac3FBbd10565F9B17A6C49D;
+    address private constant SKIM_TARGET = 0xe523182610482b8C0DD65d5A08F1Bbd256B1EA0c;
 
     /**
      * @notice Use Uniswap's constant product formula to calculate expected swap return.

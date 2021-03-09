@@ -23,6 +23,7 @@ import "./IUnifi.sol";
 import "./IWETH.sol";
 import "./IJulswap.sol";
 import "./IAcryptos.sol";
+import "./IApeswap.sol";
 
 enum Dex {
     // UniswapV2,
@@ -115,6 +116,12 @@ enum Dex {
     AcryptosVAI,
     AcryptosUST,
     AcryptosQUSD,
+    // Apeswap
+    Apeswap,
+    ApeswapETH,
+    ApeswapUSDT,
+    ApeswapBUSD,
+    ApeswapBANANA,
     // bottom mark
     NoDex
 }
@@ -172,6 +179,9 @@ library Dexes {
     using IJulswapFactoryExtension for IJulswapFactory;
 
     using IAcryptosPoolExtension for IAcryptosPool;
+
+    IApeswapFactory internal constant apeswap = IApeswapFactory(0x0841BD0B734E4F5853f0dD8d7Ea041c241fb0Da6);
+    using IApeswapFactoryExtension for IApeswapFactory;
 
     function allDexes() internal pure returns (Dex[] memory dexes) {
         uint256 dexCount = uint256(Dex.NoDex);
@@ -433,6 +443,22 @@ library Dexes {
         if (dex == Dex.AcryptosQUSD && !flags.or(Flags.FLAG_DISABLE_ACRYPTOS_ALL, Flags.FLAG_DISABLE_ACRYPTOS_QUSD)) {
             return IAcryptosPoolExtension.ACRYPTOS_QUSD.calculateSwapReturn(inToken, outToken, inAmounts);
         }
+        // Apeswap
+        if (dex == Dex.Apeswap && !flags.or(Flags.FLAG_DISABLE_APESWAP_ALL, Flags.FLAG_DISABLE_APESWAP)) {
+            return apeswap.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+        if (dex == Dex.ApeswapETH && !flags.or(Flags.FLAG_DISABLE_APESWAP_ALL, Flags.FLAG_DISABLE_APESWAP_ETH)) {
+            return apeswap.calculateTransitionalSwapReturn(inToken, Tokens.WETH, outToken, inAmounts);
+        }
+        if (dex == Dex.ApeswapBANANA && !flags.or(Flags.FLAG_DISABLE_APESWAP_ALL, Flags.FLAG_DISABLE_APESWAP_BANANA)) {
+            return apeswap.calculateTransitionalSwapReturn(inToken, Tokens.BANANA, outToken, inAmounts);
+        }
+        if (dex == Dex.ApeswapUSDT && !flags.or(Flags.FLAG_DISABLE_APESWAP_ALL, Flags.FLAG_DISABLE_APESWAP_USDT)) {
+            return apeswap.calculateTransitionalSwapReturn(inToken, Tokens.USDT, outToken, inAmounts);
+        }
+        if (dex == Dex.ApeswapBUSD && !flags.or(Flags.FLAG_DISABLE_APESWAP_ALL, Flags.FLAG_DISABLE_APESWAP_BUSD)) {
+            return apeswap.calculateTransitionalSwapReturn(inToken, Tokens.BUSD, outToken, inAmounts);
+        }
         // fallback
         return (new uint256[](inAmounts.length), 0);
     }
@@ -667,6 +693,22 @@ library Dexes {
         }
         if (dex == Dex.AcryptosQUSD && !flags.or(Flags.FLAG_DISABLE_ACRYPTOS_ALL, Flags.FLAG_DISABLE_ACRYPTOS_QUSD)) {
             IAcryptosPoolExtension.ACRYPTOS_QUSD.swap(inToken, outToken, amount);
+        }
+        // Apeswap
+        if (dex == Dex.Apeswap && !flags.or(Flags.FLAG_DISABLE_APESWAP_ALL, Flags.FLAG_DISABLE_APESWAP)) {
+            apeswap.swap(inToken, outToken, amount);
+        }
+        if (dex == Dex.ApeswapETH && !flags.or(Flags.FLAG_DISABLE_APESWAP_ALL, Flags.FLAG_DISABLE_APESWAP_ETH)) {
+            apeswap.swapTransitional(inToken, Tokens.WETH, outToken, amount);
+        }
+        if (dex == Dex.ApeswapBANANA && !flags.or(Flags.FLAG_DISABLE_APESWAP_ALL, Flags.FLAG_DISABLE_APESWAP_BANANA)) {
+            apeswap.swapTransitional(inToken, Tokens.BANANA, outToken, amount);
+        }
+        if (dex == Dex.ApeswapUSDT && !flags.or(Flags.FLAG_DISABLE_APESWAP_ALL, Flags.FLAG_DISABLE_APESWAP_USDT)) {
+            apeswap.swapTransitional(inToken, Tokens.USDT, outToken, amount);
+        }
+        if (dex == Dex.ApeswapBUSD && !flags.or(Flags.FLAG_DISABLE_APESWAP_ALL, Flags.FLAG_DISABLE_APESWAP_BUSD)) {
+            apeswap.swapTransitional(inToken, Tokens.BUSD, outToken, amount);
         }
     }
 }
