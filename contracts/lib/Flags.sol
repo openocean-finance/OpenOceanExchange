@@ -42,6 +42,11 @@ library Flags {
     uint256 internal constant FLAG_DISABLE_KYBER_2 = 1 << 33;
     uint256 internal constant FLAG_DISABLE_KYBER_3 = 1 << 34;
     uint256 internal constant FLAG_DISABLE_KYBER_4 = 1 << 35;
+    // add DODO
+    uint256 internal constant FLAG_DISABLE_DODO_ALL = 1 << 36;
+    uint256 internal constant FLAG_DISABLE_DODO = 1 << 37;
+    uint256 internal constant FLAG_DISABLE_DODO_USDC = 1 << 38;
+    uint256 internal constant FLAG_DISABLE_DODO_USDT = 1 << 39;
 
     function on(uint256 flags, uint256 flag) internal pure returns (bool) {
         return (flags & flag) != 0;

@@ -14,6 +14,7 @@ import "./ISushiSwap.sol";
 import "./IMooniswap.sol";
 import "./IBalancer.sol";
 import "./IKyber.sol";
+import "./IDODO.sol";
 
 enum Dex {
     UniswapV2,
@@ -53,6 +54,10 @@ enum Dex {
     Kyber2,
     Kyber3,
     Kyber4,
+    // DODO
+    DODO,
+    DODOUSDC,
+    DODOUSDT,
     // bottom mark
     NoDex
 }
@@ -84,6 +89,9 @@ library Dexes {
 
     IKyberNetworkProxy internal constant kyber = IKyberNetworkProxy(0x9AAb3f75489902f3a48495025729a0AF77d4b11e);
     using IKyberNetworkProxyExtension for IKyberNetworkProxy;
+
+    IDODOZoo internal constant dodo = IDODOZoo(0x3A97247DF274a17C59A3bd12735ea3FcDFb49950);
+    using IDODOZooExtension for IDODOZoo;
 
     function allDexes() internal pure returns (Dex[] memory dexes) {
         uint256 dexCount = uint256(Dex.NoDex);
@@ -215,6 +223,17 @@ library Dexes {
         if (dex == Dex.Kyber4 && !flags.or(Flags.FLAG_DISABLE_KYBER_ALL, Flags.FLAG_DISABLE_KYBER_4)) {
             return kyber.calculateSwapReturn(inToken, outToken, inAmounts, flags, 0);
         }
+
+        // add DODO
+        if (dex == Dex.DODO && !flags.or(Flags.FLAG_DISABLE_DODO_ALL, Flags.FLAG_DISABLE_DODO)) {
+            return dodo.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+        if (dex == Dex.DODOUSDC && !flags.or(Flags.FLAG_DISABLE_DODO_ALL, Flags.FLAG_DISABLE_DODO_USDC)) {
+            return dodo.calculateTransitionalSwapReturn(inToken, Tokens.USDC, outToken, inAmounts);
+        }
+        if (dex == Dex.DODOUSDT && !flags.or(Flags.FLAG_DISABLE_DODO_ALL, Flags.FLAG_DISABLE_DODO_USDT)) {
+            return dodo.calculateTransitionalSwapReturn(inToken, Tokens.USDT, outToken, inAmounts);
+        }
         // fallback
         return (new uint256[](inAmounts.length), 0);
     }
@@ -319,6 +338,17 @@ library Dexes {
         }
         if (dex == Dex.Kyber4 && !flags.or(Flags.FLAG_DISABLE_KYBER_ALL, Flags.FLAG_DISABLE_KYBER_4)) {
             return kyber.swap(inToken, outToken, amount, flags, 0);
+        }
+
+        // add DODO
+        if (dex == Dex.DODO && !flags.or(Flags.FLAG_DISABLE_DODO_ALL, Flags.FLAG_DISABLE_DODO)) {
+            dodo.swap(inToken, outToken, amount);
+        }
+        if (dex == Dex.DODOUSDC && !flags.or(Flags.FLAG_DISABLE_DODO_ALL, Flags.FLAG_DISABLE_DODO_USDC)) {
+            dodo.swapTransitional(inToken, Tokens.USDC, outToken, amount);
+        }
+        if (dex == Dex.DODOUSDT && !flags.or(Flags.FLAG_DISABLE_DODO_ALL, Flags.FLAG_DISABLE_DODO_USDT)) {
+            dodo.swapTransitional(inToken, Tokens.USDT, outToken, amount);
         }
     }
 }
