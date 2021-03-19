@@ -24,6 +24,7 @@ import "./IWETH.sol";
 import "./IJulswap.sol";
 import "./IAcryptos.sol";
 import "./IApeswap.sol";
+import "./IDODO.sol";
 
 enum Dex {
     // UniswapV2,
@@ -122,6 +123,10 @@ enum Dex {
     ApeswapUSDT,
     ApeswapBUSD,
     ApeswapBANANA,
+    // DODO
+    DODO,
+    DODOUSDC,
+    DODOUSDT,
     // bottom mark
     NoDex
 }
@@ -182,6 +187,9 @@ library Dexes {
 
     IApeswapFactory internal constant apeswap = IApeswapFactory(0x0841BD0B734E4F5853f0dD8d7Ea041c241fb0Da6);
     using IApeswapFactoryExtension for IApeswapFactory;
+
+    IDODOZoo internal constant dodo = IDODOZoo(0xCA459456a45e300AA7EF447DBB60F87CCcb42828);
+    using IDODOZooExtension for IDODOZoo;
 
     function allDexes() internal pure returns (Dex[] memory dexes) {
         uint256 dexCount = uint256(Dex.NoDex);
@@ -459,6 +467,18 @@ library Dexes {
         if (dex == Dex.ApeswapBUSD && !flags.or(Flags.FLAG_DISABLE_APESWAP_ALL, Flags.FLAG_DISABLE_APESWAP_BUSD)) {
             return apeswap.calculateTransitionalSwapReturn(inToken, Tokens.BUSD, outToken, inAmounts);
         }
+
+        // add DODO
+        if (dex == Dex.DODO && !flags.or(Flags.FLAG_DISABLE_DODO_ALL, Flags.FLAG_DISABLE_DODO)) {
+            return dodo.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+        if (dex == Dex.DODOUSDC && !flags.or(Flags.FLAG_DISABLE_DODO_ALL, Flags.FLAG_DISABLE_DODO_USDC)) {
+            return dodo.calculateTransitionalSwapReturn(inToken, Tokens.USDC, outToken, inAmounts);
+        }
+        if (dex == Dex.DODOUSDT && !flags.or(Flags.FLAG_DISABLE_DODO_ALL, Flags.FLAG_DISABLE_DODO_USDT)) {
+            return dodo.calculateTransitionalSwapReturn(inToken, Tokens.USDT, outToken, inAmounts);
+        }
+
         // fallback
         return (new uint256[](inAmounts.length), 0);
     }
@@ -709,6 +729,16 @@ library Dexes {
         }
         if (dex == Dex.ApeswapBUSD && !flags.or(Flags.FLAG_DISABLE_APESWAP_ALL, Flags.FLAG_DISABLE_APESWAP_BUSD)) {
             apeswap.swapTransitional(inToken, Tokens.BUSD, outToken, amount);
+        }
+        // add DODO
+        if (dex == Dex.DODO && !flags.or(Flags.FLAG_DISABLE_DODO_ALL, Flags.FLAG_DISABLE_DODO)) {
+            dodo.swap(inToken, outToken, amount);
+        }
+        if (dex == Dex.DODOUSDC && !flags.or(Flags.FLAG_DISABLE_DODO_ALL, Flags.FLAG_DISABLE_DODO_USDC)) {
+            dodo.swapTransitional(inToken, Tokens.USDC, outToken, amount);
+        }
+        if (dex == Dex.DODOUSDT && !flags.or(Flags.FLAG_DISABLE_DODO_ALL, Flags.FLAG_DISABLE_DODO_USDT)) {
+            dodo.swapTransitional(inToken, Tokens.USDT, outToken, amount);
         }
     }
 }
