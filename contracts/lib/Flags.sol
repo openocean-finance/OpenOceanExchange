@@ -113,6 +113,8 @@ library Flags {
     uint256 internal constant FLAG_DISABLE_DODO = 1 << 55;
     uint256 internal constant FLAG_DISABLE_DODO_USDC = 1 << 56;
     uint256 internal constant FLAG_DISABLE_DODO_USDT = 1 << 57;
+    // add Smoothy
+    uint256 internal constant FLAG_DISABLE_SMOOTHY = 1 << 58;
 
     function on(uint256 flags, uint256 flag) internal pure returns (bool) {
         return (flags & flag) != 0;

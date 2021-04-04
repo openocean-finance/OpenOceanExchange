@@ -25,6 +25,7 @@ import "./IJulswap.sol";
 import "./IAcryptos.sol";
 import "./IApeswap.sol";
 import "./IDODO.sol";
+import "./ISmoothy.sol";
 
 enum Dex {
     // UniswapV2,
@@ -127,6 +128,8 @@ enum Dex {
     DODO,
     DODOUSDC,
     DODOUSDT,
+    // Smoothy
+    Smoothy,
     // bottom mark
     NoDex
 }
@@ -190,6 +193,9 @@ library Dexes {
 
     IDODOZoo internal constant dodo = IDODOZoo(0xCA459456a45e300AA7EF447DBB60F87CCcb42828);
     using IDODOZooExtension for IDODOZoo;
+
+    ISmoothy internal constant smoothy = ISmoothy(0xe5859f4EFc09027A9B718781DCb2C6910CAc6E91);
+    using ISmoothyExtension for ISmoothy;
 
     function allDexes() internal pure returns (Dex[] memory dexes) {
         uint256 dexCount = uint256(Dex.NoDex);
@@ -479,6 +485,11 @@ library Dexes {
             return dodo.calculateTransitionalSwapReturn(inToken, Tokens.USDT, outToken, inAmounts);
         }
 
+        // add Smoothy
+        if (dex == Dex.Smoothy && !flags.on(Flags.FLAG_DISABLE_SMOOTHY)) {
+            return smoothy.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+
         // fallback
         return (new uint256[](inAmounts.length), 0);
     }
@@ -739,6 +750,11 @@ library Dexes {
         }
         if (dex == Dex.DODOUSDT && !flags.or(Flags.FLAG_DISABLE_DODO_ALL, Flags.FLAG_DISABLE_DODO_USDT)) {
             dodo.swapTransitional(inToken, Tokens.USDT, outToken, amount);
+        }
+
+        // add Smoothy
+        if (dex == Dex.Smoothy && !flags.on(Flags.FLAG_DISABLE_SMOOTHY)) {
+            smoothy.swap(inToken, outToken, amount);
         }
     }
 }
