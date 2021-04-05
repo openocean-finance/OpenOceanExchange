@@ -845,6 +845,8 @@ library Flags {
     uint256 internal constant FLAG_DISABLE_DODO = 1 << 55;
     uint256 internal constant FLAG_DISABLE_DODO_USDC = 1 << 56;
     uint256 internal constant FLAG_DISABLE_DODO_USDT = 1 << 57;
+    // add Smoothy
+    uint256 internal constant FLAG_DISABLE_SMOOTHY = 1 << 58;
 
     function on(uint256 flags, uint256 flag) internal pure returns (bool) {
         return (flags & flag) != 0;
@@ -2635,6 +2637,87 @@ library IDODOZooExtension {
     }
 }
 
+// File: contracts/dexes/ISmoothy.sol
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.6.0;
+
+
+
+interface ISmoothy {
+    function _ntokens() external view returns (uint256);
+
+    function _tokenExist(address) external view returns (uint256);
+
+    function _tokenInfos(uint256) external view returns (uint256);
+
+    function getSwapAmount(
+        uint256 bTokenIdxIn,
+        uint256 bTokenIdxOut,
+        uint256 bTokenInAmount
+    ) external view returns (uint256);
+
+    function swap(
+        uint256 bTokenIdxIn,
+        uint256 bTokenIdxOut,
+        uint256 bTokenInAmount,
+        uint256 bTokenOutMin
+    ) external;
+}
+
+library ISmoothyExtension {
+    using UniversalERC20 for IERC20;
+
+    function calculateSwapReturn(
+        ISmoothy smoothy,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256[] memory inAmounts
+    ) internal view returns (uint256[] memory outAmounts, uint256 gas) {
+        outAmounts = new uint256[](inAmounts.length);
+        if (smoothy._tokenExist(address(inToken)) == 0 || smoothy._tokenExist(address(outToken)) == 0) {
+            return (outAmounts, 0);
+        }
+        (uint256 inTokenIndex, uint256 outTokenIndex) = findTokenIndices(smoothy, inToken, outToken);
+        for (uint256 i = 0; i < inAmounts.length; i++) {
+            outAmounts[i] = smoothy.getSwapAmount(inTokenIndex, outTokenIndex, inAmounts[i]);
+        }
+        return (outAmounts, 0);
+    }
+
+    function swap(
+        ISmoothy smoothy,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256 inAmount
+    ) internal {
+        if (smoothy._tokenExist(address(inToken)) == 0 || smoothy._tokenExist(address(outToken)) == 0) {
+            return;
+        }
+        (uint256 inTokenIndex, uint256 outTokenIndex) = findTokenIndices(smoothy, inToken, outToken);
+        inToken.universalApprove(address(smoothy), inAmount);
+        smoothy.swap(inTokenIndex, outTokenIndex, inAmount, 0);
+    }
+
+    function findTokenIndices(
+        ISmoothy smoothy,
+        IERC20 inToken,
+        IERC20 outToken
+    ) private view returns (uint256 inTokenIndex, uint256 outTokenIndex) {
+        uint256 ntokens = smoothy._ntokens();
+        for (uint256 i = 0; i < ntokens; i++) {
+            uint256 tokenInfo = smoothy._tokenInfos(i);
+            address tokenAddress = address(tokenInfo);
+            if (tokenAddress == address(inToken)) {
+                inTokenIndex = i;
+            }
+            if (tokenAddress == address(outToken)) {
+                outTokenIndex = i;
+            }
+        }
+    }
+}
+
 // File: contracts/dexes/Dexes.sol
 
 // SPDX-License-Identifier: MIT
@@ -2652,6 +2735,7 @@ pragma solidity ^0.6.0;
 // import "./IMooniswap.sol";
 // import "./IBalancer.sol";
 // import "./IKyber.sol";
+
 
 
 
@@ -2765,6 +2849,8 @@ enum Dex {
     DODO,
     DODOUSDC,
     DODOUSDT,
+    // Smoothy
+    Smoothy,
     // bottom mark
     NoDex
 }
@@ -2828,6 +2914,9 @@ library Dexes {
 
     IDODOZoo internal constant dodo = IDODOZoo(0xCA459456a45e300AA7EF447DBB60F87CCcb42828);
     using IDODOZooExtension for IDODOZoo;
+
+    ISmoothy internal constant smoothy = ISmoothy(0xe5859f4EFc09027A9B718781DCb2C6910CAc6E91);
+    using ISmoothyExtension for ISmoothy;
 
     function allDexes() internal pure returns (Dex[] memory dexes) {
         uint256 dexCount = uint256(Dex.NoDex);
@@ -3117,6 +3206,11 @@ library Dexes {
             return dodo.calculateTransitionalSwapReturn(inToken, Tokens.USDT, outToken, inAmounts);
         }
 
+        // add Smoothy
+        if (dex == Dex.Smoothy && !flags.on(Flags.FLAG_DISABLE_SMOOTHY)) {
+            return smoothy.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+
         // fallback
         return (new uint256[](inAmounts.length), 0);
     }
@@ -3377,6 +3471,11 @@ library Dexes {
         }
         if (dex == Dex.DODOUSDT && !flags.or(Flags.FLAG_DISABLE_DODO_ALL, Flags.FLAG_DISABLE_DODO_USDT)) {
             dodo.swapTransitional(inToken, Tokens.USDT, outToken, amount);
+        }
+
+        // add Smoothy
+        if (dex == Dex.Smoothy && !flags.on(Flags.FLAG_DISABLE_SMOOTHY)) {
+            smoothy.swap(inToken, outToken, amount);
         }
     }
 }
