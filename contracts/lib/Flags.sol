@@ -115,6 +115,15 @@ library Flags {
     uint256 internal constant FLAG_DISABLE_DODO_USDT = 1 << 57;
     // add Smoothy
     uint256 internal constant FLAG_DISABLE_SMOOTHY = 1 << 58;
+    // add Ellipsis
+    uint256 internal constant FLAG_DISABLE_ELLIPSIS = 1 << 59;
+    // add MDex
+    uint256 internal constant FLAG_DISABLE_MDEX_ALL = 1 << 60;
+    uint256 internal constant FLAG_DISABLE_MDEX = 1 << 61;
+    uint256 internal constant FLAG_DISABLE_MDEX_ETH = 1 << 62;
+    uint256 internal constant FLAG_DISABLE_MDEX_BUSD = 1 << 63;
+    uint256 internal constant FLAG_DISABLE_MDEX_USDC = 1 << 64;
+    uint256 internal constant FLAG_DISABLE_MDEX_USDT = 1 << 65;
 
     function on(uint256 flags, uint256 flag) internal pure returns (bool) {
         return (flags & flag) != 0;

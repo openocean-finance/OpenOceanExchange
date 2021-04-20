@@ -40,7 +40,12 @@ library ISmoothyExtension {
         }
         (uint256 inTokenIndex, uint256 outTokenIndex) = findTokenIndices(smoothy, inToken, outToken);
         for (uint256 i = 0; i < inAmounts.length; i++) {
-            outAmounts[i] = smoothy.getSwapAmount(inTokenIndex, outTokenIndex, inAmounts[i]);
+            try smoothy.getSwapAmount(inTokenIndex, outTokenIndex, inAmounts[i]) returns (uint256 outAmount) {
+                outAmounts[i] = outAmount;
+            } catch {
+                // bypass smoothy calculation revert
+                outAmounts[i] = 0;
+            }
         }
         return (outAmounts, 0);
     }

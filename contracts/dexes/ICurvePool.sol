@@ -137,20 +137,21 @@ library ICurveRegistryExtension {
 
         PoolInfo memory info = getCurvePoolInfo(registry, pool, underlying);
 
-        (bool success, bytes memory data) = address(CURVE_CALCULATOR).staticcall(
-            abi.encodePacked(
-                abi.encodeWithSelector(
-                    CURVE_CALCULATOR.get_dy.selector,
-                    tokens.length,
-                    info.balances,
-                    info.amp,
-                    info.fee,
-                    info.rates,
-                    info.precisions
-                ),
-                abi.encodePacked(uint256(underlying ? 1 : 0), uint256(i), uint256(j), amounts)
-            )
-        );
+        (bool success, bytes memory data) =
+            address(CURVE_CALCULATOR).staticcall(
+                abi.encodePacked(
+                    abi.encodeWithSelector(
+                        CURVE_CALCULATOR.get_dy.selector,
+                        tokens.length,
+                        info.balances,
+                        info.amp,
+                        info.fee,
+                        info.rates,
+                        info.precisions
+                    ),
+                    abi.encodePacked(uint256(underlying ? 1 : 0), uint256(i), uint256(j), amounts)
+                )
+            );
 
         if (success && data.length > 0) {
             uint256[100] memory dy = abi.decode(data, (uint256[100]));

@@ -10,7 +10,7 @@ import "../lib/Tokens.sol";
  * @notice Pool contracts of curve.fi
  * See https://github.com/curvefi/curve-vue/blob/master/src/docs/README.md#how-to-integrate-curve-smart-contracts
  */
-interface IAcryptosPool {
+interface IEllipsisPool {
     function get_dy_underlying(
         int128 i,
         int128 j,
@@ -38,17 +38,15 @@ interface IAcryptosPool {
     ) external;
 }
 
-library IAcryptosPoolExtension {
+library IEllipsisPoolExtension {
     using UniversalERC20 for IERC20;
 
-    IAcryptosPool internal constant ACRYPTOS_USD = IAcryptosPool(0xb3F0C9ea1F05e312093Fdb031E789A756659B0AC);
-    IAcryptosPool internal constant ACRYPTOS_VAI = IAcryptosPool(0x191409D5A4EfFe25b0f4240557BA2192D18a191e);
-    IAcryptosPool internal constant ACRYPTOS_UST = IAcryptosPool(0x99c92765EfC472a9709Ced86310D64C4573c4b77);
-    IAcryptosPool internal constant ACRYPTOS_QUSD = IAcryptosPool(0x3919874C7bc0699cF59c981C5eb668823FA4f958);
-    IAcryptosPool internal constant ACRYPTOS_BTC = IAcryptosPool(0xbE7CAa236544d1B9A0E7F91e94B9f5Bfd3B5ca81);
+    IEllipsisPool internal constant ELLIPSIS_USD = IEllipsisPool(0x160CAed03795365F3A589f10C379FfA7d75d4E76);
+    IEllipsisPool internal constant ELLIPSIS_BTC = IEllipsisPool(0x2477fB288c5b4118315714ad3c7Fd7CC69b00bf9);
+    IEllipsisPool internal constant ELLIPSIS_FUSDT = IEllipsisPool(0x556ea0b4c06D043806859c9490072FaadC104b63);
 
     function calculateSwapReturn(
-        IAcryptosPool pool,
+        IEllipsisPool pool,
         IERC20 inToken,
         IERC20 outToken,
         uint256[] memory inAmounts
@@ -76,7 +74,7 @@ library IAcryptosPoolExtension {
     }
 
     function swap(
-        IAcryptosPool pool,
+        IEllipsisPool pool,
         IERC20 inToken,
         IERC20 outToken,
         uint256 inAmount
@@ -122,7 +120,7 @@ library IAcryptosPoolExtension {
      * @notice Build calculation arguments.
      * See https://github.com/curvefi/curve-vue/blob/master/src/docs/README.md
      */
-    function getPoolConfig(IAcryptosPool pool)
+    function getPoolConfig(IEllipsisPool pool)
         private
         pure
         returns (
@@ -131,46 +129,25 @@ library IAcryptosPoolExtension {
             uint256 gas
         )
     {
-        if (pool == ACRYPTOS_USD) {
-            tokens = new IERC20[](4);
+        if (pool == ELLIPSIS_USD) {
+            tokens = new IERC20[](3);
             tokens[0] = Tokens.BUSD;
-            tokens[1] = Tokens.USDT;
-            tokens[2] = Tokens.DAI;
-            tokens[3] = Tokens.USDC;
+            tokens[1] = Tokens.USDC;
+            tokens[2] = Tokens.USDT;
             underlying = false;
             gas = 720_000;
-        } else if (pool == ACRYPTOS_VAI) {
-            tokens = new IERC20[](5);
-            tokens[0] = Tokens.VAI;
+        } else if (pool == ELLIPSIS_FUSDT) {
+            tokens = new IERC20[](4);
+            tokens[0] = Tokens.fUSDT;
             tokens[1] = Tokens.BUSD;
-            tokens[2] = Tokens.USDT;
-            tokens[3] = Tokens.DAI;
-            tokens[4] = Tokens.USDC;
+            tokens[2] = Tokens.USDC;
+            tokens[3] = Tokens.USDT;
             underlying = true;
             gas = 1_400_000;
-        } else if (pool == ACRYPTOS_UST) {
-            tokens = new IERC20[](5);
-            tokens[0] = Tokens.UST;
-            tokens[1] = Tokens.BUSD;
-            tokens[2] = Tokens.USDT;
-            tokens[3] = Tokens.DAI;
-            tokens[4] = Tokens.USDC;
-            underlying = true;
-            gas = 1_400_000;
-        } else if (pool == ACRYPTOS_QUSD) {
-            tokens = new IERC20[](5);
-            tokens[0] = Tokens.QUSD;
-            tokens[1] = Tokens.BUSD;
-            tokens[2] = Tokens.USDT;
-            tokens[3] = Tokens.DAI;
-            tokens[4] = Tokens.USDC;
-            underlying = true;
-            gas = 1_400_000;
-        } else if (pool == ACRYPTOS_BTC) {
+        } else if (pool == ELLIPSIS_BTC) {
             tokens = new IERC20[](3);
             tokens[0] = Tokens.BTCB;
             tokens[1] = Tokens.RENBTC;
-            tokens[2] = Tokens.pBTC;
             underlying = false;
             gas = 720_000;
         }
