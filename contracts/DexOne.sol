@@ -29,7 +29,7 @@ contract DexOne is IDexOne {
         uint256 inAmount,
         uint256 partition,
         uint256 flags
-    ) public override view returns (uint256 outAmount, uint256[] memory distribution) {
+    ) public view override returns (uint256 outAmount, uint256[] memory distribution) {
         (outAmount, , distribution) = calculateSwapReturnWithGas(inToken, outToken, inAmount, partition, flags, 0);
     }
 
@@ -42,8 +42,8 @@ contract DexOne is IDexOne {
         uint256 outTokenEthPriceTimesGasPrice
     )
         public
-        override
         view
+        override
         returns (
             uint256 outAmount,
             uint256 estimateGasAmount,
@@ -58,7 +58,7 @@ contract DexOne is IDexOne {
         IERC20 outToken,
         uint256 inAmount,
         uint256 flags
-    ) public virtual view returns (uint256[] memory outAmounts) {
+    ) public view virtual returns (uint256[] memory outAmounts) {
         return dexOneView.calculateDexSwapReturns(inToken, outToken, inAmount, flags);
     }
 
@@ -69,7 +69,7 @@ contract DexOne is IDexOne {
         uint256 minOutAmount,
         uint256[] memory distribution,
         uint256 flags
-    ) public override payable returns (uint256 outAmount) {
+    ) public payable override returns (uint256 outAmount) {
         if (inToken == outToken) {
             return amount;
         }
@@ -92,6 +92,10 @@ contract DexOne is IDexOne {
             return amount;
         }
 
+        uint256 senderBalance = inToken.universalBalanceOf(msg.sender);
+        if (senderBalance < amount) {
+            amount = senderBalance;
+        }
         inToken.universalTransferFrom(msg.sender, address(this), amount);
         uint256 balance = inToken.universalBalanceOf(address(this));
 
