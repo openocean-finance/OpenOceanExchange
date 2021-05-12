@@ -26,6 +26,8 @@ const DisableApeswap = new BN(1).shln(49);
 const DisableDODOAll = new BN(1).shln(54);
 const DisableSmoothy = new BN(1).shln(58);
 const DisableEllipsis = new BN(1).shln(59);
+const DisableMdexAll = new BN(1).shln(60);
+const DisablePancakeAllV2 = new BN(1).shln(66);
 
 const DexOneView = artifacts.require("DexOneView");
 const DexOne = artifacts.require("DexOne");
@@ -33,12 +35,13 @@ const DexOneAll = artifacts.require("DexOneAll");
 const ERC20 = artifacts.require("IERC20");
 
 const pass = DisablePancakeAll.add(DisableBurgerAll).add(DisableThugswapAll)
-.add(DisableStablexAll).add(DisableUnifiAll).add(DisableJulswapAll).add(DisableDODOAll)
-.add(DisableApeswapAll).add(DisableAcryptosAll).add(DisableApeswap).add(DisableSmoothy).add(DisableEllipsis);
+    .add(DisableStablexAll).add(DisableUnifiAll).add(DisableJulswapAll).add(DisableDODOAll)
+    .add(DisableApeswapAll).add(DisableAcryptosAll).add(DisableApeswap).add(DisableSmoothy)
+    .add(DisableEllipsis).add(DisableMdexAll).add(DisableBakeryAll).add(DisablePancakeAllV2);
 
 const flags = DisablePancakeAll.add(DisableBakeryAll).add(DisableBurgerAll).add(DisableThugswapAll)
-.add(DisableStablexAll).add(DisableUnifiAll).add(DisableJulswapAll).add(DisableDODOAll)
-.add(DisableApeswapAll).add(DisableAcryptosAll);
+    .add(DisableStablexAll).add(DisableUnifiAll).add(DisableJulswapAll).add(DisableDODOAll)
+    .add(DisableApeswapAll).add(DisableAcryptosAll);
 
 contract('DexOne', (accounts) => {
     // it('DexOneView should calculate', async () => {
@@ -89,9 +92,9 @@ contract('DexOne', (accounts) => {
     // });
 
     it('DexOneAll should swap ETH to CAKE', async () => {
-        const dai = await ERC20.at("0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56");
-        let balance = await dai.balanceOf(accounts[0])
-        console.log(`balance of ${accounts[0]}: (${balance}) BUSD`);
+        const busd = await ERC20.at("0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56");
+        let balanceBefore = await busd.balanceOf(accounts[0])
+        console.log(`balance of ${accounts[0]}: (${balanceBefore}) BUSD`);
 
         const dexOne = await DexOne.deployed();
         const res = await dexOne.calculateSwapReturn(
@@ -102,10 +105,12 @@ contract('DexOne', (accounts) => {
             // 0,
             pass,
         );
+        expectedOutAmount = res.outAmount;
         console.log(`expect out amount ${res.outAmount.toString()} BUSD`);
-        res.distribution.forEach(dist => {
-            console.log(dist.toString());
-        });
+        // res.distribution.forEach(dist => {
+        //     console.log(dist.toString());
+        // });
+        console.log("res.distribution:", res.distribution.toString());
 
         const swapped = await dexOne.contract.methods.swap(
             '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
@@ -146,8 +151,9 @@ contract('DexOne', (accounts) => {
             // console.log(JSON.stringify(receipt));
         });
 
-        balance = await dai.balanceOf(accounts[0])
-        console.log(`balance of ${accounts[0]}: (${balance}) BUSD`);
+        balanceAfter = await busd.balanceOf(accounts[0])
+        console.log(`balance of ${accounts[0]}: (${balanceAfter}) BUSD`);
+        assert.equal(expectedOutAmount, balanceAfter - balanceBefore);
     });
 
     // it('DexOneAll should swap CAKE to BNB', async () => {
