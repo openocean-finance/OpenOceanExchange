@@ -133,6 +133,14 @@ library Flags {
     uint256 internal constant FLAG_DISABLE_PANCAKE_DOT_V2 = 1 << 71;
     uint256 internal constant FLAG_DISABLE_PANCAKE_BUSD_V2 = 1 << 72;
 
+    // nerve
+    uint256 internal constant FLAG_DISABLE_NERVE_ALL = 1 << 74;
+    // cafeswap
+    uint256 internal constant FLAG_DISABLE_CAFESWAP_ALL = 1 << 75;
+    // beltswap
+    uint256 internal constant FLAG_DISABLE_BELTSWAP_ALL = 1 << 76;
+
+
     function on(uint256 flags, uint256 flag) internal pure returns (bool) {
         return (flags & flag) != 0;
     }
