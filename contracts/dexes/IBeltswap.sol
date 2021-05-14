@@ -103,6 +103,8 @@ library IBeltSwapExtension {
             return 0;
         }
         beltSwap.exchange(i, j, inAmount, outAmounts[0]);
+        outAmount = outAmounts[0];
+        return;
     }
 
     function swapTransitional(
