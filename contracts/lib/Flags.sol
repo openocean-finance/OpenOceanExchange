@@ -128,13 +128,10 @@ library Flags {
     uint256 internal constant FLAG_DISABLE_PANCAKE_ALL_V2 = 1 << 66;
     uint256 internal constant FLAG_DISABLE_PANCAKE_V2 = 1 << 67;
     uint256 internal constant FLAG_DISABLE_PANCAKE_ETH_V2 = 1 << 68;
-    uint256 internal constant FLAG_DISABLE_PANCAKE_DAI_V2 = 1 << 69;
-    uint256 internal constant FLAG_DISABLE_PANCAKE_USDC_V2 = 1 << 70;
-    uint256 internal constant FLAG_DISABLE_PANCAKE_USDT_V2 = 1 << 71;
-    // Pancake DOT
-    uint256 internal constant FLAG_DISABLE_PANCAKE_DOT_V2 = 1 << 72;
-    // BUSD transitional token
-    uint256 internal constant FLAG_DISABLE_PANCAKE_BUSD_V2 = 1 << 73;
+    uint256 internal constant FLAG_DISABLE_PANCAKE_USDC_V2 = 1 << 69;
+    uint256 internal constant FLAG_DISABLE_PANCAKE_USDT_V2 = 1 << 70;
+    uint256 internal constant FLAG_DISABLE_PANCAKE_DOT_V2 = 1 << 71;
+    uint256 internal constant FLAG_DISABLE_PANCAKE_BUSD_V2 = 1 << 72;
 
     function on(uint256 flags, uint256 flag) internal pure returns (bool) {
         return (flags & flag) != 0;

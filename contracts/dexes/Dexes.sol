@@ -30,133 +30,132 @@ import "./ISmoothy.sol";
 import "./IEllipsis.sol";
 import "./IMDex.sol";
 
-    enum Dex {
-        // UniswapV2,
-        // UniswapV2ETH,
-        // UniswapV2DAI,
-        // UniswapV2USDC,
-        // CurveCompound,
-        // CurveUSDT,
-        // CurveY,
-        // CurveBinance,
-        // CurveSynthetix,
-        // CurvePAX,
-        // CurveRenBTC,
-        // CurveTBTC,
-        // CurveSBTC,
-        // Oasis,
-        // Uniswap,
-        // Curve,
-        // // add Mooniswap
-        // Mooniswap,
-        // MooniswapETH,
-        // MooniswapDAI,
-        // MooniswapUSDC,
-        // // add SushiSwap
-        // SushiSwap,
-        // SushiSwapETH,
-        // SushiSwapDAI,
-        // SushiSwapUSDC,
-        // // add Balancer
-        // Balancer,
-        // Balancer1,
-        // Balancer2,
-        // Balancer3,
-        // // add Kyber
-        // Kyber,
-        // Kyber1,
-        // Kyber2,
-        // Kyber3,
-        // Kyber4,
+enum Dex {
+    // UniswapV2,
+    // UniswapV2ETH,
+    // UniswapV2DAI,
+    // UniswapV2USDC,
+    // CurveCompound,
+    // CurveUSDT,
+    // CurveY,
+    // CurveBinance,
+    // CurveSynthetix,
+    // CurvePAX,
+    // CurveRenBTC,
+    // CurveTBTC,
+    // CurveSBTC,
+    // Oasis,
+    // Uniswap,
+    // Curve,
+    // // add Mooniswap
+    // Mooniswap,
+    // MooniswapETH,
+    // MooniswapDAI,
+    // MooniswapUSDC,
+    // // add SushiSwap
+    // SushiSwap,
+    // SushiSwapETH,
+    // SushiSwapDAI,
+    // SushiSwapUSDC,
+    // // add Balancer
+    // Balancer,
+    // Balancer1,
+    // Balancer2,
+    // Balancer3,
+    // // add Kyber
+    // Kyber,
+    // Kyber1,
+    // Kyber2,
+    // Kyber3,
+    // Kyber4,
 
-        // Pancake
-        Pancake,
-        PancakeETH,
-        PancakeDAI,
-        PancakeUSDC,
-        PancakeUSDT,
-        // PancakeV2
-        PancakeV2,
-        PancakeETHV2,
-        PancakeDAIV2,
-        PancakeUSDCV2,
-        PancakeUSDTV2,
-        // Bakery
-        Bakery,
-        BakeryETH,
-        BakeryDAI,
-        BakeryUSDC,
-        BakeryUSDT,
-        // Burger
-        Burger,
-        BurgerETH,
-        BurgerDGAS,
-        // Thugswap
-        Thugswap,
-        ThugswapETH,
-        ThugswapDAI,
-        ThugswapUSDC,
-        ThugswapUSDT,
-        // BUSD transitional
-        PancakeBUSD,
-        PancakeBUSDV2,
-        BakeryBUSD,
-        ThugswapBUSD,
-        // StableX
-        Stablex,
-        StablexDAI,
-        StablexBUSD,
-        StablexQUSD,
-        StablexUSDC,
-        StablexUSDT,
-        // Unifi
-        Unifi,
-        // WETH
-        WETH,
-        // Julswap
-        Julswap,
-        JulswapETH,
-        JulswapDAI,
-        JulswapUSDC,
-        JulswapUSDT,
-        JulswapBUSD,
-        // Pancake DOT
-        PancakeDOT,
-        PancakeDOTV2,
-        // Acrytos
-        Acryptos,
-        AcryptosUSD,
-        AcryptosVAI,
-        AcryptosUST,
-        AcryptosQUSD,
-        // Apeswap
-        Apeswap,
-        ApeswapETH,
-        ApeswapUSDT,
-        ApeswapBUSD,
-        ApeswapBANANA,
-        // DODO
-        DODO,
-        DODOUSDC,
-        DODOUSDT,
-        // Smoothy
-        Smoothy,
-        // Acryptos
-        AcryptosBTC,
-        // Ellipsis
-        Ellipsis,
-        EllipsisUSD,
-        EllipsisBTC,
-        EllipsisFUSDT,
-        // MDex
-        MDex,
-        MDexETH,
-        MDexBUSD,
-        MDexUSDC,
-        MDexUSDT,
-        // bottom mark
-        NoDex
-    }
+    // Pancake
+    Pancake,
+    PancakeETH,
+    PancakeDAI,
+    PancakeUSDC,
+    PancakeUSDT,
+    // Bakery
+    Bakery,
+    BakeryETH,
+    BakeryDAI,
+    BakeryUSDC,
+    BakeryUSDT,
+    // Burger
+    Burger,
+    BurgerETH,
+    BurgerDGAS,
+    // Thugswap
+    Thugswap,
+    ThugswapETH,
+    ThugswapDAI,
+    ThugswapUSDC,
+    ThugswapUSDT,
+    // BUSD transitional
+    PancakeBUSD,
+    BakeryBUSD,
+    ThugswapBUSD,
+    // StableX
+    Stablex,
+    StablexDAI,
+    StablexBUSD,
+    StablexQUSD,
+    StablexUSDC,
+    StablexUSDT,
+    // Unifi
+    Unifi,
+    // WETH
+    WETH,
+    // Julswap
+    Julswap,
+    JulswapETH,
+    JulswapDAI,
+    JulswapUSDC,
+    JulswapUSDT,
+    JulswapBUSD,
+    // Pancake DOT
+    PancakeDOT,
+    // Acrytos
+    Acryptos,
+    AcryptosUSD,
+    AcryptosVAI,
+    AcryptosUST,
+    AcryptosQUSD,
+    // Apeswap
+    Apeswap,
+    ApeswapETH,
+    ApeswapUSDT,
+    ApeswapBUSD,
+    ApeswapBANANA,
+    // DODO
+    DODO,
+    DODOUSDC,
+    DODOUSDT,
+    // Smoothy
+    Smoothy,
+    // Acryptos
+    AcryptosBTC,
+    // Ellipsis
+    Ellipsis,
+    EllipsisUSD,
+    EllipsisBTC,
+    EllipsisFUSDT,
+    // MDex
+    MDex,
+    MDexETH,
+    MDexBUSD,
+    MDexUSDC,
+    MDexUSDT,
+    // PancakeV2
+    PancakeV2,
+    PancakeETHV2,
+    PancakeUSDCV2,
+    PancakeUSDTV2,
+    PancakeBUSDV2,
+    PancakeDOTV2,
+    // bottom mark
+    NoDex
+}
 
 library Dexes {
     using UniversalERC20 for IERC20;
@@ -241,28 +240,6 @@ library Dexes {
         }
         if (dex == Dex.PancakeDOT && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL, Flags.FLAG_DISABLE_PANCAKE_DOT)) {
             return pancake.calculateTransitionalSwapReturn(inToken, Tokens.DOT, outToken, inAmounts);
-        }
-        // PancakeV2
-        if (dex == Dex.PancakeV2 && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL_V2, Flags.FLAG_DISABLE_PANCAKE_V2)) {
-            return pancakeV2.calculateSwapReturn(inToken, outToken, inAmounts);
-        }
-        if (dex == Dex.PancakeETHV2 && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL_V2, Flags.FLAG_DISABLE_PANCAKE_ETH_V2)) {
-            return pancakeV2.calculateTransitionalSwapReturn(inToken, Tokens.WETH, outToken, inAmounts);
-        }
-        if (dex == Dex.PancakeDAIV2 && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL_V2, Flags.FLAG_DISABLE_PANCAKE_DAI_V2)) {
-            return pancakeV2.calculateTransitionalSwapReturn(inToken, Tokens.DAI, outToken, inAmounts);
-        }
-        if (dex == Dex.PancakeUSDCV2 && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL_V2, Flags.FLAG_DISABLE_PANCAKE_USDC_V2)) {
-            return pancakeV2.calculateTransitionalSwapReturn(inToken, Tokens.USDC, outToken, inAmounts);
-        }
-        if (dex == Dex.PancakeUSDTV2 && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL_V2, Flags.FLAG_DISABLE_PANCAKE_USDT_V2)) {
-            return pancakeV2.calculateTransitionalSwapReturn(inToken, Tokens.USDT, outToken, inAmounts);
-        }
-        if (dex == Dex.PancakeBUSDV2 && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL_V2, Flags.FLAG_DISABLE_PANCAKE_BUSD_V2)) {
-            return pancakeV2.calculateTransitionalSwapReturn(inToken, Tokens.BUSD, outToken, inAmounts);
-        }
-        if (dex == Dex.PancakeDOTV2 && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL_V2, Flags.FLAG_DISABLE_PANCAKE_DOT_V2)) {
-            return pancakeV2.calculateTransitionalSwapReturn(inToken, Tokens.DOT, outToken, inAmounts);
         }
         // Bakery
         if (dex == Dex.Bakery && !flags.or(Flags.FLAG_DISABLE_BAKERY_ALL, Flags.FLAG_DISABLE_BAKERY)) {
@@ -435,6 +412,26 @@ library Dexes {
             return mdex.calculateTransitionalSwapReturn(inToken, Tokens.BUSD, outToken, inAmounts);
         }
 
+        // PancakeV2
+        if (dex == Dex.PancakeV2 && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL_V2, Flags.FLAG_DISABLE_PANCAKE_V2)) {
+            return pancakeV2.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+        if (dex == Dex.PancakeETHV2 && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL_V2, Flags.FLAG_DISABLE_PANCAKE_ETH_V2)) {
+            return pancakeV2.calculateTransitionalSwapReturn(inToken, Tokens.WETH, outToken, inAmounts);
+        }
+        if (dex == Dex.PancakeUSDCV2 && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL_V2, Flags.FLAG_DISABLE_PANCAKE_USDC_V2)) {
+            return pancakeV2.calculateTransitionalSwapReturn(inToken, Tokens.USDC, outToken, inAmounts);
+        }
+        if (dex == Dex.PancakeUSDTV2 && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL_V2, Flags.FLAG_DISABLE_PANCAKE_USDT_V2)) {
+            return pancakeV2.calculateTransitionalSwapReturn(inToken, Tokens.USDT, outToken, inAmounts);
+        }
+        if (dex == Dex.PancakeBUSDV2 && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL_V2, Flags.FLAG_DISABLE_PANCAKE_BUSD_V2)) {
+            return pancakeV2.calculateTransitionalSwapReturn(inToken, Tokens.BUSD, outToken, inAmounts);
+        }
+        if (dex == Dex.PancakeDOTV2 && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL_V2, Flags.FLAG_DISABLE_PANCAKE_DOT_V2)) {
+            return pancakeV2.calculateTransitionalSwapReturn(inToken, Tokens.DOT, outToken, inAmounts);
+        }
+
         // fallback
         return (new uint256[](inAmounts.length), 0);
     }
@@ -449,9 +446,6 @@ library Dexes {
         // Pancake
         if (dex == Dex.Pancake && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL, Flags.FLAG_DISABLE_PANCAKE)) {
             pancake.swap(inToken, outToken, amount);
-        }
-        if (dex == Dex.PancakeV2 && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL_V2, Flags.FLAG_DISABLE_PANCAKE_V2)) {
-            pancakeV2.swap(inToken, outToken, amount);
         }
         if (dex == Dex.PancakeETH && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL, Flags.FLAG_DISABLE_PANCAKE_ETH)) {
             pancake.swapTransitional(inToken, Tokens.WETH, outToken, amount);
@@ -639,6 +633,26 @@ library Dexes {
         }
         if (dex == Dex.MDexBUSD && !flags.or(Flags.FLAG_DISABLE_MDEX_ALL, Flags.FLAG_DISABLE_MDEX_BUSD)) {
             mdex.swapTransitional(inToken, Tokens.BUSD, outToken, amount);
+        }
+
+        // Pancake
+        if (dex == Dex.PancakeV2 && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL_V2, Flags.FLAG_DISABLE_PANCAKE_V2)) {
+            pancakeV2.swap(inToken, outToken, amount);
+        }
+        if (dex == Dex.PancakeETHV2 && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL_V2, Flags.FLAG_DISABLE_PANCAKE_ETH_V2)) {
+            pancakeV2.swapTransitional(inToken, Tokens.WETH, outToken, amount);
+        }
+        if (dex == Dex.PancakeUSDCV2 && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL_V2, Flags.FLAG_DISABLE_PANCAKE_USDC_V2)) {
+            pancakeV2.swapTransitional(inToken, Tokens.USDC, outToken, amount);
+        }
+        if (dex == Dex.PancakeUSDTV2 && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL_V2, Flags.FLAG_DISABLE_PANCAKE_USDT_V2)) {
+            pancakeV2.swapTransitional(inToken, Tokens.USDT, outToken, amount);
+        }
+        if (dex == Dex.PancakeBUSDV2 && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL_V2, Flags.FLAG_DISABLE_PANCAKE_BUSD_V2)) {
+            pancakeV2.swapTransitional(inToken, Tokens.BUSD, outToken, amount);
+        }
+        if (dex == Dex.PancakeDOTV2 && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL_V2, Flags.FLAG_DISABLE_PANCAKE_DOT_V2)) {
+            pancakeV2.swapTransitional(inToken, Tokens.DOT, outToken, amount);
         }
     }
 }

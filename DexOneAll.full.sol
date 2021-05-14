@@ -688,10 +688,17 @@ library Tokens {
     // Apeswap
     IERC20 internal constant BANANA = IERC20(0x603c7f932ED1fc6575303D8Fb018fDCBb0f39a95);
 
+    // Acryptos
+    IERC20 internal constant BTCB = IERC20(0x7130d2A12B9BCbFAe4f2634d864A1Ee1Ce3Ead9c);
+    IERC20 internal constant pBTC = IERC20(0xeD28A457A5A76596ac48d87C0f577020F6Ea1c4C);
+    IERC20 internal constant RENBTC = IERC20(0xfCe146bF3146100cfe5dB4129cf6C82b0eF4Ad8c);
+
+    // Ellipsis
+    IERC20 internal constant fUSDT = IERC20(0x049d68029688eAbF473097a2fC38ef61633A3C7A);
+
     IERC20 internal constant TUSD = IERC20(0x0000000000085d4780B73119b644AE5ecd22b376);
     IERC20 internal constant SUSD = IERC20(0x57Ab1ec28D129707052df4dF418D58a2D46d5f51);
     IERC20 internal constant PAX = IERC20(0x8E870D67F660D95d5be530380D0eC0bd388289E1);
-    IERC20 internal constant RENBTC = IERC20(0xEB4C2781e4ebA804CE9a9803C67d0893436bB27D);
     IERC20 internal constant WBTC = IERC20(0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599);
     IERC20 internal constant TBTC = IERC20(0x1bBE271d15Bb64dF0bc6CD28Df9Ff322F2eBD847);
     IERC20 internal constant HBTC = IERC20(0x0316EB71485b0Ab14103307bf65a021042c6d380);
@@ -847,6 +854,23 @@ library Flags {
     uint256 internal constant FLAG_DISABLE_DODO_USDT = 1 << 57;
     // add Smoothy
     uint256 internal constant FLAG_DISABLE_SMOOTHY = 1 << 58;
+    // add Ellipsis
+    uint256 internal constant FLAG_DISABLE_ELLIPSIS = 1 << 59;
+    // add MDex
+    uint256 internal constant FLAG_DISABLE_MDEX_ALL = 1 << 60;
+    uint256 internal constant FLAG_DISABLE_MDEX = 1 << 61;
+    uint256 internal constant FLAG_DISABLE_MDEX_ETH = 1 << 62;
+    uint256 internal constant FLAG_DISABLE_MDEX_BUSD = 1 << 63;
+    uint256 internal constant FLAG_DISABLE_MDEX_USDC = 1 << 64;
+    uint256 internal constant FLAG_DISABLE_MDEX_USDT = 1 << 65;
+    // PANCAKE_V2
+    uint256 internal constant FLAG_DISABLE_PANCAKE_ALL_V2 = 1 << 66;
+    uint256 internal constant FLAG_DISABLE_PANCAKE_V2 = 1 << 67;
+    uint256 internal constant FLAG_DISABLE_PANCAKE_ETH_V2 = 1 << 68;
+    uint256 internal constant FLAG_DISABLE_PANCAKE_USDC_V2 = 1 << 69;
+    uint256 internal constant FLAG_DISABLE_PANCAKE_USDT_V2 = 1 << 70;
+    uint256 internal constant FLAG_DISABLE_PANCAKE_DOT_V2 = 1 << 71;
+    uint256 internal constant FLAG_DISABLE_PANCAKE_BUSD_V2 = 1 << 72;
 
     function on(uint256 flags, uint256 flag) internal pure returns (bool) {
         return (flags & flag) != 0;
@@ -1066,6 +1090,187 @@ library IPancakeFactoryExtension {
 
     function swapTransitional(
         IPancakeFactory factory,
+        IERC20 inToken,
+        IERC20 transitionToken,
+        IERC20 outToken,
+        uint256 inAmount
+    ) internal {
+        swap(factory, transitionToken, outToken, swap(factory, inToken, transitionToken, inAmount));
+    }
+}
+
+// File: contracts/dexes/IPancakeV2.sol
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.6.0;
+
+
+
+
+
+
+/**
+ * @notice Uniswap V2 factory contract interface. See https://uniswap.org/docs/v2/smart-contracts/factory/
+ */
+interface IPancakeFactoryV2 {
+    function getPair(IERC20 tokenA, IERC20 tokenB) external view returns (IPancakePairV2 pair);
+}
+
+/**
+ * @notice Uniswap V2 pair pool interface. See https://uniswap.org/docs/v2/smart-contracts/pair/
+ */
+interface IPancakePairV2 {
+    function swap(
+        uint256 amount0Out,
+        uint256 amount1Out,
+        address to,
+        bytes calldata data
+    ) external;
+
+    function getReserves()
+    external
+    view
+    returns (
+        uint112 reserve0,
+        uint112 reserve1,
+        uint32 blockTimestampLast
+    );
+
+    function skim(address to) external;
+
+    function sync() external;
+}
+
+library IPancakePairExtensionV2 {
+    using SafeMath for uint256;
+    using UniversalERC20 for IERC20;
+
+    address private constant SKIM_TARGET = 0xe523182610482b8C0DD65d5A08F1Bbd256B1EA0c;
+
+    /**
+     * @notice Use Uniswap's constant product formula to calculate expected swap return.
+     * See https://github.com/runtimeverification/verified-smart-contracts/blob/uniswap/uniswap/x-y-k.pdf
+     */
+    function calculateSwapReturn(
+        IPancakePairV2 pair,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256 amount
+    ) internal view returns (uint256) {
+        if (amount == 0) {
+            return 0;
+        }
+        uint256 inReserve = inToken.universalBalanceOf(address(pair));
+        uint256 outReserve = outToken.universalBalanceOf(address(pair));
+        return doCalculate(inReserve, outReserve, amount);
+    }
+
+    function calculateRealSwapReturn(
+        IPancakePairV2 pair,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256 amount
+    ) internal returns (uint256) {
+        uint256 inReserve = inToken.universalBalanceOf(address(pair));
+        uint256 outReserve = outToken.universalBalanceOf(address(pair));
+
+        (uint112 reserve0, uint112 reserve1,) = pair.getReserves();
+        if (inToken > outToken) {
+            (reserve0, reserve1) = (reserve1, reserve0);
+        }
+        if (inReserve < reserve0 || outReserve < reserve1) {
+            pair.sync();
+        } else if (inReserve > reserve0 || outReserve > reserve1) {
+            pair.skim(SKIM_TARGET);
+        }
+
+        return doCalculate(Math.min(inReserve, reserve0), Math.min(outReserve, reserve1), amount);
+    }
+
+    function doCalculate(
+        uint256 inReserve,
+        uint256 outReserve,
+        uint256 amount
+    ) private pure returns (uint256) {
+        uint256 inAmountWithFee = amount.mul(9975);
+        // Pancake now requires fixed 0.2% swap fee
+        uint256 numerator = inAmountWithFee.mul(outReserve);
+        uint256 denominator = inReserve.mul(10000).add(inAmountWithFee);
+        return (denominator == 0) ? 0 : numerator.div(denominator);
+    }
+}
+
+library IPancakeFactoryExtensionV2 {
+    using UniversalERC20 for IERC20;
+    using IPancakePairExtensionV2 for IPancakePairV2;
+    using Tokens for IERC20;
+
+    function calculateSwapReturn(
+        IPancakeFactoryV2 factory,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256[] memory inAmounts
+    ) internal view returns (uint256[] memory outAmounts, uint256 gas) {
+        outAmounts = new uint256[](inAmounts.length);
+
+        IERC20 realInToken = inToken.wrapETH();
+        IERC20 realOutToken = outToken.wrapETH();
+        IPancakePairV2 pair = factory.getPair(realInToken, realOutToken);
+        if (pair != IPancakePairV2(0)) {
+            for (uint256 i = 0; i < inAmounts.length; i++) {
+                outAmounts[i] = pair.calculateSwapReturn(realInToken, realOutToken, inAmounts[i]);
+            }
+            return (outAmounts, 50_000);
+        }
+    }
+
+    function calculateTransitionalSwapReturn(
+        IPancakeFactoryV2 factory,
+        IERC20 inToken,
+        IERC20 transitionToken,
+        IERC20 outToken,
+        uint256[] memory inAmounts
+    ) internal view returns (uint256[] memory outAmounts, uint256 gas) {
+        IERC20 realInToken = inToken.wrapETH();
+        IERC20 realTransitionToken = transitionToken.wrapETH();
+        IERC20 realOutToken = outToken.wrapETH();
+
+        if (realInToken == realTransitionToken || realOutToken == realTransitionToken) {
+            return (new uint256[](inAmounts.length), 0);
+        }
+        uint256 firstGas;
+        uint256 secondGas;
+        (outAmounts, firstGas) = calculateSwapReturn(factory, realInToken, realTransitionToken, inAmounts);
+        (outAmounts, secondGas) = calculateSwapReturn(factory, realTransitionToken, realOutToken, outAmounts);
+        return (outAmounts, firstGas + secondGas);
+    }
+
+    function swap(
+        IPancakeFactoryV2 factory,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256 inAmount
+    ) internal returns (uint256 outAmount) {
+        inToken.depositToWETH(inAmount);
+
+        IERC20 realInToken = inToken.wrapETH();
+        IERC20 realOutToken = outToken.wrapETH();
+        IPancakePairV2 pair = factory.getPair(realInToken, realOutToken);
+
+        outAmount = pair.calculateRealSwapReturn(realInToken, realOutToken, inAmount);
+
+        realInToken.universalTransfer(address(pair), inAmount);
+        if (uint256(address(realInToken)) < uint256(address(realOutToken))) {
+            pair.swap(0, outAmount, address(this), "");
+        } else {
+            pair.swap(outAmount, 0, address(this), "");
+        }
+
+        outToken.withdrawFromWETH();
+    }
+
+    function swapTransitional(
+        IPancakeFactoryV2 factory,
         IERC20 inToken,
         IERC20 transitionToken,
         IERC20 outToken,
@@ -2200,6 +2405,7 @@ library IAcryptosPoolExtension {
     IAcryptosPool internal constant ACRYPTOS_VAI = IAcryptosPool(0x191409D5A4EfFe25b0f4240557BA2192D18a191e);
     IAcryptosPool internal constant ACRYPTOS_UST = IAcryptosPool(0x99c92765EfC472a9709Ced86310D64C4573c4b77);
     IAcryptosPool internal constant ACRYPTOS_QUSD = IAcryptosPool(0x3919874C7bc0699cF59c981C5eb668823FA4f958);
+    IAcryptosPool internal constant ACRYPTOS_BTC = IAcryptosPool(0xbE7CAa236544d1B9A0E7F91e94B9f5Bfd3B5ca81);
 
     function calculateSwapReturn(
         IAcryptosPool pool,
@@ -2320,6 +2526,13 @@ library IAcryptosPoolExtension {
             tokens[4] = Tokens.USDC;
             underlying = true;
             gas = 1_400_000;
+        } else if (pool == ACRYPTOS_BTC) {
+            tokens = new IERC20[](3);
+            tokens[0] = Tokens.BTCB;
+            tokens[1] = Tokens.RENBTC;
+            tokens[2] = Tokens.pBTC;
+            underlying = false;
+            gas = 720_000;
         }
     }
 }
@@ -2680,7 +2893,12 @@ library ISmoothyExtension {
         }
         (uint256 inTokenIndex, uint256 outTokenIndex) = findTokenIndices(smoothy, inToken, outToken);
         for (uint256 i = 0; i < inAmounts.length; i++) {
-            outAmounts[i] = smoothy.getSwapAmount(inTokenIndex, outTokenIndex, inAmounts[i]);
+            try smoothy.getSwapAmount(inTokenIndex, outTokenIndex, inAmounts[i]) returns (uint256 outAmount) {
+                outAmounts[i] = outAmount;
+            } catch {
+                // bypass smoothy calculation revert
+                outAmounts[i] = 0;
+            }
         }
         return (outAmounts, 0);
     }
@@ -2718,6 +2936,349 @@ library ISmoothyExtension {
     }
 }
 
+// File: contracts/dexes/IEllipsis.sol
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.6.0;
+
+
+
+
+
+/**
+ * @notice Pool contracts of curve.fi
+ * See https://github.com/curvefi/curve-vue/blob/master/src/docs/README.md#how-to-integrate-curve-smart-contracts
+ */
+interface IEllipsisPool {
+    function get_dy_underlying(
+        int128 i,
+        int128 j,
+        uint256 dx
+    ) external view returns (uint256 dy);
+
+    function get_dy(
+        int128 i,
+        int128 j,
+        uint256 dx
+    ) external view returns (uint256 dy);
+
+    function exchange_underlying(
+        int128 i,
+        int128 j,
+        uint256 dx,
+        uint256 minDy
+    ) external;
+
+    function exchange(
+        int128 i,
+        int128 j,
+        uint256 dx,
+        uint256 minDy
+    ) external;
+}
+
+library IEllipsisPoolExtension {
+    using UniversalERC20 for IERC20;
+
+    IEllipsisPool internal constant ELLIPSIS_USD = IEllipsisPool(0x160CAed03795365F3A589f10C379FfA7d75d4E76);
+    IEllipsisPool internal constant ELLIPSIS_BTC = IEllipsisPool(0x2477fB288c5b4118315714ad3c7Fd7CC69b00bf9);
+    IEllipsisPool internal constant ELLIPSIS_FUSDT = IEllipsisPool(0x556ea0b4c06D043806859c9490072FaadC104b63);
+
+    function calculateSwapReturn(
+        IEllipsisPool pool,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256[] memory inAmounts
+    ) internal view returns (uint256[] memory outAmounts, uint256 gas) {
+        outAmounts = new uint256[](inAmounts.length);
+        IERC20[] memory tokens;
+        bool underlying;
+        (tokens, underlying, gas) = getPoolConfig(pool);
+
+        (int128 i, int128 j) = determineTokenIndex(inToken, outToken, tokens);
+        if (i == -1 || j == -1) {
+            return (outAmounts, 0);
+        }
+        if (underlying && i != 0 && j != 0) {
+            return (outAmounts, 0);
+        }
+
+        for (uint256 k = 0; k < inAmounts.length; k++) {
+            if (underlying) {
+                outAmounts[k] = pool.get_dy_underlying(i, j, inAmounts[k]);
+            } else {
+                outAmounts[k] = pool.get_dy(i, j, inAmounts[k]);
+            }
+        }
+    }
+
+    function swap(
+        IEllipsisPool pool,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256 inAmount
+    ) internal {
+        (IERC20[] memory tokens, bool underlying, ) = getPoolConfig(pool);
+
+        (int128 i, int128 j) = determineTokenIndex(inToken, outToken, tokens);
+        if (i == -1 || j == -1) {
+            return;
+        }
+        if (underlying && i != 0 && j != 0) {
+            return;
+        }
+
+        inToken.universalApprove(address(pool), inAmount);
+        if (underlying) {
+            pool.exchange_underlying(i, j, inAmount, 0);
+        } else {
+            pool.exchange(i, j, inAmount, 0);
+        }
+    }
+
+    function determineTokenIndex(
+        IERC20 inToken,
+        IERC20 outToken,
+        IERC20[] memory tokens
+    ) private pure returns (int128, int128) {
+        int128 i = -1;
+        int128 j = -1;
+        for (uint256 k = 0; k < tokens.length; k++) {
+            IERC20 token = tokens[k];
+            if (inToken == token) {
+                i = int128(k);
+            }
+            if (outToken == token) {
+                j = int128(k);
+            }
+        }
+        return (i, j);
+    }
+
+    /**
+     * @notice Build calculation arguments.
+     * See https://github.com/curvefi/curve-vue/blob/master/src/docs/README.md
+     */
+    function getPoolConfig(IEllipsisPool pool)
+        private
+        pure
+        returns (
+            IERC20[] memory tokens,
+            bool underlying,
+            uint256 gas
+        )
+    {
+        if (pool == ELLIPSIS_USD) {
+            tokens = new IERC20[](3);
+            tokens[0] = Tokens.BUSD;
+            tokens[1] = Tokens.USDC;
+            tokens[2] = Tokens.USDT;
+            underlying = false;
+            gas = 720_000;
+        } else if (pool == ELLIPSIS_FUSDT) {
+            tokens = new IERC20[](4);
+            tokens[0] = Tokens.fUSDT;
+            tokens[1] = Tokens.BUSD;
+            tokens[2] = Tokens.USDC;
+            tokens[3] = Tokens.USDT;
+            underlying = true;
+            gas = 1_400_000;
+        } else if (pool == ELLIPSIS_BTC) {
+            tokens = new IERC20[](3);
+            tokens[0] = Tokens.BTCB;
+            tokens[1] = Tokens.RENBTC;
+            underlying = false;
+            gas = 720_000;
+        }
+    }
+}
+
+// File: contracts/dexes/IMDex.sol
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.6.0;
+
+
+
+
+
+
+/**
+ * @notice Uniswap V2 factory contract interface. See https://uniswap.org/docs/v2/smart-contracts/factory/
+ */
+interface IMDexFactory {
+    function getPair(IERC20 tokenA, IERC20 tokenB) external view returns (IMDexPair pair);
+
+    function getPairFees(address pair) external view returns (uint256);
+}
+
+/**
+ * @notice Uniswap V2 pair pool interface. See https://uniswap.org/docs/v2/smart-contracts/pair/
+ */
+interface IMDexPair {
+    function swap(
+        uint256 amount0Out,
+        uint256 amount1Out,
+        address to,
+        bytes calldata data
+    ) external;
+
+    function getReserves()
+        external
+        view
+        returns (
+            uint112 reserve0,
+            uint112 reserve1,
+            uint32 blockTimestampLast
+        );
+
+    function skim(address to) external;
+
+    function sync() external;
+}
+
+library IMDexPairExtension {
+    using SafeMath for uint256;
+    using UniversalERC20 for IERC20;
+
+    address private constant SKIM_TARGET = 0xe523182610482b8C0DD65d5A08F1Bbd256B1EA0c;
+
+    /**
+     * @notice Use Uniswap's constant product formula to calculate expected swap return.
+     * See https://github.com/runtimeverification/verified-smart-contracts/blob/uniswap/uniswap/x-y-k.pdf
+     */
+    function calculateSwapReturn(
+        IMDexPair pair,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256 amount,
+        uint256 fee
+    ) internal view returns (uint256) {
+        if (amount == 0) {
+            return 0;
+        }
+        uint256 inReserve = inToken.universalBalanceOf(address(pair));
+        uint256 outReserve = outToken.universalBalanceOf(address(pair));
+        return doCalculate(inReserve, outReserve, amount, fee);
+    }
+
+    function calculateRealSwapReturn(
+        IMDexPair pair,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256 amount,
+        uint256 fee
+    ) internal returns (uint256) {
+        uint256 inReserve = inToken.universalBalanceOf(address(pair));
+        uint256 outReserve = outToken.universalBalanceOf(address(pair));
+
+        (uint112 reserve0, uint112 reserve1, ) = pair.getReserves();
+        if (inToken > outToken) {
+            (reserve0, reserve1) = (reserve1, reserve0);
+        }
+        if (inReserve < reserve0 || outReserve < reserve1) {
+            pair.sync();
+        } else if (inReserve > reserve0 || outReserve > reserve1) {
+            pair.skim(SKIM_TARGET);
+        }
+
+        return doCalculate(Math.min(inReserve, reserve0), Math.min(outReserve, reserve1), amount, fee);
+    }
+
+    function doCalculate(
+        uint256 inReserve,
+        uint256 outReserve,
+        uint256 amount,
+        uint256 fee
+    ) private pure returns (uint256) {
+        uint256 inAmountWithFee = amount.mul(10000 - fee); // MDex now requires fixed 0.2% swap fee
+        uint256 numerator = inAmountWithFee.mul(outReserve);
+        uint256 denominator = inReserve.mul(10000).add(inAmountWithFee);
+        return (denominator == 0) ? 0 : numerator.div(denominator);
+    }
+}
+
+library IMDexFactoryExtension {
+    using UniversalERC20 for IERC20;
+    using IMDexPairExtension for IMDexPair;
+    using Tokens for IERC20;
+
+    function calculateSwapReturn(
+        IMDexFactory factory,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256[] memory inAmounts
+    ) internal view returns (uint256[] memory outAmounts, uint256 gas) {
+        outAmounts = new uint256[](inAmounts.length);
+
+        IERC20 realInToken = inToken.wrapETH();
+        IERC20 realOutToken = outToken.wrapETH();
+        IMDexPair pair = factory.getPair(realInToken, realOutToken);
+        if (pair != IMDexPair(0)) {
+            uint256 fee = factory.getPairFees(address(pair));
+            for (uint256 i = 0; i < inAmounts.length; i++) {
+                outAmounts[i] = pair.calculateSwapReturn(realInToken, realOutToken, inAmounts[i], fee);
+            }
+            return (outAmounts, 50_000);
+        }
+    }
+
+    function calculateTransitionalSwapReturn(
+        IMDexFactory factory,
+        IERC20 inToken,
+        IERC20 transitionToken,
+        IERC20 outToken,
+        uint256[] memory inAmounts
+    ) internal view returns (uint256[] memory outAmounts, uint256 gas) {
+        IERC20 realInToken = inToken.wrapETH();
+        IERC20 realTransitionToken = transitionToken.wrapETH();
+        IERC20 realOutToken = outToken.wrapETH();
+
+        if (realInToken == realTransitionToken || realOutToken == realTransitionToken) {
+            return (new uint256[](inAmounts.length), 0);
+        }
+        uint256 firstGas;
+        uint256 secondGas;
+        (outAmounts, firstGas) = calculateSwapReturn(factory, realInToken, realTransitionToken, inAmounts);
+        (outAmounts, secondGas) = calculateSwapReturn(factory, realTransitionToken, realOutToken, outAmounts);
+        return (outAmounts, firstGas + secondGas);
+    }
+
+    function swap(
+        IMDexFactory factory,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256 inAmount
+    ) internal returns (uint256 outAmount) {
+        inToken.depositToWETH(inAmount);
+
+        IERC20 realInToken = inToken.wrapETH();
+        IERC20 realOutToken = outToken.wrapETH();
+        IMDexPair pair = factory.getPair(realInToken, realOutToken);
+        uint256 fee = factory.getPairFees(address(pair));
+        outAmount = pair.calculateRealSwapReturn(realInToken, realOutToken, inAmount, fee);
+
+        realInToken.universalTransfer(address(pair), inAmount);
+        if (uint256(address(realInToken)) < uint256(address(realOutToken))) {
+            pair.swap(0, outAmount, address(this), "");
+        } else {
+            pair.swap(outAmount, 0, address(this), "");
+        }
+
+        outToken.withdrawFromWETH();
+    }
+
+    function swapTransitional(
+        IMDexFactory factory,
+        IERC20 inToken,
+        IERC20 transitionToken,
+        IERC20 outToken,
+        uint256 inAmount
+    ) internal {
+        swap(factory, transitionToken, outToken, swap(factory, inToken, transitionToken, inAmount));
+    }
+}
+
 // File: contracts/dexes/Dexes.sol
 
 // SPDX-License-Identifier: MIT
@@ -2735,6 +3296,9 @@ pragma solidity ^0.6.0;
 // import "./IMooniswap.sol";
 // import "./IBalancer.sol";
 // import "./IKyber.sol";
+
+
+
 
 
 
@@ -2851,6 +3415,26 @@ enum Dex {
     DODOUSDT,
     // Smoothy
     Smoothy,
+    // Acryptos
+    AcryptosBTC,
+    // Ellipsis
+    Ellipsis,
+    EllipsisUSD,
+    EllipsisBTC,
+    EllipsisFUSDT,
+    // MDex
+    MDex,
+    MDexETH,
+    MDexBUSD,
+    MDexUSDC,
+    MDexUSDT,
+    // PancakeV2
+    PancakeV2,
+    PancakeETHV2,
+    PancakeUSDCV2,
+    PancakeUSDTV2,
+    PancakeBUSDV2,
+    PancakeDOTV2,
     // bottom mark
     NoDex
 }
@@ -2859,32 +3443,11 @@ library Dexes {
     using UniversalERC20 for IERC20;
     using Flags for uint256;
 
-    // IUniswapV2Factory internal constant uniswapV2 = IUniswapV2Factory(0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f);
-    // using IUniswapV2FactoryExtension for IUniswapV2Factory;
-
-    // ICurveRegistry internal constant curveRegistry = ICurveRegistry(0x7002B727Ef8F5571Cb5F9D70D13DBEEb4dFAe9d1);
-    // using ICurveRegistryExtension for ICurveRegistry;
-
-    // IOasis internal constant oasis = IOasis(0x794e6e91555438aFc3ccF1c5076A74F42133d08D);
-    // using IOasisExtension for IOasis;
-
-    // IUniswapFactory internal constant uniswap = IUniswapFactory(0xc0a47dFe034B400B47bDaD5FecDa2621de6c4d95);
-    // using IUniswapFactoryExtension for IUniswapFactory;
-
-    // ISushiSwapFactory internal constant sushiswap = ISushiSwapFactory(0xC0AEe478e3658e2610c5F7A4A2E1777cE9e4f2Ac);
-    // using ISushiSwapFactoryExtension for ISushiSwapFactory;
-
-    // IMooniswapRegistry internal constant mooniswap = IMooniswapRegistry(0x71CD6666064C3A1354a3B4dca5fA1E2D3ee7D303);
-    // using IMooniswapRegistryExtension for IMooniswapRegistry;
-
-    // IBalancerRegistry internal constant balancer = IBalancerRegistry(0x65e67cbc342712DF67494ACEfc06fe951EE93982);
-    // using IBalancerRegistryExtension for IBalancerRegistry;
-
-    // IKyberNetworkProxy internal constant kyber = IKyberNetworkProxy(0x9AAb3f75489902f3a48495025729a0AF77d4b11e);
-    // using IKyberNetworkProxyExtension for IKyberNetworkProxy;
-
     IPancakeFactory internal constant pancake = IPancakeFactory(0xBCfCcbde45cE874adCB698cC183deBcF17952812);
     using IPancakeFactoryExtension for IPancakeFactory;
+
+    IPancakeFactoryV2 internal constant pancakeV2 = IPancakeFactoryV2(0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73);
+    using IPancakeFactoryExtensionV2 for IPancakeFactoryV2;
 
     IBakeryFactory internal constant bakery = IBakeryFactory(0x01bF7C66c6BD861915CdaaE475042d3c4BaE16A7);
     using IBakeryFactoryExtension for IBakeryFactory;
@@ -2918,6 +3481,11 @@ library Dexes {
     ISmoothy internal constant smoothy = ISmoothy(0xe5859f4EFc09027A9B718781DCb2C6910CAc6E91);
     using ISmoothyExtension for ISmoothy;
 
+    using IEllipsisPoolExtension for IEllipsisPool;
+
+    IMDexFactory internal constant mdex = IMDexFactory(0x3CD1C46068dAEa5Ebb0d3f55F6915B10648062B8);
+    using IMDexFactoryExtension for IMDexFactory;
+
     function allDexes() internal pure returns (Dex[] memory dexes) {
         uint256 dexCount = uint256(Dex.NoDex);
         dexes = new Dex[](dexCount);
@@ -2933,122 +3501,6 @@ library Dexes {
         uint256[] memory inAmounts,
         uint256 flags
     ) internal view returns (uint256[] memory, uint256) {
-        // if (dex == Dex.UniswapV2 && !flags.or(Flags.FLAG_DISABLE_UNISWAP_V2_ALL, Flags.FLAG_DISABLE_UNISWAP_V2)) {
-        //     return uniswapV2.calculateSwapReturn(inToken, outToken, inAmounts);
-        // }
-        // if (dex == Dex.UniswapV2ETH && !flags.or(Flags.FLAG_DISABLE_UNISWAP_V2_ALL, Flags.FLAG_DISABLE_UNISWAP_V2_ETH)) {
-        //     return uniswapV2.calculateTransitionalSwapReturn(inToken, Tokens.WETH, outToken, inAmounts);
-        // }
-        // if (dex == Dex.UniswapV2DAI && !flags.or(Flags.FLAG_DISABLE_UNISWAP_V2_ALL, Flags.FLAG_DISABLE_UNISWAP_V2_DAI)) {
-        //     return uniswapV2.calculateTransitionalSwapReturn(inToken, Tokens.DAI, outToken, inAmounts);
-        // }
-        // if (dex == Dex.UniswapV2USDC && !flags.or(Flags.FLAG_DISABLE_UNISWAP_V2_ALL, Flags.FLAG_DISABLE_UNISWAP_V2_USDC)) {
-        //     return uniswapV2.calculateTransitionalSwapReturn(inToken, Tokens.USDC, outToken, inAmounts);
-        // }
-        // if (dex == Dex.CurveCompound && !flags.or(Flags.FLAG_DISABLE_CURVE_ALL, Flags.FLAG_DISABLE_CURVE_COMPOUND)) {
-        //     return curveRegistry.calculateSwapReturn(ICurveRegistryExtension.CURVE_COMPOUND, inToken, outToken, inAmounts);
-        // }
-        // if (dex == Dex.CurveUSDT && !flags.or(Flags.FLAG_DISABLE_CURVE_ALL, Flags.FLAG_DISABLE_CURVE_USDT)) {
-        //     return curveRegistry.calculateSwapReturn(ICurveRegistryExtension.CURVE_USDT, inToken, outToken, inAmounts);
-        // }
-        // if (dex == Dex.CurveY && !flags.or(Flags.FLAG_DISABLE_CURVE_ALL, Flags.FLAG_DISABLE_CURVE_Y)) {
-        //     return curveRegistry.calculateSwapReturn(ICurveRegistryExtension.CURVE_Y, inToken, outToken, inAmounts);
-        // }
-        // if (dex == Dex.CurveBinance && !flags.or(Flags.FLAG_DISABLE_CURVE_ALL, Flags.FLAG_DISABLE_CURVE_BINANCE)) {
-        //     return curveRegistry.calculateSwapReturn(ICurveRegistryExtension.CURVE_BINANCE, inToken, outToken, inAmounts);
-        // }
-        // if (dex == Dex.CurveSynthetix && !flags.or(Flags.FLAG_DISABLE_CURVE_ALL, Flags.FLAG_DISABLE_CURVE_SYNTHETIX)) {
-        //     return curveRegistry.calculateSwapReturn(ICurveRegistryExtension.CURVE_SYNTHETIX, inToken, outToken, inAmounts);
-        // }
-        // if (dex == Dex.CurvePAX && !flags.or(Flags.FLAG_DISABLE_CURVE_ALL, Flags.FLAG_DISABLE_CURVE_PAX)) {
-        //     return curveRegistry.calculateSwapReturn(ICurveRegistryExtension.CURVE_PAX, inToken, outToken, inAmounts);
-        // }
-        // if (dex == Dex.CurveRenBTC && !flags.or(Flags.FLAG_DISABLE_CURVE_ALL, Flags.FLAG_DISABLE_CURVE_RENBTC)) {
-        //     return curveRegistry.calculateSwapReturn(ICurveRegistryExtension.CURVE_REN_BTC, inToken, outToken, inAmounts);
-        // }
-        // if (dex == Dex.CurveTBTC && !flags.or(Flags.FLAG_DISABLE_CURVE_ALL, Flags.FLAG_DISABLE_CURVE_TBTC)) {
-        //     return curveRegistry.calculateSwapReturn(ICurveRegistryExtension.CURVE_TBTC, inToken, outToken, inAmounts);
-        // }
-        // if (dex == Dex.CurveSBTC && !flags.or(Flags.FLAG_DISABLE_CURVE_ALL, Flags.FLAG_DISABLE_CURVE_SBTC)) {
-        //     return curveRegistry.calculateSwapReturn(ICurveRegistryExtension.CURVE_SBTC, inToken, outToken, inAmounts);
-        // }
-        // if (dex == Dex.Oasis && !flags.on(Flags.FLAG_DISABLE_OASIS)) {
-        //     return oasis.calculateSwapReturn(inToken, outToken, inAmounts);
-        // }
-        // if (dex == Dex.Uniswap && !flags.on(Flags.FLAG_DISABLE_UNISWAP)) {
-        //     return uniswap.calculateSwapReturn(inToken, outToken, inAmounts);
-        // }
-        // // add SushiSwap
-        // if (dex == Dex.SushiSwap && !flags.or(Flags.FLAG_DISABLE_SUSHISWAP_ALL, Flags.FLAG_DISABLE_SUSHISWAP)) {
-        //     return sushiswap.calculateSwapReturn(inToken, outToken, inAmounts);
-        // }
-        // if (dex == Dex.SushiSwapETH && !flags.or(Flags.FLAG_DISABLE_SUSHISWAP_ALL, Flags.FLAG_DISABLE_SUSHISWAP_ETH)) {
-        //     return sushiswap.calculateTransitionalSwapReturn(inToken, Tokens.WETH, outToken, inAmounts);
-        // }
-        // if (dex == Dex.SushiSwapDAI && !flags.or(Flags.FLAG_DISABLE_SUSHISWAP_ALL, Flags.FLAG_DISABLE_SUSHISWAP_DAI)) {
-        //     return sushiswap.calculateTransitionalSwapReturn(inToken, Tokens.DAI, outToken, inAmounts);
-        // }
-        // if (dex == Dex.SushiSwapUSDC && !flags.or(Flags.FLAG_DISABLE_SUSHISWAP_ALL, Flags.FLAG_DISABLE_SUSHISWAP_USDC)) {
-        //     return sushiswap.calculateTransitionalSwapReturn(inToken, Tokens.USDC, outToken, inAmounts);
-        // }
-        // // add Mooniswap
-        // if (dex == Dex.Mooniswap && !flags.or(Flags.FLAG_DISABLE_MOONISWAP_ALL, Flags.FLAG_DISABLE_MOONISWAP)) {
-        //     return mooniswap.calculateSwapReturn(inToken, outToken, inAmounts);
-        // }
-        // if (dex == Dex.MooniswapETH && !flags.or(Flags.FLAG_DISABLE_MOONISWAP_ALL, Flags.FLAG_DISABLE_MOONISWAP_ETH)) {
-        //     return mooniswap.calculateTransitionalSwapReturn(inToken, UniversalERC20.ETH_ADDRESS, outToken, inAmounts);
-        // }
-        // if (dex == Dex.MooniswapDAI && !flags.or(Flags.FLAG_DISABLE_MOONISWAP_ALL, Flags.FLAG_DISABLE_MOONISWAP_DAI)) {
-        //     return mooniswap.calculateTransitionalSwapReturn(inToken, Tokens.DAI, outToken, inAmounts);
-        // }
-        // if (dex == Dex.MooniswapUSDC && !flags.or(Flags.FLAG_DISABLE_MOONISWAP_ALL, Flags.FLAG_DISABLE_MOONISWAP_USDC)) {
-        //     return mooniswap.calculateTransitionalSwapReturn(inToken, Tokens.USDC, outToken, inAmounts);
-        // }
-        // // add Balancer
-        // if (dex == Dex.Balancer1 && !flags.or(Flags.FLAG_DISABLE_BALANCER_ALL, Flags.FLAG_DISABLE_BALANCER_1)) {
-        //     return balancer.calculateSwapReturn(inToken, outToken, inAmounts, 0);
-        // }
-        // if (dex == Dex.Balancer2 && !flags.or(Flags.FLAG_DISABLE_BALANCER_ALL, Flags.FLAG_DISABLE_BALANCER_2)) {
-        //     return balancer.calculateSwapReturn(inToken, outToken, inAmounts, 1);
-        // }
-        // if (dex == Dex.Balancer3 && !flags.or(Flags.FLAG_DISABLE_BALANCER_ALL, Flags.FLAG_DISABLE_BALANCER_3)) {
-        //     return balancer.calculateSwapReturn(inToken, outToken, inAmounts, 2);
-        // }
-        // // add Kyber
-        // if (dex == Dex.Kyber1 && !flags.or(Flags.FLAG_DISABLE_KYBER_ALL, Flags.FLAG_DISABLE_KYBER_1)) {
-        //     return
-        //         kyber.calculateSwapReturn(
-        //             inToken,
-        //             outToken,
-        //             inAmounts,
-        //             flags,
-        //             0xff4b796265722046707200000000000000000000000000000000000000000000
-        //         );
-        // }
-        // if (dex == Dex.Kyber2 && !flags.or(Flags.FLAG_DISABLE_KYBER_ALL, Flags.FLAG_DISABLE_KYBER_2)) {
-        //     return
-        //         kyber.calculateSwapReturn(
-        //             inToken,
-        //             outToken,
-        //             inAmounts,
-        //             flags,
-        //             0xffabcd0000000000000000000000000000000000000000000000000000000000
-        //         );
-        // }
-        // if (dex == Dex.Kyber3 && !flags.or(Flags.FLAG_DISABLE_KYBER_ALL, Flags.FLAG_DISABLE_KYBER_3)) {
-        //     return
-        //         kyber.calculateSwapReturn(
-        //             inToken,
-        //             outToken,
-        //             inAmounts,
-        //             flags,
-        //             0xff4f6e65426974205175616e7400000000000000000000000000000000000000
-        //         );
-        // }
-        // if (dex == Dex.Kyber4 && !flags.or(Flags.FLAG_DISABLE_KYBER_ALL, Flags.FLAG_DISABLE_KYBER_4)) {
-        //     return kyber.calculateSwapReturn(inToken, outToken, inAmounts, flags, 0);
-        // }
-
         // Pancake
         if (dex == Dex.Pancake && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL, Flags.FLAG_DISABLE_PANCAKE)) {
             return pancake.calculateSwapReturn(inToken, outToken, inAmounts);
@@ -3178,6 +3630,9 @@ library Dexes {
         if (dex == Dex.AcryptosQUSD && !flags.or(Flags.FLAG_DISABLE_ACRYPTOS_ALL, Flags.FLAG_DISABLE_ACRYPTOS_QUSD)) {
             return IAcryptosPoolExtension.ACRYPTOS_QUSD.calculateSwapReturn(inToken, outToken, inAmounts);
         }
+        if (dex == Dex.AcryptosBTC && !flags.on(Flags.FLAG_DISABLE_ACRYPTOS_ALL)) {
+            return IAcryptosPoolExtension.ACRYPTOS_BTC.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
         // Apeswap
         if (dex == Dex.Apeswap && !flags.or(Flags.FLAG_DISABLE_APESWAP_ALL, Flags.FLAG_DISABLE_APESWAP)) {
             return apeswap.calculateSwapReturn(inToken, outToken, inAmounts);
@@ -3196,19 +3651,67 @@ library Dexes {
         }
 
         // add DODO
-        if (dex == Dex.DODO && !flags.or(Flags.FLAG_DISABLE_DODO_ALL, Flags.FLAG_DISABLE_DODO)) {
-            return dodo.calculateSwapReturn(inToken, outToken, inAmounts);
-        }
-        if (dex == Dex.DODOUSDC && !flags.or(Flags.FLAG_DISABLE_DODO_ALL, Flags.FLAG_DISABLE_DODO_USDC)) {
-            return dodo.calculateTransitionalSwapReturn(inToken, Tokens.USDC, outToken, inAmounts);
-        }
-        if (dex == Dex.DODOUSDT && !flags.or(Flags.FLAG_DISABLE_DODO_ALL, Flags.FLAG_DISABLE_DODO_USDT)) {
-            return dodo.calculateTransitionalSwapReturn(inToken, Tokens.USDT, outToken, inAmounts);
-        }
+        // if (dex == Dex.DODO && !flags.or(Flags.FLAG_DISABLE_DODO_ALL, Flags.FLAG_DISABLE_DODO)) {
+        //     return dodo.calculateSwapReturn(inToken, outToken, inAmounts);
+        // }
+        // if (dex == Dex.DODOUSDC && !flags.or(Flags.FLAG_DISABLE_DODO_ALL, Flags.FLAG_DISABLE_DODO_USDC)) {
+        //     return dodo.calculateTransitionalSwapReturn(inToken, Tokens.USDC, outToken, inAmounts);
+        // }
+        // if (dex == Dex.DODOUSDT && !flags.or(Flags.FLAG_DISABLE_DODO_ALL, Flags.FLAG_DISABLE_DODO_USDT)) {
+        //     return dodo.calculateTransitionalSwapReturn(inToken, Tokens.USDT, outToken, inAmounts);
+        // }
 
         // add Smoothy
         if (dex == Dex.Smoothy && !flags.on(Flags.FLAG_DISABLE_SMOOTHY)) {
             return smoothy.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+
+        // add Ellipsis
+        if (dex == Dex.EllipsisUSD && !flags.on(Flags.FLAG_DISABLE_ELLIPSIS)) {
+            return IEllipsisPoolExtension.ELLIPSIS_USD.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+        if (dex == Dex.EllipsisBTC && !flags.on(Flags.FLAG_DISABLE_ELLIPSIS)) {
+            return IEllipsisPoolExtension.ELLIPSIS_BTC.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+        if (dex == Dex.EllipsisFUSDT && !flags.on(Flags.FLAG_DISABLE_ELLIPSIS)) {
+            return IEllipsisPoolExtension.ELLIPSIS_FUSDT.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+
+        // add MDex
+        if (dex == Dex.MDex && !flags.or(Flags.FLAG_DISABLE_MDEX_ALL, Flags.FLAG_DISABLE_MDEX)) {
+            return mdex.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+        if (dex == Dex.MDexETH && !flags.or(Flags.FLAG_DISABLE_MDEX_ALL, Flags.FLAG_DISABLE_MDEX_ETH)) {
+            return mdex.calculateTransitionalSwapReturn(inToken, Tokens.WETH, outToken, inAmounts);
+        }
+        if (dex == Dex.MDexUSDC && !flags.or(Flags.FLAG_DISABLE_MDEX_ALL, Flags.FLAG_DISABLE_MDEX_USDC)) {
+            return mdex.calculateTransitionalSwapReturn(inToken, Tokens.USDC, outToken, inAmounts);
+        }
+        if (dex == Dex.MDexUSDT && !flags.or(Flags.FLAG_DISABLE_MDEX_ALL, Flags.FLAG_DISABLE_MDEX_USDT)) {
+            return mdex.calculateTransitionalSwapReturn(inToken, Tokens.USDT, outToken, inAmounts);
+        }
+        if (dex == Dex.MDexBUSD && !flags.or(Flags.FLAG_DISABLE_MDEX_ALL, Flags.FLAG_DISABLE_MDEX_BUSD)) {
+            return mdex.calculateTransitionalSwapReturn(inToken, Tokens.BUSD, outToken, inAmounts);
+        }
+
+        // PancakeV2
+        if (dex == Dex.PancakeV2 && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL_V2, Flags.FLAG_DISABLE_PANCAKE_V2)) {
+            return pancakeV2.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+        if (dex == Dex.PancakeETHV2 && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL_V2, Flags.FLAG_DISABLE_PANCAKE_ETH_V2)) {
+            return pancakeV2.calculateTransitionalSwapReturn(inToken, Tokens.WETH, outToken, inAmounts);
+        }
+        if (dex == Dex.PancakeUSDCV2 && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL_V2, Flags.FLAG_DISABLE_PANCAKE_USDC_V2)) {
+            return pancakeV2.calculateTransitionalSwapReturn(inToken, Tokens.USDC, outToken, inAmounts);
+        }
+        if (dex == Dex.PancakeUSDTV2 && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL_V2, Flags.FLAG_DISABLE_PANCAKE_USDT_V2)) {
+            return pancakeV2.calculateTransitionalSwapReturn(inToken, Tokens.USDT, outToken, inAmounts);
+        }
+        if (dex == Dex.PancakeBUSDV2 && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL_V2, Flags.FLAG_DISABLE_PANCAKE_BUSD_V2)) {
+            return pancakeV2.calculateTransitionalSwapReturn(inToken, Tokens.BUSD, outToken, inAmounts);
+        }
+        if (dex == Dex.PancakeDOTV2 && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL_V2, Flags.FLAG_DISABLE_PANCAKE_DOT_V2)) {
+            return pancakeV2.calculateTransitionalSwapReturn(inToken, Tokens.DOT, outToken, inAmounts);
         }
 
         // fallback
@@ -3222,101 +3725,6 @@ library Dexes {
         uint256 amount,
         uint256 flags
     ) internal {
-        // if (dex == Dex.UniswapV2 && !flags.or(Flags.FLAG_DISABLE_UNISWAP_V2_ALL, Flags.FLAG_DISABLE_UNISWAP_V2)) {
-        //     uniswapV2.swap(inToken, outToken, amount);
-        // }
-        // if (dex == Dex.UniswapV2ETH && !flags.or(Flags.FLAG_DISABLE_UNISWAP_V2_ALL, Flags.FLAG_DISABLE_UNISWAP_V2_ETH)) {
-        //     uniswapV2.swapTransitional(inToken, Tokens.WETH, outToken, amount);
-        // }
-        // if (dex == Dex.UniswapV2DAI && !flags.or(Flags.FLAG_DISABLE_UNISWAP_V2_ALL, Flags.FLAG_DISABLE_UNISWAP_V2_DAI)) {
-        //     uniswapV2.swapTransitional(inToken, Tokens.DAI, outToken, amount);
-        // }
-        // if (dex == Dex.UniswapV2USDC && !flags.or(Flags.FLAG_DISABLE_UNISWAP_V2_ALL, Flags.FLAG_DISABLE_UNISWAP_V2_USDC)) {
-        //     uniswapV2.swapTransitional(inToken, Tokens.USDC, outToken, amount);
-        // }
-        // if (dex == Dex.CurveCompound && !flags.or(Flags.FLAG_DISABLE_CURVE_ALL, Flags.FLAG_DISABLE_CURVE_COMPOUND)) {
-        //     curveRegistry.swap(ICurveRegistryExtension.CURVE_COMPOUND, inToken, outToken, amount);
-        // }
-        // if (dex == Dex.CurveUSDT && !flags.or(Flags.FLAG_DISABLE_CURVE_ALL, Flags.FLAG_DISABLE_CURVE_USDT)) {
-        //     curveRegistry.swap(ICurveRegistryExtension.CURVE_USDT, inToken, outToken, amount);
-        // }
-        // if (dex == Dex.CurveY && !flags.or(Flags.FLAG_DISABLE_CURVE_ALL, Flags.FLAG_DISABLE_CURVE_Y)) {
-        //     curveRegistry.swap(ICurveRegistryExtension.CURVE_Y, inToken, outToken, amount);
-        // }
-        // if (dex == Dex.CurveBinance && !flags.or(Flags.FLAG_DISABLE_CURVE_ALL, Flags.FLAG_DISABLE_CURVE_BINANCE)) {
-        //     curveRegistry.swap(ICurveRegistryExtension.CURVE_BINANCE, inToken, outToken, amount);
-        // }
-        // if (dex == Dex.CurveSynthetix && !flags.or(Flags.FLAG_DISABLE_CURVE_ALL, Flags.FLAG_DISABLE_CURVE_SYNTHETIX)) {
-        //     curveRegistry.swap(ICurveRegistryExtension.CURVE_SYNTHETIX, inToken, outToken, amount);
-        // }
-        // if (dex == Dex.CurvePAX && !flags.or(Flags.FLAG_DISABLE_CURVE_ALL, Flags.FLAG_DISABLE_CURVE_PAX)) {
-        //     curveRegistry.swap(ICurveRegistryExtension.CURVE_PAX, inToken, outToken, amount);
-        // }
-        // if (dex == Dex.CurveRenBTC && !flags.or(Flags.FLAG_DISABLE_CURVE_ALL, Flags.FLAG_DISABLE_CURVE_RENBTC)) {
-        //     curveRegistry.swap(ICurveRegistryExtension.CURVE_REN_BTC, inToken, outToken, amount);
-        // }
-        // if (dex == Dex.CurveTBTC && !flags.or(Flags.FLAG_DISABLE_CURVE_ALL, Flags.FLAG_DISABLE_CURVE_TBTC)) {
-        //     curveRegistry.swap(ICurveRegistryExtension.CURVE_TBTC, inToken, outToken, amount);
-        // }
-        // if (dex == Dex.CurveSBTC && !flags.or(Flags.FLAG_DISABLE_CURVE_ALL, Flags.FLAG_DISABLE_CURVE_SBTC)) {
-        //     curveRegistry.swap(ICurveRegistryExtension.CURVE_SBTC, inToken, outToken, amount);
-        // }
-        // if (dex == Dex.Oasis && !flags.on(Flags.FLAG_DISABLE_OASIS)) {
-        //     oasis.swap(inToken, outToken, amount);
-        // }
-        // if (dex == Dex.Uniswap && !flags.on(Flags.FLAG_DISABLE_UNISWAP)) {
-        //     uniswap.swap(inToken, outToken, amount);
-        // }
-        // // add SushiSwap
-        // if (dex == Dex.SushiSwap && !flags.or(Flags.FLAG_DISABLE_SUSHISWAP_ALL, Flags.FLAG_DISABLE_SUSHISWAP)) {
-        //     sushiswap.swap(inToken, outToken, amount);
-        // }
-        // if (dex == Dex.SushiSwapETH && !flags.or(Flags.FLAG_DISABLE_SUSHISWAP_ALL, Flags.FLAG_DISABLE_SUSHISWAP_ETH)) {
-        //     sushiswap.swapTransitional(inToken, Tokens.WETH, outToken, amount);
-        // }
-        // if (dex == Dex.SushiSwapDAI && !flags.or(Flags.FLAG_DISABLE_SUSHISWAP_ALL, Flags.FLAG_DISABLE_SUSHISWAP_DAI)) {
-        //     sushiswap.swapTransitional(inToken, Tokens.DAI, outToken, amount);
-        // }
-        // if (dex == Dex.SushiSwapUSDC && !flags.or(Flags.FLAG_DISABLE_SUSHISWAP_ALL, Flags.FLAG_DISABLE_SUSHISWAP_USDC)) {
-        //     sushiswap.swapTransitional(inToken, Tokens.USDC, outToken, amount);
-        // }
-        // // add Mooniswap
-        // if (dex == Dex.Mooniswap && !flags.or(Flags.FLAG_DISABLE_MOONISWAP_ALL, Flags.FLAG_DISABLE_MOONISWAP)) {
-        //     mooniswap.swap(inToken, outToken, amount);
-        // }
-        // if (dex == Dex.MooniswapETH && !flags.or(Flags.FLAG_DISABLE_MOONISWAP_ALL, Flags.FLAG_DISABLE_MOONISWAP_ETH)) {
-        //     mooniswap.swapTransitional(inToken, UniversalERC20.ETH_ADDRESS, outToken, amount);
-        // }
-        // if (dex == Dex.MooniswapDAI && !flags.or(Flags.FLAG_DISABLE_MOONISWAP_ALL, Flags.FLAG_DISABLE_MOONISWAP_DAI)) {
-        //     mooniswap.swapTransitional(inToken, Tokens.DAI, outToken, amount);
-        // }
-        // if (dex == Dex.MooniswapUSDC && !flags.or(Flags.FLAG_DISABLE_MOONISWAP_ALL, Flags.FLAG_DISABLE_MOONISWAP_USDC)) {
-        //     mooniswap.swapTransitional(inToken, Tokens.USDC, outToken, amount);
-        // }
-        // // add Balancer
-        // if (dex == Dex.Balancer1 && !flags.or(Flags.FLAG_DISABLE_BALANCER_ALL, Flags.FLAG_DISABLE_BALANCER_1)) {
-        //     balancer.swap(inToken, outToken, amount, 0);
-        // }
-        // if (dex == Dex.Balancer2 && !flags.or(Flags.FLAG_DISABLE_BALANCER_ALL, Flags.FLAG_DISABLE_BALANCER_2)) {
-        //     balancer.swap(inToken, outToken, amount, 1);
-        // }
-        // if (dex == Dex.Balancer3 && !flags.or(Flags.FLAG_DISABLE_BALANCER_ALL, Flags.FLAG_DISABLE_BALANCER_3)) {
-        //     balancer.swap(inToken, outToken, amount, 2);
-        // }
-        // // add Kyber
-        // if (dex == Dex.Kyber1 && !flags.or(Flags.FLAG_DISABLE_KYBER_ALL, Flags.FLAG_DISABLE_KYBER_1)) {
-        //     return kyber.swap(inToken, outToken, amount, flags, 0xff4b796265722046707200000000000000000000000000000000000000000000);
-        // }
-        // if (dex == Dex.Kyber2 && !flags.or(Flags.FLAG_DISABLE_KYBER_ALL, Flags.FLAG_DISABLE_KYBER_2)) {
-        //     return kyber.swap(inToken, outToken, amount, flags, 0xffabcd0000000000000000000000000000000000000000000000000000000000);
-        // }
-        // if (dex == Dex.Kyber3 && !flags.or(Flags.FLAG_DISABLE_KYBER_ALL, Flags.FLAG_DISABLE_KYBER_3)) {
-        //     return kyber.swap(inToken, outToken, amount, flags, 0xff4f6e65426974205175616e7400000000000000000000000000000000000000);
-        // }
-        // if (dex == Dex.Kyber4 && !flags.or(Flags.FLAG_DISABLE_KYBER_ALL, Flags.FLAG_DISABLE_KYBER_4)) {
-        //     return kyber.swap(inToken, outToken, amount, flags, 0);
-        // }
-
         // Pancake
         if (dex == Dex.Pancake && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL, Flags.FLAG_DISABLE_PANCAKE)) {
             pancake.swap(inToken, outToken, amount);
@@ -3446,6 +3854,9 @@ library Dexes {
         if (dex == Dex.AcryptosQUSD && !flags.or(Flags.FLAG_DISABLE_ACRYPTOS_ALL, Flags.FLAG_DISABLE_ACRYPTOS_QUSD)) {
             IAcryptosPoolExtension.ACRYPTOS_QUSD.swap(inToken, outToken, amount);
         }
+        if (dex == Dex.AcryptosBTC && !flags.on(Flags.FLAG_DISABLE_ACRYPTOS_ALL)) {
+            IAcryptosPoolExtension.ACRYPTOS_BTC.swap(inToken, outToken, amount);
+        }
         // Apeswap
         if (dex == Dex.Apeswap && !flags.or(Flags.FLAG_DISABLE_APESWAP_ALL, Flags.FLAG_DISABLE_APESWAP)) {
             apeswap.swap(inToken, outToken, amount);
@@ -3463,19 +3874,67 @@ library Dexes {
             apeswap.swapTransitional(inToken, Tokens.BUSD, outToken, amount);
         }
         // add DODO
-        if (dex == Dex.DODO && !flags.or(Flags.FLAG_DISABLE_DODO_ALL, Flags.FLAG_DISABLE_DODO)) {
-            dodo.swap(inToken, outToken, amount);
-        }
-        if (dex == Dex.DODOUSDC && !flags.or(Flags.FLAG_DISABLE_DODO_ALL, Flags.FLAG_DISABLE_DODO_USDC)) {
-            dodo.swapTransitional(inToken, Tokens.USDC, outToken, amount);
-        }
-        if (dex == Dex.DODOUSDT && !flags.or(Flags.FLAG_DISABLE_DODO_ALL, Flags.FLAG_DISABLE_DODO_USDT)) {
-            dodo.swapTransitional(inToken, Tokens.USDT, outToken, amount);
-        }
+        // if (dex == Dex.DODO && !flags.or(Flags.FLAG_DISABLE_DODO_ALL, Flags.FLAG_DISABLE_DODO)) {
+        //     dodo.swap(inToken, outToken, amount);
+        // }
+        // if (dex == Dex.DODOUSDC && !flags.or(Flags.FLAG_DISABLE_DODO_ALL, Flags.FLAG_DISABLE_DODO_USDC)) {
+        //     dodo.swapTransitional(inToken, Tokens.USDC, outToken, amount);
+        // }
+        // if (dex == Dex.DODOUSDT && !flags.or(Flags.FLAG_DISABLE_DODO_ALL, Flags.FLAG_DISABLE_DODO_USDT)) {
+        //     dodo.swapTransitional(inToken, Tokens.USDT, outToken, amount);
+        // }
 
         // add Smoothy
         if (dex == Dex.Smoothy && !flags.on(Flags.FLAG_DISABLE_SMOOTHY)) {
             smoothy.swap(inToken, outToken, amount);
+        }
+
+        // add Ellipsis
+        if (dex == Dex.EllipsisUSD && !flags.on(Flags.FLAG_DISABLE_ELLIPSIS)) {
+            IEllipsisPoolExtension.ELLIPSIS_USD.swap(inToken, outToken, amount);
+        }
+        if (dex == Dex.EllipsisBTC && !flags.on(Flags.FLAG_DISABLE_ELLIPSIS)) {
+            IEllipsisPoolExtension.ELLIPSIS_BTC.swap(inToken, outToken, amount);
+        }
+        if (dex == Dex.EllipsisFUSDT && !flags.on(Flags.FLAG_DISABLE_ELLIPSIS)) {
+            IEllipsisPoolExtension.ELLIPSIS_FUSDT.swap(inToken, outToken, amount);
+        }
+
+        // add MDex
+        if (dex == Dex.MDex && !flags.or(Flags.FLAG_DISABLE_MDEX_ALL, Flags.FLAG_DISABLE_MDEX)) {
+            mdex.swap(inToken, outToken, amount);
+        }
+        if (dex == Dex.MDexETH && !flags.or(Flags.FLAG_DISABLE_MDEX_ALL, Flags.FLAG_DISABLE_MDEX_ETH)) {
+            mdex.swapTransitional(inToken, Tokens.WETH, outToken, amount);
+        }
+        if (dex == Dex.MDexUSDC && !flags.or(Flags.FLAG_DISABLE_MDEX_ALL, Flags.FLAG_DISABLE_MDEX_USDC)) {
+            mdex.swapTransitional(inToken, Tokens.USDC, outToken, amount);
+        }
+        if (dex == Dex.MDexUSDT && !flags.or(Flags.FLAG_DISABLE_MDEX_ALL, Flags.FLAG_DISABLE_MDEX_USDT)) {
+            mdex.swapTransitional(inToken, Tokens.USDT, outToken, amount);
+        }
+        if (dex == Dex.MDexBUSD && !flags.or(Flags.FLAG_DISABLE_MDEX_ALL, Flags.FLAG_DISABLE_MDEX_BUSD)) {
+            mdex.swapTransitional(inToken, Tokens.BUSD, outToken, amount);
+        }
+
+        // Pancake
+        if (dex == Dex.PancakeV2 && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL_V2, Flags.FLAG_DISABLE_PANCAKE_V2)) {
+            pancakeV2.swap(inToken, outToken, amount);
+        }
+        if (dex == Dex.PancakeETHV2 && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL_V2, Flags.FLAG_DISABLE_PANCAKE_ETH_V2)) {
+            pancakeV2.swapTransitional(inToken, Tokens.WETH, outToken, amount);
+        }
+        if (dex == Dex.PancakeUSDCV2 && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL_V2, Flags.FLAG_DISABLE_PANCAKE_USDC_V2)) {
+            pancakeV2.swapTransitional(inToken, Tokens.USDC, outToken, amount);
+        }
+        if (dex == Dex.PancakeUSDTV2 && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL_V2, Flags.FLAG_DISABLE_PANCAKE_USDT_V2)) {
+            pancakeV2.swapTransitional(inToken, Tokens.USDT, outToken, amount);
+        }
+        if (dex == Dex.PancakeBUSDV2 && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL_V2, Flags.FLAG_DISABLE_PANCAKE_BUSD_V2)) {
+            pancakeV2.swapTransitional(inToken, Tokens.BUSD, outToken, amount);
+        }
+        if (dex == Dex.PancakeDOTV2 && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL_V2, Flags.FLAG_DISABLE_PANCAKE_DOT_V2)) {
+            pancakeV2.swapTransitional(inToken, Tokens.DOT, outToken, amount);
         }
     }
 }
@@ -3697,7 +4156,7 @@ contract DexOne is IDexOne {
         uint256 inAmount,
         uint256 partition,
         uint256 flags
-    ) public override view returns (uint256 outAmount, uint256[] memory distribution) {
+    ) public view override returns (uint256 outAmount, uint256[] memory distribution) {
         (outAmount, , distribution) = calculateSwapReturnWithGas(inToken, outToken, inAmount, partition, flags, 0);
     }
 
@@ -3710,8 +4169,8 @@ contract DexOne is IDexOne {
         uint256 outTokenEthPriceTimesGasPrice
     )
         public
-        override
         view
+        override
         returns (
             uint256 outAmount,
             uint256 estimateGasAmount,
@@ -3726,7 +4185,7 @@ contract DexOne is IDexOne {
         IERC20 outToken,
         uint256 inAmount,
         uint256 flags
-    ) public virtual view returns (uint256[] memory outAmounts) {
+    ) public view virtual returns (uint256[] memory outAmounts) {
         return dexOneView.calculateDexSwapReturns(inToken, outToken, inAmount, flags);
     }
 
@@ -3737,7 +4196,7 @@ contract DexOne is IDexOne {
         uint256 minOutAmount,
         uint256[] memory distribution,
         uint256 flags
-    ) public override payable returns (uint256 outAmount) {
+    ) public payable override returns (uint256 outAmount) {
         if (inToken == outToken) {
             return amount;
         }
@@ -3760,6 +4219,10 @@ contract DexOne is IDexOne {
             return amount;
         }
 
+        uint256 senderBalance = inToken.universalBalanceOf(msg.sender);
+        if (senderBalance < amount) {
+            amount = senderBalance;
+        }
         inToken.universalTransferFrom(msg.sender, address(this), amount);
         uint256 balance = inToken.universalBalanceOf(address(this));
 

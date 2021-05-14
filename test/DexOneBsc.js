@@ -37,7 +37,7 @@ const ERC20 = artifacts.require("IERC20");
 const pass = DisablePancakeAll.add(DisableBurgerAll).add(DisableThugswapAll)
     .add(DisableStablexAll).add(DisableUnifiAll).add(DisableJulswapAll).add(DisableDODOAll)
     .add(DisableApeswapAll).add(DisableAcryptosAll).add(DisableApeswap).add(DisableSmoothy)
-    .add(DisableEllipsis).add(DisableMdexAll).add(DisableBakeryAll).add(DisablePancakeAllV2);
+    .add(DisableEllipsis).add(DisableMdexAll).add(DisableBakeryAll);
 
 const flags = DisablePancakeAll.add(DisableBakeryAll).add(DisableBurgerAll).add(DisableThugswapAll)
     .add(DisableStablexAll).add(DisableUnifiAll).add(DisableJulswapAll).add(DisableDODOAll)
