@@ -61,8 +61,8 @@ library INerveExtension {
         for (uint256 i = 0; i < inAmounts.length; i++) {
             outAmounts[i] = calculateSwapReturn(nerve, realInToken, realOutToken, inAmounts[i]);
         }
-        return (outAmounts, 50_000);
         //todo gas
+        return (outAmounts, 50_000);
     }
 
     function calculateTransitionalSwapReturn(

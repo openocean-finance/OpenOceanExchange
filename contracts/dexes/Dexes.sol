@@ -30,7 +30,7 @@ import "./ISmoothy.sol";
 import "./IEllipsis.sol";
 import "./IMDex.sol";
 import "./INerve.sol";
-import "./ICafeswap.sol";
+//import "./ICafeswap.sol";
 import "./IBeltswap.sol";
 
     enum Dex {
@@ -170,20 +170,20 @@ library Dexes {
     using UniversalERC20 for IERC20;
     using Flags for uint256;
 
-    ICafeFactory internal constant cafeswap = ICafeFactory(0x1B3771a66ee31180906972580adE9b81AFc5fCDc);
-    using ICafeFactoryExtension for ICafeFactory;
+    //TODO 请验证地址是否正确  https://bscscan.com/address/0x3e708fdbe3ada63fc94f8f61811196f1302137ad#code
+//    ICafeFactory internal constant cafeswap = ICafeFactory(0x3e708FdbE3ADA63fc94F8F61811196f1302137AD);
+//    using ICafeFactoryExtension for ICafeFactory;
 
     INerve internal constant nerve = INerve(0x1B3771a66ee31180906972580adE9b81AFc5fCDc);
     using INerveExtension for INerve;
+
+    using IBeltSwapExtension for IBeltSwap;
 
     IPancakeFactory internal constant pancake = IPancakeFactory(0xBCfCcbde45cE874adCB698cC183deBcF17952812);
     using IPancakeFactoryExtension for IPancakeFactory;
 
     IPancakeFactoryV2 internal constant pancakeV2 = IPancakeFactoryV2(0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73);
     using IPancakeFactoryExtensionV2 for IPancakeFactoryV2;
-
-    IBeltSwap internal constant beltswap = IBeltSwap(0xAEA4f7dcd172997947809CE6F12018a6D5c1E8b6);
-    using IBeltSwapExtension for IBeltSwap;
 
     IBakeryFactory internal constant bakery = IBakeryFactory(0x01bF7C66c6BD861915CdaaE475042d3c4BaE16A7);
     using IBakeryFactoryExtension for IBakeryFactory;
@@ -239,16 +239,16 @@ library Dexes {
     ) internal view returns (uint256[] memory, uint256) {
 
         // cafeswap
-        if (dex == Dex.Cafeswap && flags.on(Flags.FLAG_DISABLE_CAFESWAP_ALL)) {
-            return cafeswap.calculateSwapReturn(inToken, outToken, inAmounts);
-        }
+//        if (dex == Dex.Cafeswap && !flags.on(Flags.FLAG_DISABLE_CAFESWAP_ALL)) {
+//            return cafeswap.calculateSwapReturn(inToken, outToken, inAmounts);
+//        }
         //nerve
-        if (dex == Dex.NerveDex && flags.on(Flags.FLAG_DISABLE_NERVE_ALL)) {
+        if (dex == Dex.NerveDex && !flags.on(Flags.FLAG_DISABLE_NERVE_ALL)) {
             return nerve.calculateSwapReturn(inToken, outToken, inAmounts);
         }
         // beltswap
-        if (dex == Dex.Beltswap && flags.on(Flags.FLAG_DISABLE_BELTSWAP_ALL)) {
-            return beltswap.calculateSwapReturn(inToken, outToken, inAmounts);
+        if (dex == Dex.Beltswap && !flags.on(Flags.FLAG_DISABLE_BELTSWAP_ALL)) {
+            return IBeltSwapExtension.IBELTSWAP.calculateSwapReturn(inToken, outToken, inAmounts);
         }
 
         // Pancake
@@ -477,16 +477,16 @@ library Dexes {
     ) internal {
         // belt swap
         if (dex == Dex.Beltswap && !flags.on(Flags.FLAG_DISABLE_BELTSWAP_ALL)) {
-            beltswap.swap(inToken, outToken, amount);
+            IBeltSwapExtension.IBELTSWAP.swap(inToken, outToken, amount);
         }
         // nerve
         if (dex == Dex.NerveDex && !flags.on(Flags.FLAG_DISABLE_NERVE_ALL)) {
             nerve.swap(inToken, outToken, amount);
         }
         // cafeswap
-        if (dex == Dex.Cafeswap && !flags.on(Flags.FLAG_DISABLE_CAFESWAP_ALL)) {
-            cafeswap.swap(inToken, outToken, amount);
-        }
+//        if (dex == Dex.Cafeswap && !flags.on(Flags.FLAG_DISABLE_CAFESWAP_ALL)) {
+//            cafeswap.swap(inToken, outToken, amount);
+//        }
         // Pancake
         if (dex == Dex.Pancake && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL, Flags.FLAG_DISABLE_PANCAKE)) {
             pancake.swap(inToken, outToken, amount);
