@@ -12,8 +12,10 @@ interface IBeltSwap {
 
     function underlying_coins(int128 arg0) external view returns (address);
 
-    function exchange(int128 i, int128 j, uint256 dx, uint256 min_dy) external;
+    function exchange_underlying(int128 i, int128 j, uint256 dx, uint256 min_dy) external;
+
     function get_dy(int128 i, int128 j, uint256 dx) external view returns (uint256);
+
     function get_dy_underlying(int128 i, int128 j, uint256 dx) external view returns (uint256);
 }
 
@@ -45,7 +47,7 @@ library IBeltSwapExtension {
     }
 
     function calculateSwapReturn(
-        IBeltSwap beltSwap,
+        IBeltSwap beltswap,
         IERC20 inToken,
         IERC20 outToken,
         uint256[] memory inAmounts
@@ -56,7 +58,7 @@ library IBeltSwapExtension {
         if (i < tokensLength && j < tokensLength) {
             for (uint256 k = 0; k < inAmounts.length; k++) {
                 if (inAmounts[k] > 0) {
-                    outAmounts[k] = beltSwap.get_dy_underlying(i, j, inAmounts[k]);
+                    outAmounts[k] = beltswap.get_dy_underlying(i, j, inAmounts[k]);
                 }
             }
             //todo gas
@@ -64,8 +66,22 @@ library IBeltSwapExtension {
         }
     }
 
+    function calculateRealSwapReturn(
+        IBeltSwap beltswap,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256 inAmount
+    ) internal view returns (uint256 outAmount) {
+        int128 i = findIndex(inToken);
+        int128 j = findIndex(outToken);
+        if (i < tokensLength && j < tokensLength && inAmount > 0) {
+            outAmount = beltswap.get_dy_underlying(i, j, inAmount);
+            return outAmount;
+        }
+    }
+
     function calculateTransitionalSwapReturn(
-        IBeltSwap beltSwap,
+        IBeltSwap beltswap,
         IERC20 inToken,
         IERC20 transitionToken,
         IERC20 outToken,
@@ -76,21 +92,18 @@ library IBeltSwapExtension {
         }
         uint256 firstGas;
         uint256 secondGas;
-        (outAmounts, firstGas) = calculateSwapReturn(beltSwap, inToken, transitionToken, inAmounts);
-        (outAmounts, secondGas) = calculateSwapReturn(beltSwap, transitionToken, outToken, outAmounts);
+        (outAmounts, firstGas) = calculateSwapReturn(beltswap, inToken, transitionToken, inAmounts);
+        (outAmounts, secondGas) = calculateSwapReturn(beltswap, transitionToken, outToken, outAmounts);
         return (outAmounts, firstGas + secondGas);
     }
 
     function swap(
-        IBeltSwap beltSwap,
+        IBeltSwap beltswap,
         IERC20 inToken,
         IERC20 outToken,
         uint256 inAmount
     ) internal returns (uint256 outAmount) {
-        uint256[] memory inAmounts = new uint256[](1);
-        inAmounts[0] = inAmount;
-        (uint256[] memory outAmounts,) = calculateSwapReturn(beltSwap, inToken, outToken, inAmounts);
-        require(outAmounts.length == 1);
+        outAmount = calculateRealSwapReturn(beltswap, inToken, outToken, inAmount);
         int128 i = findIndex(inToken);
         if (i >= tokensLength) {
             return 0;
@@ -99,19 +112,20 @@ library IBeltSwapExtension {
         if (j >= tokensLength) {
             return 0;
         }
-        inToken.universalApprove(address(beltSwap), inAmount);
-        beltSwap.exchange(i, j, inAmount, outAmounts[0]);
-        outAmount = outAmounts[0];
+        inToken.universalApprove(address(beltswap), inAmount);
+        // todo 1% 修正
+        outAmount = outAmount * 99 / 100;
+        beltswap.exchange_underlying(i, j, inAmount, outAmount);
         return outAmount;
     }
 
     function swapTransitional(
-        IBeltSwap beltSwap,
+        IBeltSwap beltswap,
         IERC20 inToken,
         IERC20 transitionToken,
         IERC20 outToken,
         uint256 inAmount
     ) internal {
-        swap(beltSwap, transitionToken, outToken, swap(beltSwap, inToken, transitionToken, inAmount));
+        swap(beltswap, transitionToken, outToken, swap(beltswap, inToken, transitionToken, inAmount));
     }
 }
