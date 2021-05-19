@@ -15,6 +15,8 @@ library UniversalERC20 {
     IERC20 internal constant ZERO_ADDRESS = IERC20(0x0000000000000000000000000000000000000000);
     IERC20 internal constant ETH_ADDRESS = IERC20(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
 
+    IERC20 internal constant MATIC_ADDRESS = IERC20(0x0000000000000000000000000000000000001010);
+
     function universalTransfer(
         IERC20 token,
         address to,
@@ -24,7 +26,7 @@ library UniversalERC20 {
             return true;
         }
 
-        if (isETH(token)) {
+        if (isMATIC(token)) {
             address(uint160(to)).transfer(amount);
             return true;
         } else {
@@ -43,7 +45,7 @@ library UniversalERC20 {
             return;
         }
 
-        if (isETH(token)) {
+        if (isMATIC(token)) {
             require(from == msg.sender && msg.value >= amount, "Wrong useage of ETH.universalTransferFrom()");
             if (to != address(this)) {
                 address(uint160(to)).transfer(amount);
@@ -62,7 +64,7 @@ library UniversalERC20 {
             return;
         }
 
-        if (isETH(token)) {
+        if (isMATIC(token)) {
             if (msg.value > amount) {
                 // return the remainder
                 msg.sender.transfer(msg.value.sub(amount));
@@ -77,7 +79,7 @@ library UniversalERC20 {
         address to,
         uint256 amount
     ) internal {
-        if (!isETH(token)) {
+        if (!isMATIC(token)) {
             if (amount == 0) {
                 token.safeApprove(to, 0);
                 return;
@@ -94,7 +96,7 @@ library UniversalERC20 {
     }
 
     function universalBalanceOf(IERC20 token, address who) internal view returns (uint256) {
-        if (isETH(token)) {
+        if (isMATIC(token)) {
             return who.balance;
         } else {
             return token.balanceOf(who);
@@ -102,7 +104,7 @@ library UniversalERC20 {
     }
 
     function universalDecimals(IERC20 token) internal view returns (uint256) {
-        if (isETH(token)) {
+        if (isMATIC(token)) {
             return 18;
         }
 
@@ -114,8 +116,8 @@ library UniversalERC20 {
         return (success && data.length > 0) ? abi.decode(data, (uint256)) : 18;
     }
 
-    function isETH(IERC20 token) internal pure returns (bool) {
-        return (address(token) == address(ZERO_ADDRESS) || address(token) == address(ETH_ADDRESS));
+    function isMATIC(IERC20 token) internal pure returns (bool) {
+        return (address(token) == address(ZERO_ADDRESS) || address(token) == address(MATIC_ADDRESS));
     }
 
     function notExist(IERC20 token) internal pure returns (bool) {

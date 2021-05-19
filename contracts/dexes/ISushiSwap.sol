@@ -43,6 +43,7 @@ library ISushiSwapPairExtension {
     using SafeMath for uint256;
     using UniversalERC20 for IERC20;
 
+    //TODO
     address private constant SKIM_TARGET = 0xe523182610482b8C0DD65d5A08F1Bbd256B1EA0c;
 
     /**
@@ -111,8 +112,8 @@ library ISushiSwapFactoryExtension {
     ) internal view returns (uint256[] memory outAmounts, uint256 gas) {
         outAmounts = new uint256[](inAmounts.length);
 
-        IERC20 realInToken = inToken.wrapETH();
-        IERC20 realOutToken = outToken.wrapETH();
+        IERC20 realInToken = inToken.wrapMATIC();
+        IERC20 realOutToken = outToken.wrapMATIC();
         ISushiSwapPair pair = factory.getPair(realInToken, realOutToken);
         if (pair != ISushiSwapPair(0)) {
             for (uint256 i = 0; i < inAmounts.length; i++) {
@@ -129,9 +130,9 @@ library ISushiSwapFactoryExtension {
         IERC20 outToken,
         uint256[] memory inAmounts
     ) internal view returns (uint256[] memory outAmounts, uint256 gas) {
-        IERC20 realInToken = inToken.wrapETH();
-        IERC20 realTransitionToken = transitionToken.wrapETH();
-        IERC20 realOutToken = outToken.wrapETH();
+        IERC20 realInToken = inToken.wrapMATIC();
+        IERC20 realTransitionToken = transitionToken.wrapMATIC();
+        IERC20 realOutToken = outToken.wrapMATIC();
 
         if (realInToken == realTransitionToken || realOutToken == realTransitionToken) {
             return (new uint256[](inAmounts.length), 0);
@@ -151,8 +152,8 @@ library ISushiSwapFactoryExtension {
     ) internal returns (uint256 outAmount) {
         inToken.depositToWETH(inAmount);
 
-        IERC20 realInToken = inToken.wrapETH();
-        IERC20 realOutToken = outToken.wrapETH();
+        IERC20 realInToken = inToken.wrapMATIC();
+        IERC20 realOutToken = outToken.wrapMATIC();
         ISushiSwapPair pair = factory.getPair(realInToken, realOutToken);
 
         outAmount = pair.calculateRealSwapReturn(realInToken, realOutToken, inAmount);

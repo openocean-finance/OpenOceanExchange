@@ -9,13 +9,13 @@ module.exports = {
         development: {
             host: "127.0.0.1",
             port: 18545,
-            network_id: "56",
+            network_id: "137",
             networkCheckTimeout: 100000000
         },
         test: {
-            url: "https://bsc-rpc.openocean.finance",
+            url: "https://rpc-mumbai.matic.today",
             // port: 443,
-            network_id: "1",
+            network_id: "80001",
             networkCheckTimeout: 100000000
         }
     },
