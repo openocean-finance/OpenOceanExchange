@@ -85,7 +85,7 @@ contract DexOne is IDexOne {
         }
 
         if (partition == 0) {
-            if (inToken.isMATIC()) {
+            if (inToken.isHT()) {
                 msg.sender.transfer(msg.value);
                 return msg.value;
             }

@@ -9,13 +9,13 @@ module.exports = {
         development: {
             host: "127.0.0.1",
             port: 18545,
-            network_id: "137",
+            network_id: "128",
             networkCheckTimeout: 100000000
         },
         test: {
-            url: "https://rpc-mumbai.matic.today",
+            url: "https://http-testnet.hecochain.com",
             // port: 443,
-            network_id: "80001",
+            network_id: "256",
             networkCheckTimeout: 100000000
         }
     },

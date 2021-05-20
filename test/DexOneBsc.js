@@ -1,47 +1,34 @@
 const {
     BN,
-    ether,
-    expectRevert
 } = require('@openzeppelin/test-helpers');
-const {
-    expect
-} = require('chai');
+
 const assert = require('assert');
 const {
     web3
 } = require('@openzeppelin/test-helpers/src/setup');
 
-const DisableUniswapV2All = new BN(1 << 0);
-const DisableUniswapV2 = new BN(1).shln(1);
-const DisableUniswapV2ETH = new BN(1).shln(2);
-const DisableUniswapV2DAI = new BN(1).shln(3);
-const DisableUniswapV2USDC = new BN(1).shln(4);
-
-const DisableSushiswapAll = new BN(1).shln(5);
-const DisableSushiswap = new BN(1).shln(6);
-const DisableSushiswapETH = new BN(1).shln(7);
-const DisableSushiswapDAI = new BN(1).shln(8);
-const DisableSushiswapUSDC = new BN(1).shln(9);
+const DisableMDexAll = new BN(1 << 0);
+const DisableMDex = new BN(1).shln(1);
+const DisableMDexHT = new BN(1).shln(2);
+const DisableMDexBUSD = new BN(1).shln(3);
+const DisableMDexUSDC = new BN(1).shln(4);
+const DisableMDexUSDT = new BN(1).shln(5);
 
 
-const DexOneView = artifacts.require("DexOneView");
 const DexOne = artifacts.require("DexOne");
-const DexOneAll = artifacts.require("DexOneAll");
 const ERC20 = artifacts.require("IERC20");
 
-var pass = DisableUniswapV2All.add(DisableUniswapV2).add(DisableUniswapV2ETH)
-    .add(DisableUniswapV2DAI).add(DisableUniswapV2USDC).add(DisableSushiswapAll)
-    .add(DisableSushiswap).add(DisableSushiswapETH).add(DisableSushiswapDAI)
-    .add(DisableSushiswapUSDC);
+var pass = DisableMDexAll.add(DisableMDex).add(DisableMDexHT)
+    .add(DisableMDexBUSD).add(DisableMDexUSDC).add(DisableMDexUSDT);
 
 
 contract('DexOne', (accounts) => {
 
     it('DexOneAll should swap ETH to CAKE', async () => {
-        let usdtAddress = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F";
+        let usdtAddress = "0xa71edc38d189767582c38a3145b5873052c3e47a";
         const usdt = await ERC20.at(usdtAddress);
 
-        let maticAddress = "0x0000000000000000000000000000000000001010";
+        let htAddress = "0x0000000000000000000000000000000000000000";
 
         var balance = await web3.eth.getBalance(accounts[0]);
         console.log("***:",balance); //
@@ -49,30 +36,24 @@ contract('DexOne', (accounts) => {
         let balanceBefore = await usdt.balanceOf(accounts[0])
         console.log(`balance of ${accounts[0]}: (${balanceBefore}) USDT`);
 
-        let testName = "quickswap";
-        if (testName == "quickswap"){
-            pass = pass.sub(DisableUniswapV2All);
-            pass = pass.sub(DisableUniswapV2);
-        } else if(testName == "") {
-            pass = pass.sub(DisableSushiswapAll);
-            pass = pass.sub(DisableSushiswap);
+        let testName = "MDex";
+        if (testName == "MDex"){
+            pass = pass.sub(DisableMDexHT);
         }
-
 
         const dexOne = await DexOne.deployed();
         const res = await dexOne.calculateSwapReturn(
-            maticAddress, // matic
+            htAddress, // matic
             usdtAddress, // usdt
             '1000000000000000000', // 1.0
             10,
-            // 0,
             pass,
         );
         expectedOutAmount = res.outAmount;
         console.log(`expect out amount ${res.outAmount.toString()} USDT`);
         console.log("res.distribution:", res.distribution.toString());
         const swapped = await dexOne.contract.methods.swap(
-            maticAddress,
+            htAddress,
             usdtAddress,
             '1000000000000000000',
             0,
@@ -94,11 +75,8 @@ contract('DexOne', (accounts) => {
             value: '1000000000000000000',
             nonce: web3.utils.toHex(nonce),
         }
-        // console.log(rawTx);
-
 
         const sign = await web3.eth.accounts.signTransaction(rawTx, '0x94e6de53e500b9fec28037c583f5214c854c7229329ce9baf6f5577bd95f9c9a');
-        // console.log(sign);
 
         web3.eth.sendSignedTransaction(sign.rawTransaction).on('receipt', receipt => {
             // console.log(JSON.stringify(receipt));

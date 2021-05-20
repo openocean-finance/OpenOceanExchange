@@ -7,7 +7,7 @@ import "./UniversalERC20.sol";
 /**
  * @dev Wrapper of ETH. See https://weth.io/
  */
-abstract contract IWMATIC is IERC20 {
+abstract contract IWHT is IERC20 {
     function deposit() external payable virtual;
 
     function withdraw(uint256 amount) external virtual;
@@ -15,10 +15,11 @@ abstract contract IWMATIC is IERC20 {
 
 library Tokens {
     using UniversalERC20 for IERC20;
-
+    IERC20 internal constant USDT = IERC20(0xa71EdC38d189767582C38A3145b5873052c3e47a);
+    // 下面没有更新 TODO
     IERC20 internal constant DAI = IERC20(0x1AF3F329e8BE154074D8769D1FFa4eE058B1DBc3);
     IERC20 internal constant USDC = IERC20(0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d);
-    IERC20 internal constant USDT = IERC20(0x55d398326f99059fF775485246999027B3197955);
+
     IERC20 internal constant BUSD = IERC20(0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56);
     IERC20 internal constant QUSD = IERC20(0xb8C540d00dd0Bf76ea12E4B4B95eFC90804f924E);
     IERC20 internal constant DOT = IERC20(0x7083609fCE4d1d8Dc0C979AAb8c869Ea2C873402);
@@ -46,7 +47,7 @@ library Tokens {
     IERC20 internal constant SBTC = IERC20(0xfE18be6b3Bd88A2D2A7f928d00292E7a9963CfC6);
 
     // IWETH internal constant WETH = IWETH(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
-    IWMATIC internal constant WMATIC = IWMATIC(0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270);
+    IWHT internal constant WHT = IWHT(0x5545153CCFcA01fbd7Dd11C0b23ba694D9509A6F);
 
     // BURGER Token
     IERC20 internal constant DGAS = IERC20(0xAe9269f27437f0fcBC232d39Ec814844a51d6b8f);
@@ -55,23 +56,23 @@ library Tokens {
      * @notice Wrap the ETH token to meet the ERC20 standard.
      * @param token token to wrap
      */
-    function wrapMATIC(IERC20 token) internal pure returns (IERC20) {
-        return token.isMATIC() ? WMATIC : token;
+    function wrapHT(IERC20 token) internal pure returns (IERC20) {
+        return token.isHT() ? WHT : token;
     }
 
-    function depositToWETH(IERC20 token, uint256 amount) internal {
-        if (token.isMATIC()) {
-            WMATIC.deposit{value: amount}();
+    function depositToWHT(IERC20 token, uint256 amount) internal {
+        if (token.isHT()) {
+            WHT.deposit{value: amount}();
         }
     }
 
-    function withdrawFromWETH(IERC20 token) internal {
-        if (token.isMATIC()) {
-            WMATIC.withdraw(WMATIC.balanceOf(address(this))); // library methods will be called in the current contract's context
+    function withdrawFromWHT(IERC20 token) internal {
+        if (token.isHT()) {
+            WHT.withdraw(WHT.balanceOf(address(this))); // library methods will be called in the current contract's context
         }
     }
 
     function isWETH(IERC20 token) internal pure returns (bool) {
-        return address(token) == address(WMATIC);
+        return address(token) == address(WHT);
     }
 }
