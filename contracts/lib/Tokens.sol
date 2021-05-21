@@ -7,7 +7,7 @@ import "./UniversalERC20.sol";
 /**
  * @dev Wrapper of ETH. See https://weth.io/
  */
-abstract contract IWXDAI is IERC20 {
+abstract contract IWFTM is IERC20 {
     function deposit() external payable virtual;
 
     function withdraw(uint256 amount) external virtual;
@@ -16,36 +16,35 @@ abstract contract IWXDAI is IERC20 {
 library Tokens {
     using UniversalERC20 for IERC20;
 
-    //not update  TODO
-    IERC20 internal constant DAI = IERC20(0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d);
-    IERC20 internal constant USDC = IERC20(0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83);
 
+    IERC20 internal constant DAI = IERC20(0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E);
+    IERC20 internal constant USDC = IERC20(0x04068DA6C83AFCFA0e13ba15A6696662335D5B75);
 
-    IWXDAI internal constant WXDAI = IWXDAI(0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d);
+    IWFTM internal constant WFTM = IWFTM(0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83);
 
 
     /**
      * @notice Wrap the ETH token to meet the ERC20 standard.
      * @param token token to wrap
      */
-    function wrapXDAI(IERC20 token) internal pure returns (IERC20) {
-        return token.isXDAI() ? WXDAI : token;
+    function wrapFTM(IERC20 token) internal pure returns (IERC20) {
+        return token.isFTM() ? WFTM : token;
     }
 
     function depositToWXDAI(IERC20 token, uint256 amount) internal {
-        if (token.isXDAI()) {
-            WXDAI.deposit{value : amount}();
+        if (token.isFTM()) {
+            WFTM.deposit{value : amount}();
         }
     }
 
     function withdrawFromWETH(IERC20 token) internal {
-        if (token.isXDAI()) {
-            WXDAI.withdraw(WXDAI.balanceOf(address(this)));
+        if (token.isFTM()) {
+            WFTM.withdraw(WFTM.balanceOf(address(this)));
             // library methods will be called in the current contract's context
         }
     }
 
     function isWETH(IERC20 token) internal pure returns (bool) {
-        return address(token) == address(WXDAI);
+        return address(token) == address(WFTM);
     }
 }

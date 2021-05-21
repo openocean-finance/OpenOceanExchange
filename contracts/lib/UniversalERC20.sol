@@ -24,7 +24,7 @@ library UniversalERC20 {
             return true;
         }
 
-        if (isXDAI(token)) {
+        if (isFTM(token)) {
             address(uint160(to)).transfer(amount);
             return true;
         } else {
@@ -43,7 +43,7 @@ library UniversalERC20 {
             return;
         }
 
-        if (isXDAI(token)) {
+        if (isFTM(token)) {
             require(from == msg.sender && msg.value >= amount, "Wrong useage of ETH.universalTransferFrom()");
             if (to != address(this)) {
                 address(uint160(to)).transfer(amount);
@@ -62,7 +62,7 @@ library UniversalERC20 {
             return;
         }
 
-        if (isXDAI(token)) {
+        if (isFTM(token)) {
             if (msg.value > amount) {
                 // return the remainder
                 msg.sender.transfer(msg.value.sub(amount));
@@ -77,7 +77,7 @@ library UniversalERC20 {
         address to,
         uint256 amount
     ) internal {
-        if (!isXDAI(token)) {
+        if (!isFTM(token)) {
             if (amount == 0) {
                 token.safeApprove(to, 0);
                 return;
@@ -94,7 +94,7 @@ library UniversalERC20 {
     }
 
     function universalBalanceOf(IERC20 token, address who) internal view returns (uint256) {
-        if (isXDAI(token)) {
+        if (isFTM(token)) {
             return who.balance;
         } else {
             return token.balanceOf(who);
@@ -102,7 +102,7 @@ library UniversalERC20 {
     }
 
     function universalDecimals(IERC20 token) internal view returns (uint256) {
-        if (isXDAI(token)) {
+        if (isFTM(token)) {
             return 18;
         }
 
@@ -114,7 +114,7 @@ library UniversalERC20 {
         return (success && data.length > 0) ? abi.decode(data, (uint256)) : 18;
     }
 
-    function isXDAI(IERC20 token) internal pure returns (bool) {
+    function isFTM(IERC20 token) internal pure returns (bool) {
         return (address(token) == address(ZERO_ADDRESS));
     }
 

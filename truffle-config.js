@@ -9,7 +9,7 @@ module.exports = {
         development: {
             host: "127.0.0.1",
             port: 18545,
-            network_id: "100",
+            network_id: "250",
             networkCheckTimeout: 100000000
         },
         test: {
