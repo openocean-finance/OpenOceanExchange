@@ -29,137 +29,155 @@ import "./IDODO.sol";
 import "./ISmoothy.sol";
 import "./IEllipsis.sol";
 import "./IMDex.sol";
+import "./INerve.sol";
+//import "./ICafeswap.sol";
+import "./IBeltswap.sol";
 
-enum Dex {
-    // UniswapV2,
-    // UniswapV2ETH,
-    // UniswapV2DAI,
-    // UniswapV2USDC,
-    // CurveCompound,
-    // CurveUSDT,
-    // CurveY,
-    // CurveBinance,
-    // CurveSynthetix,
-    // CurvePAX,
-    // CurveRenBTC,
-    // CurveTBTC,
-    // CurveSBTC,
-    // Oasis,
-    // Uniswap,
-    // Curve,
-    // // add Mooniswap
-    // Mooniswap,
-    // MooniswapETH,
-    // MooniswapDAI,
-    // MooniswapUSDC,
-    // // add SushiSwap
-    // SushiSwap,
-    // SushiSwapETH,
-    // SushiSwapDAI,
-    // SushiSwapUSDC,
-    // // add Balancer
-    // Balancer,
-    // Balancer1,
-    // Balancer2,
-    // Balancer3,
-    // // add Kyber
-    // Kyber,
-    // Kyber1,
-    // Kyber2,
-    // Kyber3,
-    // Kyber4,
+    enum Dex {
+        // UniswapV2,
+        // UniswapV2ETH,
+        // UniswapV2DAI,
+        // UniswapV2USDC,
+        // CurveCompound,
+        // CurveUSDT,
+        // CurveY,
+        // CurveBinance,
+        // CurveSynthetix,
+        // CurvePAX,
+        // CurveRenBTC,
+        // CurveTBTC,
+        // CurveSBTC,
+        // Oasis,
+        // Uniswap,
+        // Curve,
+        // // add Mooniswap
+        // Mooniswap,
+        // MooniswapETH,
+        // MooniswapDAI,
+        // MooniswapUSDC,
+        // // add SushiSwap
+        // SushiSwap,
+        // SushiSwapETH,
+        // SushiSwapDAI,
+        // SushiSwapUSDC,
+        // // add Balancer
+        // Balancer,
+        // Balancer1,
+        // Balancer2,
+        // Balancer3,
+        // // add Kyber
+        // Kyber,
+        // Kyber1,
+        // Kyber2,
+        // Kyber3,
+        // Kyber4,
 
-    // Pancake
-    Pancake,
-    PancakeETH,
-    PancakeDAI,
-    PancakeUSDC,
-    PancakeUSDT,
-    // Bakery
-    Bakery,
-    BakeryETH,
-    BakeryDAI,
-    BakeryUSDC,
-    BakeryUSDT,
-    // Burger
-    Burger,
-    BurgerETH,
-    BurgerDGAS,
-    // Thugswap
-    Thugswap,
-    ThugswapETH,
-    ThugswapDAI,
-    ThugswapUSDC,
-    ThugswapUSDT,
-    // BUSD transitional
-    PancakeBUSD,
-    BakeryBUSD,
-    ThugswapBUSD,
-    // StableX
-    Stablex,
-    StablexDAI,
-    StablexBUSD,
-    StablexQUSD,
-    StablexUSDC,
-    StablexUSDT,
-    // Unifi
-    Unifi,
-    // WETH
-    WETH,
-    // Julswap
-    Julswap,
-    JulswapETH,
-    JulswapDAI,
-    JulswapUSDC,
-    JulswapUSDT,
-    JulswapBUSD,
-    // Pancake DOT
-    PancakeDOT,
-    // Acrytos
-    Acryptos,
-    AcryptosUSD,
-    AcryptosVAI,
-    AcryptosUST,
-    AcryptosQUSD,
-    // Apeswap
-    Apeswap,
-    ApeswapETH,
-    ApeswapUSDT,
-    ApeswapBUSD,
-    ApeswapBANANA,
-    // DODO
-    DODO,
-    DODOUSDC,
-    DODOUSDT,
-    // Smoothy
-    Smoothy,
-    // Acryptos
-    AcryptosBTC,
-    // Ellipsis
-    Ellipsis,
-    EllipsisUSD,
-    EllipsisBTC,
-    EllipsisFUSDT,
-    // MDex
-    MDex,
-    MDexETH,
-    MDexBUSD,
-    MDexUSDC,
-    MDexUSDT,
-    // PancakeV2
-    PancakeV2,
-    PancakeETHV2,
-    PancakeUSDCV2,
-    PancakeUSDTV2,
-    PancakeBUSDV2,
-    PancakeDOTV2,
-    // bottom mark
-    NoDex
-}
+        // Pancake
+        Pancake,
+        PancakeETH,
+        PancakeDAI,
+        PancakeUSDC,
+        PancakeUSDT,
+        // Bakery
+        Bakery,
+        BakeryETH,
+        BakeryDAI,
+        BakeryUSDC,
+        BakeryUSDT,
+        // Burger
+        Burger,
+        BurgerETH,
+        BurgerDGAS,
+        // Thugswap
+        Thugswap,
+        ThugswapETH,
+        ThugswapDAI,
+        ThugswapUSDC,
+        ThugswapUSDT,
+        // BUSD transitional
+        PancakeBUSD,
+        BakeryBUSD,
+        ThugswapBUSD,
+        // StableX
+        Stablex,
+        StablexDAI,
+        StablexBUSD,
+        StablexQUSD,
+        StablexUSDC,
+        StablexUSDT,
+        // Unifi
+        Unifi,
+        // WETH
+        WETH,
+        // Julswap
+        Julswap,
+        JulswapETH,
+        JulswapDAI,
+        JulswapUSDC,
+        JulswapUSDT,
+        JulswapBUSD,
+        // Pancake DOT
+        PancakeDOT,
+        // Acrytos
+        Acryptos,
+        AcryptosUSD,
+        AcryptosVAI,
+        AcryptosUST,
+        AcryptosQUSD,
+        // Apeswap
+        Apeswap,
+        ApeswapETH,
+        ApeswapUSDT,
+        ApeswapBUSD,
+        ApeswapBANANA,
+        // DODO
+        DODO,
+        DODOUSDC,
+        DODOUSDT,
+        // Smoothy
+        Smoothy,
+        // Acryptos
+        AcryptosBTC,
+        // Ellipsis
+        Ellipsis,
+        EllipsisUSD,
+        EllipsisBTC,
+        EllipsisFUSDT,
+        // MDex
+        MDex,
+        MDexETH,
+        MDexBUSD,
+        MDexUSDC,
+        MDexUSDT,
+        // PancakeV2
+        PancakeV2,
+        PancakeETHV2,
+        PancakeUSDCV2,
+        PancakeUSDTV2,
+        PancakeBUSDV2,
+        PancakeDOTV2,
+        //nerve
+        NerveDex,
+        // cafeswap
+        Cafeswap,
+        // beltswap
+        Beltswap,
+        // bottom mark
+        NoDex
+    }
 
 library Dexes {
     using UniversalERC20 for IERC20;
     using Flags for uint256;
+
+    //TODO 请验证地址是否正确  https://bscscan.com/address/0x3e708fdbe3ada63fc94f8f61811196f1302137ad#code
+//    ICafeFactory internal constant cafeswap = ICafeFactory(0x3e708FdbE3ADA63fc94F8F61811196f1302137AD);
+//    using ICafeFactoryExtension for ICafeFactory;
+
+    INerve internal constant nerve = INerve(0x1B3771a66ee31180906972580adE9b81AFc5fCDc);
+    using INerveExtension for INerve;
+
+    using IBeltSwapExtension for IBeltSwap;
 
     IPancakeFactory internal constant pancake = IPancakeFactory(0xBCfCcbde45cE874adCB698cC183deBcF17952812);
     using IPancakeFactoryExtension for IPancakeFactory;
@@ -219,6 +237,20 @@ library Dexes {
         uint256[] memory inAmounts,
         uint256 flags
     ) internal view returns (uint256[] memory, uint256) {
+
+        // cafeswap
+//        if (dex == Dex.Cafeswap && !flags.on(Flags.FLAG_DISABLE_CAFESWAP_ALL)) {
+//            return cafeswap.calculateSwapReturn(inToken, outToken, inAmounts);
+//        }
+        //nerve
+        if (dex == Dex.NerveDex && !flags.on(Flags.FLAG_DISABLE_NERVE_ALL)) {
+            return nerve.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+        // beltswap
+        if (dex == Dex.Beltswap && !flags.on(Flags.FLAG_DISABLE_BELTSWAP_ALL)) {
+            return IBeltSwapExtension.IBELTSWAP.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+
         // Pancake
         if (dex == Dex.Pancake && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL, Flags.FLAG_DISABLE_PANCAKE)) {
             return pancake.calculateSwapReturn(inToken, outToken, inAmounts);
@@ -443,6 +475,18 @@ library Dexes {
         uint256 amount,
         uint256 flags
     ) internal {
+        // belt swap
+        if (dex == Dex.Beltswap && !flags.on(Flags.FLAG_DISABLE_BELTSWAP_ALL)) {
+            IBeltSwapExtension.IBELTSWAP.swap(inToken, outToken, amount);
+        }
+        // nerve
+        if (dex == Dex.NerveDex && !flags.on(Flags.FLAG_DISABLE_NERVE_ALL)) {
+            nerve.swap(inToken, outToken, amount);
+        }
+        // cafeswap
+//        if (dex == Dex.Cafeswap && !flags.on(Flags.FLAG_DISABLE_CAFESWAP_ALL)) {
+//            cafeswap.swap(inToken, outToken, amount);
+//        }
         // Pancake
         if (dex == Dex.Pancake && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL, Flags.FLAG_DISABLE_PANCAKE)) {
             pancake.swap(inToken, outToken, amount);

@@ -28,22 +28,116 @@ const DisableSmoothy = new BN(1).shln(58);
 const DisableEllipsis = new BN(1).shln(59);
 const DisableMdexAll = new BN(1).shln(60);
 const DisablePancakeAllV2 = new BN(1).shln(66);
+const DisableNerveAll = new BN(1).shln(73);
+const DisableCafeswapAll = new BN(1).shln(74);
+const DisableBeltswapAll = new BN(1).shln(75);
 
 const DexOneView = artifacts.require("DexOneView");
 const DexOne = artifacts.require("DexOne");
 const DexOneAll = artifacts.require("DexOneAll");
 const ERC20 = artifacts.require("IERC20");
+const IBeltSwap = artifacts.require("IBeltSwap");
 
-const pass = DisablePancakeAll.add(DisableBurgerAll).add(DisableThugswapAll)
+
+var pass = DisablePancakeAll.add(DisableBurgerAll).add(DisableThugswapAll)
     .add(DisableStablexAll).add(DisableUnifiAll).add(DisableJulswapAll).add(DisableDODOAll)
     .add(DisableApeswapAll).add(DisableAcryptosAll).add(DisableApeswap).add(DisableSmoothy)
-    .add(DisableEllipsis).add(DisableMdexAll).add(DisableBakeryAll);
+    .add(DisableEllipsis).add(DisableMdexAll).add(DisableBakeryAll).add(DisableNerveAll)
+    .add(DisableCafeswapAll).add(DisableBeltswapAll);
 
 const flags = DisablePancakeAll.add(DisableBakeryAll).add(DisableBurgerAll).add(DisableThugswapAll)
     .add(DisableStablexAll).add(DisableUnifiAll).add(DisableJulswapAll).add(DisableDODOAll)
     .add(DisableApeswapAll).add(DisableAcryptosAll);
 
+
+
 contract('DexOne', (accounts) => {
+
+    it('DexOneAll should swap ETH to CAKE', async () => {
+        let busdAddress = "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56";
+        let ethInnerAddress = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
+        let usdtAddress = "0x55d398326f99059fF775485246999027B3197955";
+
+
+        if(false){
+            const belt = await IBeltSwap.at("0xAEA4f7dcd172997947809CE6F12018a6D5c1E8b6");
+            res = await belt.get_dy(3, 2, '1000000000000000000');
+            console.log("res:", res.toString());
+            return;
+        }
+        const busd = await ERC20.at(busdAddress);
+        let balanceBefore = await busd.balanceOf(accounts[0])
+        console.log(`balance of ${accounts[0]}: (${balanceBefore}) BUSD`);
+
+        const dexOne = await DexOne.deployed();
+        // eth 换成 busd
+        let res = await dexOne.calculateSwapReturn(
+            ethInnerAddress, // ETH
+            busdAddress,
+            '1000000000000000000', // 1.0
+            10,
+            pass,
+        );
+        expectedOutAmount = res.outAmount;
+        console.log(`expect out amount ${res.outAmount.toString()} BUSD`);
+        console.log("res.distribution:", res.distribution.toString());
+
+        let swapped = await dexOne.contract.methods.swap(
+            ethInnerAddress,
+            busdAddress,
+            '1000000000000000000',
+            0,
+            res.distribution.map(dist => dist.toString()),
+            pass.toString(),
+        ).encodeABI();
+        await invokeContract(web3,accounts[0], dexOne,swapped);
+        balanceAfter = await busd.balanceOf(accounts[0])
+        console.log(`balance of ${accounts[0]}: (${balanceAfter}) BUSD`);
+        assert.equal(expectedOutAmount, balanceAfter - balanceBefore);
+
+        let testName = "beltswap";
+        // busd swap usdt
+        if (testName == "nerve") {
+            console.log("*************** nerve ***************");
+            pass = pass.add(DisablePancakeAllV2);
+            pass = pass.sub(DisableNerveAll);
+        } else if (testName == "cafeswap"){
+            console.log("*************** cafeswap ***************");
+            pass = pass.add(DisablePancakeAllV2);
+            pass = pass.sub(DisableCafeswapAll);
+        } else if(testName == "beltswap"){
+            console.log("*************** beltswap ***************");
+            pass = pass.add(DisablePancakeAllV2);
+            pass = pass.sub(DisableBeltswapAll);
+        }
+
+        const usdt = await ERC20.at(usdtAddress);
+        balanceBefore = await usdt.balanceOf(accounts[0])
+        res = await dexOne.calculateSwapReturn(
+            busdAddress,
+            usdtAddress,
+            '1000000000000000000', // 1.0
+            5,
+            pass,
+        );
+        expectedOutAmount = res.outAmount;
+        console.log("usdt calculateSwapReturn:", expectedOutAmount.toString());
+        console.log("res.distribution:", res.distribution.toString());
+        await busd.approve(dexOne.address, '1000000000000000000');
+        swapped = await dexOne.contract.methods.swap(
+            busdAddress,
+            usdtAddress,
+            '1000000000000000000',
+            0,
+            res.distribution.map(dist => dist.toString()),
+            pass.toString(),
+        ).encodeABI();
+        await invokeContract(web3,accounts[0], dexOne, swapped);
+        balanceAfter = await usdt.balanceOf(accounts[0]);
+        console.log(`balance of ${accounts[0]}: (${balanceAfter}) usdt`);
+        // assert.equal(expectedOutAmount, balanceAfter - balanceBefore);
+    });
+
     // it('DexOneView should calculate', async () => {
     //     // const dexOne = await DexOneView.at('0x8338D73536699acFfEf9A2FD24311B85fa515F7F');
     //     const dexOne = await DexOneView.deployed();
@@ -91,70 +185,70 @@ contract('DexOne', (accounts) => {
     //     });
     // });
 
-    it('DexOneAll should swap ETH to CAKE', async () => {
-        const busd = await ERC20.at("0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56");
-        let balanceBefore = await busd.balanceOf(accounts[0])
-        console.log(`balance of ${accounts[0]}: (${balanceBefore}) BUSD`);
-
-        const dexOne = await DexOne.deployed();
-        const res = await dexOne.calculateSwapReturn(
-            '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE', // DAI
-            '0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56', // BUSD
-            '1000000000000000000', // 1.0
-            10,
-            // 0,
-            pass,
-        );
-        expectedOutAmount = res.outAmount;
-        console.log(`expect out amount ${res.outAmount.toString()} BUSD`);
-        // res.distribution.forEach(dist => {
-        //     console.log(dist.toString());
-        // });
-        console.log("res.distribution:", res.distribution.toString());
-
-        const swapped = await dexOne.contract.methods.swap(
-            '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
-            '0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56',
-            '1000000000000000000',
-            0,
-            res.distribution.map(dist => dist.toString()),
-            pass.toString(),
-            // {
-            //     value: "1000000000000000000",
-            //     from: accounts[0]
-            // }
-        ).encodeABI();
-        // console.log(swapped);
-
-        const nonce = await web3.eth.getTransactionCount(accounts[0]);
-        console.log(`nonce: ${nonce}`);
-
-        const account = accounts[0];
-        console.log(`account: ${account}`);
-        const rawTx = {
-            from: account,
-            to: dexOne.address,
-            gas: "0x166691b7",
-            gasPrice: "0x4a817c800",
-            data: swapped,
-            // value: "0xde0b6b3a7640000",
-            value: '1000000000000000000',
-            nonce: web3.utils.toHex(nonce),
-        }
-        // console.log(rawTx);
-
-
-        const sign = await web3.eth.accounts.signTransaction(rawTx, '0x94e6de53e500b9fec28037c583f5214c854c7229329ce9baf6f5577bd95f9c9a');
-        // console.log(sign);
-
-        web3.eth.sendSignedTransaction(sign.rawTransaction).on('receipt', receipt => {
-            // console.log(JSON.stringify(receipt));
-        });
-
-        balanceAfter = await busd.balanceOf(accounts[0])
-        console.log(`balance of ${accounts[0]}: (${balanceAfter}) BUSD`);
-        assert.equal(expectedOutAmount, balanceAfter - balanceBefore);
-    });
+    // it('DexOneAll should swap ETH to CAKE', async () => {
+    //     const busd = await ERC20.at("0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56");
+    //     let balanceBefore = await busd.balanceOf(accounts[0])
+    //     console.log(`balance of ${accounts[0]}: (${balanceBefore}) BUSD`);
+    //
+    //     const dexOne = await DexOne.deployed();
+    //     const res = await dexOne.calculateSwapReturn(
+    //         '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE', // DAI
+    //         '0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56', // BUSD
+    //         '1000000000000000000', // 1.0
+    //         10,
+    //         // 0,
+    //         pass,
+    //     );
+    //     expectedOutAmount = res.outAmount;
+    //     console.log(`expect out amount ${res.outAmount.toString()} BUSD`);
+    //     // res.distribution.forEach(dist => {
+    //     //     console.log(dist.toString());
+    //     // });
+    //     console.log("res.distribution:", res.distribution.toString());
+    //
+    //     const swapped = await dexOne.contract.methods.swap(
+    //         '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
+    //         '0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56',
+    //         '1000000000000000000',
+    //         0,
+    //         res.distribution.map(dist => dist.toString()),
+    //         pass.toString(),
+    //         // {
+    //         //     value: "1000000000000000000",
+    //         //     from: accounts[0]
+    //         // }
+    //     ).encodeABI();
+    //     // console.log(swapped);
+    //
+    //     const nonce = await web3.eth.getTransactionCount(accounts[0]);
+    //     console.log(`nonce: ${nonce}`);
+    //
+    //     const account = accounts[0];
+    //     console.log(`account: ${account}`);
+    //     const rawTx = {
+    //         from: account,
+    //         to: dexOne.address,
+    //         gas: "0x166691b7",
+    //         gasPrice: "0x4a817c800",
+    //         data: swapped,
+    //         // value: "0xde0b6b3a7640000",
+    //         value: '1000000000000000000',
+    //         nonce: web3.utils.toHex(nonce),
+    //     }
+    //     // console.log(rawTx);
+    //
+    //
+    //     const sign = await web3.eth.accounts.signTransaction(rawTx, '0x94e6de53e500b9fec28037c583f5214c854c7229329ce9baf6f5577bd95f9c9a');
+    //     // console.log(sign);
+    //
+    //     web3.eth.sendSignedTransaction(sign.rawTransaction).on('receipt', receipt => {
+    //         // console.log(JSON.stringify(receipt));
+    //     });
+    //
+    //     balanceAfter = await busd.balanceOf(accounts[0])
+    //     console.log(`balance of ${accounts[0]}: (${balanceAfter}) BUSD`);
+    //     assert.equal(expectedOutAmount, balanceAfter - balanceBefore);
+    // });
 
     // it('DexOneAll should swap CAKE to BNB', async () => {
     //     const dai = await ERC20.at("0x7130d2A12B9BCbFAe4f2634d864A1Ee1Ce3Ead9c");
@@ -294,3 +388,21 @@ contract('DexOne', (accounts) => {
     // });
 
 });
+
+async function invokeContract(web3,account,dexOne,swapped) {
+    const nonce = await web3.eth.getTransactionCount(account);
+    console.log(`account: ${account}`);
+    const rawTx = {
+        from: account,
+        to: dexOne.address,
+        gas: "0x166691b7",
+        gasPrice: "0x4a817c800",
+        data: swapped,
+        // value: "0xde0b6b3a7640000",
+        value: '1000000000000000000',
+        nonce: web3.utils.toHex(nonce),
+    }
+    const sign = await web3.eth.accounts.signTransaction(rawTx, '0x94e6de53e500b9fec28037c583f5214c854c7229329ce9baf6f5577bd95f9c9a');
+    web3.eth.sendSignedTransaction(sign.rawTransaction).on('receipt', receipt => {
+    });
+}
