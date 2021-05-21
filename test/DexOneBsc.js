@@ -17,6 +17,7 @@ const DisableMDexUSDT = new BN(1).shln(5);
 
 const DexOne = artifacts.require("DexOne");
 const ERC20 = artifacts.require("IERC20");
+const Factory = artifacts.require("IMDexFactory");
 
 var pass = DisableMDexAll.add(DisableMDex).add(DisableMDexHT)
     .add(DisableMDexBUSD).add(DisableMDexUSDC).add(DisableMDexUSDT);
@@ -30,15 +31,18 @@ contract('DexOne', (accounts) => {
 
         let htAddress = "0x0000000000000000000000000000000000000000";
 
+        let wHT = "0x5545153CCFcA01fbd7Dd11C0b23ba694D9509A6F";
+
         var balance = await web3.eth.getBalance(accounts[0]);
-        console.log("***:",balance); //
+        console.log("***:", balance); //
 
         let balanceBefore = await usdt.balanceOf(accounts[0])
         console.log(`balance of ${accounts[0]}: (${balanceBefore}) USDT`);
 
         let testName = "MDex";
-        if (testName == "MDex"){
-            pass = pass.sub(DisableMDexHT);
+        if (testName == "MDex") {
+            pass = pass.sub(DisableMDexAll);
+            pass = pass.sub(DisableMDex);
         }
 
         const dexOne = await DexOne.deployed();
@@ -133,7 +137,6 @@ contract('DexOne', (accounts) => {
     //         console.log(amount.toString());
     //     });
     // });
-
 
 
     // it('DexOneAll should swap CAKE to BNB', async () => {

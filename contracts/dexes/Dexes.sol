@@ -47,14 +47,6 @@ library Dexes {
             return mdex.calculateSwapReturn(inToken, outToken, inAmounts);
         }
         if (dex == Dex.MDexHT && !flags.or(Flags.FLAG_DISABLE_MDEX_ALL, Flags.FLAG_DISABLE_MDEX_HT)) {
-            if(true){
-                uint256[] memory res = new uint256[](inAmounts.length);
-                for(uint i=0;i<inAmounts.length;i++){
-                    res[i] = 10000000000;
-                }
-                res[0] = 10000000000;
-                return (res, 20000);
-            }
             return mdex.calculateTransitionalSwapReturn(inToken, Tokens.WHT, outToken, inAmounts);
         }
         if (dex == Dex.MDexUSDC && !flags.or(Flags.FLAG_DISABLE_MDEX_ALL, Flags.FLAG_DISABLE_MDEX_USDC)) {
