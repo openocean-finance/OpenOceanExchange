@@ -112,8 +112,8 @@ library IUniswapV2FactoryExtension {
     ) internal view returns (uint256[] memory outAmounts, uint256 gas) {
         outAmounts = new uint256[](inAmounts.length);
 
-        IERC20 realInToken = inToken.wrapMATIC();
-        IERC20 realOutToken = outToken.wrapMATIC();
+        IERC20 realInToken = inToken.wrapXDAI();
+        IERC20 realOutToken = outToken.wrapXDAI();
         IUniswapV2Pair pair = factory.getPair(realInToken, realOutToken);
         if (pair != IUniswapV2Pair(0)) {
             for (uint256 i = 0; i < inAmounts.length; i++) {
@@ -131,9 +131,9 @@ library IUniswapV2FactoryExtension {
         IERC20 outToken,
         uint256[] memory inAmounts
     ) internal view returns (uint256[] memory outAmounts, uint256 gas) {
-        IERC20 realInToken = inToken.wrapMATIC();
-        IERC20 realTransitionToken = transitionToken.wrapMATIC();
-        IERC20 realOutToken = outToken.wrapMATIC();
+        IERC20 realInToken = inToken.wrapXDAI();
+        IERC20 realTransitionToken = transitionToken.wrapXDAI();
+        IERC20 realOutToken = outToken.wrapXDAI();
 
         if (realInToken == realTransitionToken || realOutToken == realTransitionToken) {
             return (new uint256[](inAmounts.length), 0);
@@ -151,10 +151,10 @@ library IUniswapV2FactoryExtension {
         IERC20 outToken,
         uint256 inAmount
     ) internal returns (uint256 outAmount) {
-        inToken.depositToWETH(inAmount);
+        inToken.depositToWXDAI(inAmount);
 
-        IERC20 realInToken = inToken.wrapMATIC();
-        IERC20 realOutToken = outToken.wrapMATIC();
+        IERC20 realInToken = inToken.wrapXDAI();
+        IERC20 realOutToken = outToken.wrapXDAI();
         IUniswapV2Pair pair = factory.getPair(realInToken, realOutToken);
 
         outAmount = pair.calculateRealSwapReturn(realInToken, realOutToken, inAmount);
