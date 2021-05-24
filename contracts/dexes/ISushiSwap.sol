@@ -112,8 +112,8 @@ library ISushiSwapFactoryExtension {
     ) internal view returns (uint256[] memory outAmounts, uint256 gas) {
         outAmounts = new uint256[](inAmounts.length);
 
-        IERC20 realInToken = inToken.wrapFTM();
-        IERC20 realOutToken = outToken.wrapFTM();
+        IERC20 realInToken = inToken.wrapAVAX();
+        IERC20 realOutToken = outToken.wrapAVAX();
         ISushiSwapPair pair = factory.getPair(realInToken, realOutToken);
         if (pair != ISushiSwapPair(0)) {
             for (uint256 i = 0; i < inAmounts.length; i++) {
@@ -130,9 +130,9 @@ library ISushiSwapFactoryExtension {
         IERC20 outToken,
         uint256[] memory inAmounts
     ) internal view returns (uint256[] memory outAmounts, uint256 gas) {
-        IERC20 realInToken = inToken.wrapFTM();
-        IERC20 realTransitionToken = transitionToken.wrapFTM();
-        IERC20 realOutToken = outToken.wrapFTM();
+        IERC20 realInToken = inToken.wrapAVAX();
+        IERC20 realTransitionToken = transitionToken.wrapAVAX();
+        IERC20 realOutToken = outToken.wrapAVAX();
 
         if (realInToken == realTransitionToken || realOutToken == realTransitionToken) {
             return (new uint256[](inAmounts.length), 0);
@@ -150,10 +150,10 @@ library ISushiSwapFactoryExtension {
         IERC20 outToken,
         uint256 inAmount
     ) internal returns (uint256 outAmount) {
-        inToken.depositToWXDAI(inAmount);
+        inToken.depositToWAVAX(inAmount);
 
-        IERC20 realInToken = inToken.wrapFTM();
-        IERC20 realOutToken = outToken.wrapFTM();
+        IERC20 realInToken = inToken.wrapAVAX();
+        IERC20 realOutToken = outToken.wrapAVAX();
         ISushiSwapPair pair = factory.getPair(realInToken, realOutToken);
 
         outAmount = pair.calculateRealSwapReturn(realInToken, realOutToken, inAmount);
@@ -165,7 +165,7 @@ library ISushiSwapFactoryExtension {
             pair.swap(outAmount, 0, address(this), "");
         }
 
-        outToken.withdrawFromWETH();
+        outToken.withdrawFromWAVAX();
     }
 
     function swapTransitional(

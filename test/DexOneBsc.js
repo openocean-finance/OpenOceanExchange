@@ -35,18 +35,18 @@ contract('DexOne', (accounts) => {
     it('DexOneAll should swap ETH to CAKE', async () => {
 
         // 合约地址 不对  TODO
-        let usdtAddress = "0x049d68029688eabf473097a2fc38ef61633a3c7a";
+        let usdtAddress = "0x13D0D85fE3534E02c30Ad87Bc55a3f361E358c09";
         const usdt = await ERC20.at(usdtAddress);
 
-        let fmtAddress = "0x0000000000000000000000000000000000000000";
-        let wftmAddress = "0x21be370d5312f44cb42ce377bc9b8a0cef1a4c83";
+        let avaxAddress = "0x0000000000000000000000000000000000000000";
+        let wavaxAddress = "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7";
 
-        if (false) {
+        if (true) {
             let fAddress = "0xA818b4F111Ccac7AA31D0BCc0806d64F2E0737D7";//honeyswap
 
-            fAddress = "0xc35DADB65012eC5796536bD9864eD8773aBc74C4";//sushiswap
+            fAddress = "0xC0AEe478e3658e2610c5F7A4A2E1777cE9e4f2Ac";//sushiswap
             let f = await Factory.at(fAddress);
-            let res = await f.getPair(wftmAddress, usdtAddress);
+            let res = await f.getPair(wavaxAddress, usdtAddress);
             console.log("res:", res.toString());
             return;
         }
@@ -67,7 +67,7 @@ contract('DexOne', (accounts) => {
 
         const dexOne = await DexOne.deployed();
         const res = await dexOne.calculateSwapReturn(
-            fmtAddress, // matic
+            avaxAddress, // matic
             usdtAddress, // usdt
             '1000000000000000000', // 1.0
             10,
@@ -77,7 +77,7 @@ contract('DexOne', (accounts) => {
         console.log(`expect out amount ${res.outAmount.toString()} USDT`);
         console.log("res.distribution:", res.distribution.toString());
         const swapped = await dexOne.contract.methods.swap(
-            fmtAddress,
+            avaxAddress,
             usdtAddress,
             '1000000000000000000',
             0,

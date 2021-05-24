@@ -7,7 +7,6 @@ library Flags {
      uint256 internal constant FLAG_DISABLE_SUSHISWAP = 1 << 1;
      uint256 internal constant FLAG_DISABLE_SUSHISWAP_ETH = 1 << 2;
      uint256 internal constant FLAG_DISABLE_SUSHISWAP_DAI = 1 << 3;
-     uint256 internal constant FLAG_DISABLE_SUSHISWAP_USDC = 1 << 4;
 
 
     function on(uint256 flags, uint256 flag) internal pure returns (bool) {
