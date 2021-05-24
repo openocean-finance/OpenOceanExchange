@@ -58,8 +58,7 @@ contract('DexOne', (accounts) => {
         console.log(`balance of ${accounts[0]}: (${balanceBefore}) USDT`);
 
         let testName = "sushiswap";
-        if (testName == "temp") {
-        } else if (testName == "sushiswap") {
+        if (testName == "sushiswap") {
             pass = pass.sub(DisableSushiswapAll);
             pass = pass.sub(DisableSushiswap);
         }
