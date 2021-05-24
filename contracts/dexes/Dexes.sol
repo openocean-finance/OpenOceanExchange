@@ -30,7 +30,8 @@ library Dexes {
     IUniswapV2Factory internal constant quickswap = IUniswapV2Factory(0x5757371414417b8C6CAad45bAeF941aBc7d3Ab32);
     using IUniswapV2FactoryExtension for IUniswapV2Factory;
 
-    ISushiSwapFactory internal constant sushiswap = ISushiSwapFactory(0xC0AEe478e3658e2610c5F7A4A2E1777cE9e4f2Ac);
+    //https://dev.sushi.com/sushiswap/contracts TODO check ISushiSwapFactory address
+    ISushiSwapFactory internal constant sushiswap = ISushiSwapFactory(0xc35DADB65012eC5796536bD9864eD8773aBc74C4);
     using ISushiSwapFactoryExtension for ISushiSwapFactory;
 
     function allDexes() internal pure returns (Dex[] memory dexes) {

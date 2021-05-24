@@ -59,7 +59,7 @@ contract('DexOne', (accounts) => {
         let balanceBefore = await usdt.balanceOf(accounts[0])
         console.log(`balance of ${accounts[0]}: (${balanceBefore}) USDT`);
 
-        let testName = "quickswap";
+        let testName = "sushiswap";
         if (testName == "quickswap") {
             pass = pass.sub(DisableUniswapV2All);
             pass = pass.sub(DisableUniswapV2);
