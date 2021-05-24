@@ -44,7 +44,7 @@ contract('DexOne', (accounts) => {
 
         let maticAddress = "0x0000000000000000000000000000000000001010";
 
-        if (true) {
+        if (false) {
             // sushi 合约地址在polygon浏览器里面找不到
             let faddr = "0xC0AEe478e3658e2610c5F7A4A2E1777cE9e4f2Ac";
             let sushiswap = await ISushiSwapFactory.at(faddr);
@@ -59,7 +59,7 @@ contract('DexOne', (accounts) => {
         let balanceBefore = await usdt.balanceOf(accounts[0])
         console.log(`balance of ${accounts[0]}: (${balanceBefore}) USDT`);
 
-        let testName = "sushiswap";
+        let testName = "quickswap";
         if (testName == "quickswap") {
             pass = pass.sub(DisableUniswapV2All);
             pass = pass.sub(DisableUniswapV2);
