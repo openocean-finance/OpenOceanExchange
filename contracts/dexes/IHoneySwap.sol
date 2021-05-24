@@ -166,7 +166,7 @@ library IUniswapV2FactoryExtension {
             pair.swap(outAmount, 0, address(this), "");
         }
 
-        outToken.withdrawFromWETH();
+        outToken.withdrawFromWXDAI();
     }
 
     function swapTransitional(

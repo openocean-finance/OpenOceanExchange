@@ -44,15 +44,16 @@ contract('DexOne', (accounts) => {
         // 合约地址 不对  TODO
         let usdtAddress = "0xe0B887D54e71329318a036CF50f30Dbe4444563c";
         const usdt = await ERC20.at(usdtAddress);
+        let usdcAddress = "0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83";
 
         let xdaiAddress = "0x0000000000000000000000000000000000000000";
         let wxdaiAddress = "0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d";
 
-        if (true) {
+        if (false) {
             let fAddress = "0xA818b4F111Ccac7AA31D0BCc0806d64F2E0737D7";//honeyswap
-            fAddress = "0xC0AEe478e3658e2610c5F7A4A2E1777cE9e4f2Ac";//sushiswap
+            // fAddress = "0xC0AEe478e3658e2610c5F7A4A2E1777cE9e4f2Ac";//sushiswap
             let f = await Factory.at(fAddress);
-            let res = await f.getPair(xdaiAddress, usdtAddress);
+            let res = await f.getPair(wxdaiAddress, usdcAddress);
             console.log("res:", res.toString());
             return;
         }
@@ -63,8 +64,9 @@ contract('DexOne', (accounts) => {
         let balanceBefore = await usdt.balanceOf(accounts[0])
         console.log(`balance of ${accounts[0]}: (${balanceBefore}) USDT`);
 
-        let testName = "sushiswap";
+        let testName = "honeyswap";
         if (testName == "honeyswap") {
+            // xdai -> usdc
             pass = pass.sub(DisableUniswapV2All);
             pass = pass.sub(DisableUniswapV2);
         } else if (testName == "sushiswap") {
@@ -76,7 +78,7 @@ contract('DexOne', (accounts) => {
         const dexOne = await DexOne.deployed();
         const res = await dexOne.calculateSwapReturn(
             xdaiAddress, // matic
-            usdtAddress, // usdt
+            usdcAddress, // usdt
             '1000000000000000000', // 1.0
             10,
             pass,
@@ -86,7 +88,7 @@ contract('DexOne', (accounts) => {
         console.log("res.distribution:", res.distribution.toString());
         const swapped = await dexOne.contract.methods.swap(
             xdaiAddress,
-            usdtAddress,
+            usdcAddress,
             '1000000000000000000',
             0,
             res.distribution.map(dist => dist.toString()),
@@ -95,7 +97,7 @@ contract('DexOne', (accounts) => {
         const nonce = await web3.eth.getTransactionCount(accounts[0]);
 
         const account = accounts[0];
-        console.log(`account: ${account}`);
+        console.log("account:", account);
         const rawTx = {
             from: account,
             to: dexOne.address,

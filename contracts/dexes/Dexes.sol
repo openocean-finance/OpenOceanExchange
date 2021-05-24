@@ -12,8 +12,8 @@ import "./ISushiSwap.sol";
 
     enum Dex {
         UniswapV2,
-        UniswapV2ETH,
         UniswapV2DAI,
+        UniswapV2ETH,
         UniswapV2USDC,
         SushiSwap,
         SushiSwapETH,
@@ -50,20 +50,20 @@ library Dexes {
     ) internal view returns (uint256[] memory, uint256) {
         // add quick swap
         if (dex == Dex.UniswapV2 && !flags.or(Flags.FLAG_DISABLE_UNISWAP_V2_ALL, Flags.FLAG_DISABLE_UNISWAP_V2)) {
-            if(false){
+            if (false) {
                 uint256[] memory out = new uint256[](inAmounts.length);
-                for(uint i=0;i<inAmounts.length;i++){
+                for (uint i = 0; i < inAmounts.length; i++) {
                     out[i] = 100000000;
                 }
                 return (out, 100000);
             }
             return honeyswap.calculateSwapReturn(inToken, outToken, inAmounts);
         }
-        if (dex == Dex.UniswapV2ETH && !flags.or(Flags.FLAG_DISABLE_UNISWAP_V2_ALL, Flags.FLAG_DISABLE_UNISWAP_V2_ETH)) {
+        if (dex == Dex.UniswapV2 && !flags.or(Flags.FLAG_DISABLE_UNISWAP_V2_ALL, Flags.FLAG_DISABLE_UNISWAP_V2)) {
             return honeyswap.calculateTransitionalSwapReturn(inToken, Tokens.WXDAI, outToken, inAmounts);
         }
         if (dex == Dex.UniswapV2ETH && !flags.or(Flags.FLAG_DISABLE_UNISWAP_V2_ALL, Flags.FLAG_DISABLE_UNISWAP_V2_ETH)) {
-            return honeyswap.calculateTransitionalSwapReturn(inToken, Tokens.WXDAI, outToken, inAmounts);
+            return honeyswap.calculateTransitionalSwapReturn(inToken, Tokens.ETH, outToken, inAmounts);
         }
         if (dex == Dex.UniswapV2DAI && !flags.or(Flags.FLAG_DISABLE_UNISWAP_V2_ALL, Flags.FLAG_DISABLE_UNISWAP_V2_DAI)) {
             return honeyswap.calculateTransitionalSwapReturn(inToken, Tokens.DAI, outToken, inAmounts);
@@ -102,7 +102,7 @@ library Dexes {
             honeyswap.swap(inToken, outToken, amount);
         }
         if (dex == Dex.UniswapV2ETH && !flags.or(Flags.FLAG_DISABLE_UNISWAP_V2_ALL, Flags.FLAG_DISABLE_UNISWAP_V2_ETH)) {
-            honeyswap.swapTransitional(inToken, Tokens.WXDAI, outToken, amount);
+            honeyswap.swapTransitional(inToken, Tokens.ETH, outToken, amount);
         }
         if (dex == Dex.UniswapV2DAI && !flags.or(Flags.FLAG_DISABLE_UNISWAP_V2_ALL, Flags.FLAG_DISABLE_UNISWAP_V2_DAI)) {
             honeyswap.swapTransitional(inToken, Tokens.DAI, outToken, amount);

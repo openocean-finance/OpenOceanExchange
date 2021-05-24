@@ -165,7 +165,7 @@ library ISushiSwapFactoryExtension {
             pair.swap(outAmount, 0, address(this), "");
         }
 
-        outToken.withdrawFromWETH();
+        outToken.withdrawFromWXDAI();
     }
 
     function swapTransitional(
