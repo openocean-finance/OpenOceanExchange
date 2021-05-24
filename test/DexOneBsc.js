@@ -51,6 +51,7 @@ contract('DexOne', (accounts) => {
 
         if (false) {
             let fAddress = "0xA818b4F111Ccac7AA31D0BCc0806d64F2E0737D7";//honeyswap
+            // sushiswap 地址不对
             // fAddress = "0xC0AEe478e3658e2610c5F7A4A2E1777cE9e4f2Ac";//sushiswap
             let f = await Factory.at(fAddress);
             let res = await f.getPair(wxdaiAddress, usdcAddress);
@@ -64,7 +65,7 @@ contract('DexOne', (accounts) => {
         let balanceBefore = await usdt.balanceOf(accounts[0])
         console.log(`balance of ${accounts[0]}: (${balanceBefore}) USDT`);
 
-        let testName = "honeyswap";
+        let testName = "sushiswap";
         if (testName == "honeyswap") {
             // xdai -> usdc
             pass = pass.sub(DisableUniswapV2All);
