@@ -29,8 +29,8 @@ const DisableEllipsis = new BN(1).shln(59);
 const DisableMdexAll = new BN(1).shln(60);
 const DisablePancakeAllV2 = new BN(1).shln(66);
 const DisableNerveAll = new BN(1).shln(73);
-const DisableCafeswapAll = new BN(1).shln(74);
-const DisableBeltswapAll = new BN(1).shln(75);
+const DisableCafeswapAll = new BN(1).shln(77);
+const DisableBeltswapAll = new BN(1).shln(78);
 
 const DexOneView = artifacts.require("DexOneView");
 const DexOne = artifacts.require("DexOne");
@@ -95,7 +95,7 @@ contract('DexOne', (accounts) => {
         console.log(`balance of ${accounts[0]}: (${balanceAfter}) BUSD`);
         assert.equal(expectedOutAmount, balanceAfter - balanceBefore);
 
-        let testName = "beltswap";
+        let testName = "cafeswap";
         // busd swap usdt
         if (testName == "nerve") {
             console.log("*************** nerve ***************");
