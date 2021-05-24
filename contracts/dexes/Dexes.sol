@@ -14,173 +14,165 @@ import "../lib/Flags.sol";
 // import "./IMooniswap.sol";
 // import "./IBalancer.sol";
 // import "./IKyber.sol";
-import "./IPancake.sol";
+// import "./IPancake.sol";
 import "./IPancakeV2.sol";
 import "./IBakery.sol";
-import "./IBurger.sol";
+// import "./IBurger.sol";
 import "./IThugswap.sol";
 import "./IStablex.sol";
-import "./IUnifi.sol";
+// import "./IUnifi.sol";
 import "./IWETH.sol";
 import "./IJulswap.sol";
 import "./IAcryptos.sol";
 import "./IApeswap.sol";
-import "./IDODO.sol";
+// import "./IDODO.sol";
 import "./ISmoothy.sol";
 import "./IEllipsis.sol";
 import "./IMDex.sol";
 import "./INerve.sol";
-//import "./ICafeswap.sol";
-import "./IBeltswap.sol";
+import "./ICafeswap.sol";
+// import "./IBeltswap.sol";
 
-    enum Dex {
-        // UniswapV2,
-        // UniswapV2ETH,
-        // UniswapV2DAI,
-        // UniswapV2USDC,
-        // CurveCompound,
-        // CurveUSDT,
-        // CurveY,
-        // CurveBinance,
-        // CurveSynthetix,
-        // CurvePAX,
-        // CurveRenBTC,
-        // CurveTBTC,
-        // CurveSBTC,
-        // Oasis,
-        // Uniswap,
-        // Curve,
-        // // add Mooniswap
-        // Mooniswap,
-        // MooniswapETH,
-        // MooniswapDAI,
-        // MooniswapUSDC,
-        // // add SushiSwap
-        // SushiSwap,
-        // SushiSwapETH,
-        // SushiSwapDAI,
-        // SushiSwapUSDC,
-        // // add Balancer
-        // Balancer,
-        // Balancer1,
-        // Balancer2,
-        // Balancer3,
-        // // add Kyber
-        // Kyber,
-        // Kyber1,
-        // Kyber2,
-        // Kyber3,
-        // Kyber4,
+enum Dex {
+    // UniswapV2,
+    // UniswapV2ETH,
+    // UniswapV2DAI,
+    // UniswapV2USDC,
+    // CurveCompound,
+    // CurveUSDT,
+    // CurveY,
+    // CurveBinance,
+    // CurveSynthetix,
+    // CurvePAX,
+    // CurveRenBTC,
+    // CurveTBTC,
+    // CurveSBTC,
+    // Oasis,
+    // Uniswap,
+    // Curve,
+    // // add Mooniswap
+    // Mooniswap,
+    // MooniswapETH,
+    // MooniswapDAI,
+    // MooniswapUSDC,
+    // // add SushiSwap
+    // SushiSwap,
+    // SushiSwapETH,
+    // SushiSwapDAI,
+    // SushiSwapUSDC,
+    // // add Balancer
+    // Balancer,
+    // Balancer1,
+    // Balancer2,
+    // Balancer3,
+    // // add Kyber
+    // Kyber,
+    // Kyber1,
+    // Kyber2,
+    // Kyber3,
+    // Kyber4,
 
-        // Pancake
-        Pancake,
-        PancakeETH,
-        PancakeDAI,
-        PancakeUSDC,
-        PancakeUSDT,
-        // Bakery
-        Bakery,
-        BakeryETH,
-        BakeryDAI,
-        BakeryUSDC,
-        BakeryUSDT,
-        // Burger
-        Burger,
-        BurgerETH,
-        BurgerDGAS,
-        // Thugswap
-        Thugswap,
-        ThugswapETH,
-        ThugswapDAI,
-        ThugswapUSDC,
-        ThugswapUSDT,
-        // BUSD transitional
-        PancakeBUSD,
-        BakeryBUSD,
-        ThugswapBUSD,
-        // StableX
-        Stablex,
-        StablexDAI,
-        StablexBUSD,
-        StablexQUSD,
-        StablexUSDC,
-        StablexUSDT,
-        // Unifi
-        Unifi,
-        // WETH
-        WETH,
-        // Julswap
-        Julswap,
-        JulswapETH,
-        JulswapDAI,
-        JulswapUSDC,
-        JulswapUSDT,
-        JulswapBUSD,
-        // Pancake DOT
-        PancakeDOT,
-        // Acrytos
-        Acryptos,
-        AcryptosUSD,
-        AcryptosVAI,
-        AcryptosUST,
-        AcryptosQUSD,
-        // Apeswap
-        Apeswap,
-        ApeswapETH,
-        ApeswapUSDT,
-        ApeswapBUSD,
-        ApeswapBANANA,
-        // DODO
-        DODO,
-        DODOUSDC,
-        DODOUSDT,
-        // Smoothy
-        Smoothy,
-        // Acryptos
-        AcryptosBTC,
-        // Ellipsis
-        Ellipsis,
-        EllipsisUSD,
-        EllipsisBTC,
-        EllipsisFUSDT,
-        // MDex
-        MDex,
-        MDexETH,
-        MDexBUSD,
-        MDexUSDC,
-        MDexUSDT,
-        // PancakeV2
-        PancakeV2,
-        PancakeETHV2,
-        PancakeUSDCV2,
-        PancakeUSDTV2,
-        PancakeBUSDV2,
-        PancakeDOTV2,
-        //nerve
-        NerveDex,
-        // cafeswap
-        Cafeswap,
-        // beltswap
-        Beltswap,
-        // bottom mark
-        NoDex
-    }
+    // Pancake
+    Pancake,
+    PancakeETH,
+    PancakeDAI,
+    PancakeUSDC,
+    PancakeUSDT,
+    // Bakery
+    Bakery,
+    BakeryETH,
+    BakeryDAI,
+    BakeryUSDC,
+    BakeryUSDT,
+    // Burger
+    Burger,
+    BurgerETH,
+    BurgerDGAS,
+    // Thugswap
+    Thugswap,
+    ThugswapETH,
+    ThugswapDAI,
+    ThugswapUSDC,
+    ThugswapUSDT,
+    // BUSD transitional
+    PancakeBUSD,
+    BakeryBUSD,
+    ThugswapBUSD,
+    // StableX
+    Stablex,
+    StablexDAI,
+    StablexBUSD,
+    StablexQUSD,
+    StablexUSDC,
+    StablexUSDT,
+    // Unifi
+    Unifi,
+    // WETH
+    WETH,
+    // Julswap
+    Julswap,
+    JulswapETH,
+    JulswapDAI,
+    JulswapUSDC,
+    JulswapUSDT,
+    JulswapBUSD,
+    // Pancake DOT
+    PancakeDOT,
+    // Acrytos
+    Acryptos,
+    AcryptosUSD,
+    AcryptosVAI,
+    AcryptosUST,
+    AcryptosQUSD,
+    // Apeswap
+    Apeswap,
+    ApeswapETH,
+    ApeswapUSDT,
+    ApeswapBUSD,
+    ApeswapBANANA,
+    // DODO
+    DODO,
+    DODOUSDC,
+    DODOUSDT,
+    // Smoothy
+    Smoothy,
+    // Acryptos
+    AcryptosBTC,
+    // Ellipsis
+    Ellipsis,
+    EllipsisUSD,
+    EllipsisBTC,
+    EllipsisFUSDT,
+    // MDex
+    MDex,
+    MDexETH,
+    MDexBUSD,
+    MDexUSDC,
+    MDexUSDT,
+    // PancakeV2
+    PancakeV2,
+    PancakeETHV2,
+    PancakeUSDCV2,
+    PancakeUSDTV2,
+    PancakeBUSDV2,
+    PancakeDOTV2,
+    // Nerve
+    Nerve,
+    NervePOOL3,
+    NerveBTC,
+    NerveETH,
+    Cafeswap,
+    // Beltswap,
+    // bottom mark
+    NoDex
+}
 
 library Dexes {
     using UniversalERC20 for IERC20;
     using Flags for uint256;
 
-    //TODO 请验证地址是否正确  https://bscscan.com/address/0x3e708fdbe3ada63fc94f8f61811196f1302137ad#code
-//    ICafeFactory internal constant cafeswap = ICafeFactory(0x3e708FdbE3ADA63fc94F8F61811196f1302137AD);
-//    using ICafeFactoryExtension for ICafeFactory;
-
-    INerve internal constant nerve = INerve(0x1B3771a66ee31180906972580adE9b81AFc5fCDc);
-    using INerveExtension for INerve;
-
-    using IBeltSwapExtension for IBeltSwap;
-
-    IPancakeFactory internal constant pancake = IPancakeFactory(0xBCfCcbde45cE874adCB698cC183deBcF17952812);
-    using IPancakeFactoryExtension for IPancakeFactory;
+    // IPancakeFactory internal constant pancake = IPancakeFactory(0xBCfCcbde45cE874adCB698cC183deBcF17952812);
+    // using IPancakeFactoryExtension for IPancakeFactory;
 
     IPancakeFactoryV2 internal constant pancakeV2 = IPancakeFactoryV2(0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73);
     using IPancakeFactoryExtensionV2 for IPancakeFactoryV2;
@@ -188,8 +180,8 @@ library Dexes {
     IBakeryFactory internal constant bakery = IBakeryFactory(0x01bF7C66c6BD861915CdaaE475042d3c4BaE16A7);
     using IBakeryFactoryExtension for IBakeryFactory;
 
-    IDemaxPlatform internal constant burger = IDemaxPlatform(0xBf6527834dBB89cdC97A79FCD62E6c08B19F8ec0);
-    using IDemaxPlatformExtension for IDemaxPlatform;
+    // IDemaxPlatform internal constant burger = IDemaxPlatform(0xBf6527834dBB89cdC97A79FCD62E6c08B19F8ec0);
+    // using IDemaxPlatformExtension for IDemaxPlatform;
 
     IThugswapFactory internal constant thugswap = IThugswapFactory(0xaC653cE27E04C6ac565FD87F18128aD33ca03Ba2);
     using IThugswapFactoryExtension for IThugswapFactory;
@@ -197,8 +189,8 @@ library Dexes {
     IStablexFactory internal constant stablex = IStablexFactory(0x918d7e714243F7d9d463C37e106235dCde294ffC);
     using IStablexFactoryExtension for IStablexFactory;
 
-    IUnifiTradeRegistry internal constant unifi = IUnifiTradeRegistry(0xFD4B5179B535df687e0861cDF86E9CCAB50E5A51);
-    using IUnifiTradeRegistryExtenstion for IUnifiTradeRegistry;
+    // IUnifiTradeRegistry internal constant unifi = IUnifiTradeRegistry(0xFD4B5179B535df687e0861cDF86E9CCAB50E5A51);
+    // using IUnifiTradeRegistryExtenstion for IUnifiTradeRegistry;
 
     IWETH internal constant weth = IWETH(0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c);
     using IWETHExtension for IWETH;
@@ -211,8 +203,8 @@ library Dexes {
     IApeswapFactory internal constant apeswap = IApeswapFactory(0x0841BD0B734E4F5853f0dD8d7Ea041c241fb0Da6);
     using IApeswapFactoryExtension for IApeswapFactory;
 
-    IDODOZoo internal constant dodo = IDODOZoo(0xCA459456a45e300AA7EF447DBB60F87CCcb42828);
-    using IDODOZooExtension for IDODOZoo;
+    // IDODOZoo internal constant dodo = IDODOZoo(0xCA459456a45e300AA7EF447DBB60F87CCcb42828);
+    // using IDODOZooExtension for IDODOZoo;
 
     ISmoothy internal constant smoothy = ISmoothy(0xe5859f4EFc09027A9B718781DCb2C6910CAc6E91);
     using ISmoothyExtension for ISmoothy;
@@ -221,6 +213,13 @@ library Dexes {
 
     IMDexFactory internal constant mdex = IMDexFactory(0x3CD1C46068dAEa5Ebb0d3f55F6915B10648062B8);
     using IMDexFactoryExtension for IMDexFactory;
+
+    using INerveExtension for INerve;
+
+    ICafeFactory internal constant cafeswap = ICafeFactory(0x3e708FdbE3ADA63fc94F8F61811196f1302137AD);
+    using ICafeFactoryExtension for ICafeFactory;
+
+    // using IBeltSwapExtension for IBeltSwap;
 
     function allDexes() internal pure returns (Dex[] memory dexes) {
         uint256 dexCount = uint256(Dex.NoDex);
@@ -237,42 +236,28 @@ library Dexes {
         uint256[] memory inAmounts,
         uint256 flags
     ) internal view returns (uint256[] memory, uint256) {
-
-        // cafeswap
-//        if (dex == Dex.Cafeswap && !flags.on(Flags.FLAG_DISABLE_CAFESWAP_ALL)) {
-//            return cafeswap.calculateSwapReturn(inToken, outToken, inAmounts);
-//        }
-        //nerve
-        if (dex == Dex.NerveDex && !flags.on(Flags.FLAG_DISABLE_NERVE_ALL)) {
-            return nerve.calculateSwapReturn(inToken, outToken, inAmounts);
-        }
-        // beltswap
-        if (dex == Dex.Beltswap && !flags.on(Flags.FLAG_DISABLE_BELTSWAP_ALL)) {
-            return IBeltSwapExtension.IBELTSWAP.calculateSwapReturn(inToken, outToken, inAmounts);
-        }
-
         // Pancake
-        if (dex == Dex.Pancake && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL, Flags.FLAG_DISABLE_PANCAKE)) {
-            return pancake.calculateSwapReturn(inToken, outToken, inAmounts);
-        }
-        if (dex == Dex.PancakeETH && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL, Flags.FLAG_DISABLE_PANCAKE_ETH)) {
-            return pancake.calculateTransitionalSwapReturn(inToken, Tokens.WETH, outToken, inAmounts);
-        }
-        if (dex == Dex.PancakeDAI && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL, Flags.FLAG_DISABLE_PANCAKE_DAI)) {
-            return pancake.calculateTransitionalSwapReturn(inToken, Tokens.DAI, outToken, inAmounts);
-        }
-        if (dex == Dex.PancakeUSDC && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL, Flags.FLAG_DISABLE_PANCAKE_USDC)) {
-            return pancake.calculateTransitionalSwapReturn(inToken, Tokens.USDC, outToken, inAmounts);
-        }
-        if (dex == Dex.PancakeUSDT && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL, Flags.FLAG_DISABLE_PANCAKE_USDT)) {
-            return pancake.calculateTransitionalSwapReturn(inToken, Tokens.USDT, outToken, inAmounts);
-        }
-        if (dex == Dex.PancakeBUSD && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL, Flags.FLAG_DISABLE_PANCAKE_BUSD)) {
-            return pancake.calculateTransitionalSwapReturn(inToken, Tokens.BUSD, outToken, inAmounts);
-        }
-        if (dex == Dex.PancakeDOT && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL, Flags.FLAG_DISABLE_PANCAKE_DOT)) {
-            return pancake.calculateTransitionalSwapReturn(inToken, Tokens.DOT, outToken, inAmounts);
-        }
+        // if (dex == Dex.Pancake && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL, Flags.FLAG_DISABLE_PANCAKE)) {
+        //     return pancake.calculateSwapReturn(inToken, outToken, inAmounts);
+        // }
+        // if (dex == Dex.PancakeETH && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL, Flags.FLAG_DISABLE_PANCAKE_ETH)) {
+        //     return pancake.calculateTransitionalSwapReturn(inToken, Tokens.WETH, outToken, inAmounts);
+        // }
+        // if (dex == Dex.PancakeDAI && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL, Flags.FLAG_DISABLE_PANCAKE_DAI)) {
+        //     return pancake.calculateTransitionalSwapReturn(inToken, Tokens.DAI, outToken, inAmounts);
+        // }
+        // if (dex == Dex.PancakeUSDC && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL, Flags.FLAG_DISABLE_PANCAKE_USDC)) {
+        //     return pancake.calculateTransitionalSwapReturn(inToken, Tokens.USDC, outToken, inAmounts);
+        // }
+        // if (dex == Dex.PancakeUSDT && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL, Flags.FLAG_DISABLE_PANCAKE_USDT)) {
+        //     return pancake.calculateTransitionalSwapReturn(inToken, Tokens.USDT, outToken, inAmounts);
+        // }
+        // if (dex == Dex.PancakeBUSD && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL, Flags.FLAG_DISABLE_PANCAKE_BUSD)) {
+        //     return pancake.calculateTransitionalSwapReturn(inToken, Tokens.BUSD, outToken, inAmounts);
+        // }
+        // if (dex == Dex.PancakeDOT && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL, Flags.FLAG_DISABLE_PANCAKE_DOT)) {
+        //     return pancake.calculateTransitionalSwapReturn(inToken, Tokens.DOT, outToken, inAmounts);
+        // }
         // Bakery
         if (dex == Dex.Bakery && !flags.or(Flags.FLAG_DISABLE_BAKERY_ALL, Flags.FLAG_DISABLE_BAKERY)) {
             return bakery.calculateSwapReturn(inToken, outToken, inAmounts);
@@ -293,15 +278,15 @@ library Dexes {
             return bakery.calculateTransitionalSwapReturn(inToken, Tokens.BUSD, outToken, inAmounts);
         }
         // Burger
-        if (dex == Dex.Burger && !flags.or(Flags.FLAG_DISABLE_BURGER_ALL, Flags.FLAG_DISABLE_BURGER)) {
-            return burger.calculateSwapReturn(inToken, outToken, inAmounts);
-        }
-        if (dex == Dex.BurgerETH && !flags.or(Flags.FLAG_DISABLE_BURGER_ALL, Flags.FLAG_DISABLE_BURGER_ETH)) {
-            return burger.calculateTransitionalSwapReturn(inToken, Tokens.WETH, outToken, inAmounts);
-        }
-        if (dex == Dex.BurgerDGAS && !flags.or(Flags.FLAG_DISABLE_BURGER_ALL, Flags.FLAG_DISABLE_BURGER_DGAS)) {
-            return burger.calculateTransitionalSwapReturn(inToken, Tokens.DGAS, outToken, inAmounts);
-        }
+        // if (dex == Dex.Burger && !flags.or(Flags.FLAG_DISABLE_BURGER_ALL, Flags.FLAG_DISABLE_BURGER)) {
+        //     return burger.calculateSwapReturn(inToken, outToken, inAmounts);
+        // }
+        // if (dex == Dex.BurgerETH && !flags.or(Flags.FLAG_DISABLE_BURGER_ALL, Flags.FLAG_DISABLE_BURGER_ETH)) {
+        //     return burger.calculateTransitionalSwapReturn(inToken, Tokens.WETH, outToken, inAmounts);
+        // }
+        // if (dex == Dex.BurgerDGAS && !flags.or(Flags.FLAG_DISABLE_BURGER_ALL, Flags.FLAG_DISABLE_BURGER_DGAS)) {
+        //     return burger.calculateTransitionalSwapReturn(inToken, Tokens.DGAS, outToken, inAmounts);
+        // }
         // Thugswap
         if (dex == Dex.Thugswap && !flags.or(Flags.FLAG_DISABLE_THUGSWAP_ALL, Flags.FLAG_DISABLE_THUGSWAP)) {
             return thugswap.calculateSwapReturn(inToken, outToken, inAmounts);
@@ -341,9 +326,9 @@ library Dexes {
             return stablex.calculateTransitionalSwapReturn(inToken, Tokens.BUSD, outToken, inAmounts);
         }
         // Unifi
-        if (dex == Dex.Unifi && !flags.or(Flags.FLAG_DISABLE_UNIFI_ALL, Flags.FLAG_DISABLE_UNIFI)) {
-            return unifi.calculateSwapReturn(inToken, outToken, inAmounts);
-        }
+        // if (dex == Dex.Unifi && !flags.or(Flags.FLAG_DISABLE_UNIFI_ALL, Flags.FLAG_DISABLE_UNIFI)) {
+        //     return unifi.calculateSwapReturn(inToken, outToken, inAmounts);
+        // }
         // WETH
         if (dex == Dex.WETH && !flags.on(Flags.FLAG_DISABLE_WETH)) {
             return weth.calculateSwapReturn(inToken, outToken, inAmounts);
@@ -464,6 +449,27 @@ library Dexes {
             return pancakeV2.calculateTransitionalSwapReturn(inToken, Tokens.DOT, outToken, inAmounts);
         }
 
+        // Nerve
+        if (dex == Dex.NervePOOL3 && !flags.or(Flags.FLAG_DISABLE_NERVE_ALL, Flags.FLAG_DISABLE_NERVE_POOL3)) {
+            return INerveExtension.POOL3.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+        if (dex == Dex.NerveBTC && !flags.or(Flags.FLAG_DISABLE_NERVE_ALL, Flags.FLAG_DISABLE_NERVE_BTC)) {
+            return INerveExtension.BTC.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+        if (dex == Dex.NerveETH && !flags.or(Flags.FLAG_DISABLE_NERVE_ALL, Flags.FLAG_DISABLE_NERVE_ETH)) {
+            return INerveExtension.ETH.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+
+        // Cafeswap
+        if (dex == Dex.Cafeswap && !flags.on(Flags.FLAG_DISABLE_CAFESWAP_ALL)) {
+            return cafeswap.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+
+        // Beltswap
+        // if (dex == Dex.Beltswap && !flags.on(Flags.FLAG_DISABLE_BELTSWAP_ALL)) {
+        //     return IBeltSwapExtension.BELT4.calculateSwapReturn(inToken, outToken, inAmounts);
+        // }
+
         // fallback
         return (new uint256[](inAmounts.length), 0);
     }
@@ -475,40 +481,28 @@ library Dexes {
         uint256 amount,
         uint256 flags
     ) internal {
-        // belt swap
-        if (dex == Dex.Beltswap && !flags.on(Flags.FLAG_DISABLE_BELTSWAP_ALL)) {
-            IBeltSwapExtension.IBELTSWAP.swap(inToken, outToken, amount);
-        }
-        // nerve
-        if (dex == Dex.NerveDex && !flags.on(Flags.FLAG_DISABLE_NERVE_ALL)) {
-            nerve.swap(inToken, outToken, amount);
-        }
-        // cafeswap
-//        if (dex == Dex.Cafeswap && !flags.on(Flags.FLAG_DISABLE_CAFESWAP_ALL)) {
-//            cafeswap.swap(inToken, outToken, amount);
-//        }
         // Pancake
-        if (dex == Dex.Pancake && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL, Flags.FLAG_DISABLE_PANCAKE)) {
-            pancake.swap(inToken, outToken, amount);
-        }
-        if (dex == Dex.PancakeETH && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL, Flags.FLAG_DISABLE_PANCAKE_ETH)) {
-            pancake.swapTransitional(inToken, Tokens.WETH, outToken, amount);
-        }
-        if (dex == Dex.PancakeDAI && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL, Flags.FLAG_DISABLE_PANCAKE_DAI)) {
-            pancake.swapTransitional(inToken, Tokens.DAI, outToken, amount);
-        }
-        if (dex == Dex.PancakeUSDC && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL, Flags.FLAG_DISABLE_PANCAKE_USDC)) {
-            pancake.swapTransitional(inToken, Tokens.USDC, outToken, amount);
-        }
-        if (dex == Dex.PancakeUSDT && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL, Flags.FLAG_DISABLE_PANCAKE_USDT)) {
-            pancake.swapTransitional(inToken, Tokens.USDT, outToken, amount);
-        }
-        if (dex == Dex.PancakeBUSD && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL, Flags.FLAG_DISABLE_PANCAKE_BUSD)) {
-            pancake.swapTransitional(inToken, Tokens.BUSD, outToken, amount);
-        }
-        if (dex == Dex.PancakeDOT && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL, Flags.FLAG_DISABLE_PANCAKE_DOT)) {
-            pancake.swapTransitional(inToken, Tokens.DOT, outToken, amount);
-        }
+        // if (dex == Dex.Pancake && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL, Flags.FLAG_DISABLE_PANCAKE)) {
+        //     pancake.swap(inToken, outToken, amount);
+        // }
+        // if (dex == Dex.PancakeETH && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL, Flags.FLAG_DISABLE_PANCAKE_ETH)) {
+        //     pancake.swapTransitional(inToken, Tokens.WETH, outToken, amount);
+        // }
+        // if (dex == Dex.PancakeDAI && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL, Flags.FLAG_DISABLE_PANCAKE_DAI)) {
+        //     pancake.swapTransitional(inToken, Tokens.DAI, outToken, amount);
+        // }
+        // if (dex == Dex.PancakeUSDC && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL, Flags.FLAG_DISABLE_PANCAKE_USDC)) {
+        //     pancake.swapTransitional(inToken, Tokens.USDC, outToken, amount);
+        // }
+        // if (dex == Dex.PancakeUSDT && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL, Flags.FLAG_DISABLE_PANCAKE_USDT)) {
+        //     pancake.swapTransitional(inToken, Tokens.USDT, outToken, amount);
+        // }
+        // if (dex == Dex.PancakeBUSD && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL, Flags.FLAG_DISABLE_PANCAKE_BUSD)) {
+        //     pancake.swapTransitional(inToken, Tokens.BUSD, outToken, amount);
+        // }
+        // if (dex == Dex.PancakeDOT && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL, Flags.FLAG_DISABLE_PANCAKE_DOT)) {
+        //     pancake.swapTransitional(inToken, Tokens.DOT, outToken, amount);
+        // }
         // Bakery
         if (dex == Dex.Bakery && !flags.or(Flags.FLAG_DISABLE_BAKERY_ALL, Flags.FLAG_DISABLE_BAKERY)) {
             bakery.swap(inToken, outToken, amount);
@@ -529,15 +523,15 @@ library Dexes {
             bakery.swapTransitional(inToken, Tokens.BUSD, outToken, amount);
         }
         // Burger
-        if (dex == Dex.Burger && !flags.or(Flags.FLAG_DISABLE_BURGER_ALL, Flags.FLAG_DISABLE_BURGER)) {
-            burger.swap(inToken, outToken, amount);
-        }
-        if (dex == Dex.BurgerETH && !flags.or(Flags.FLAG_DISABLE_BURGER_ALL, Flags.FLAG_DISABLE_BURGER_ETH)) {
-            burger.swapTransitional(inToken, Tokens.WETH, outToken, amount);
-        }
-        if (dex == Dex.BurgerDGAS && !flags.or(Flags.FLAG_DISABLE_BURGER_ALL, Flags.FLAG_DISABLE_BURGER_DGAS)) {
-            burger.swapTransitional(inToken, Tokens.DGAS, outToken, amount);
-        }
+        // if (dex == Dex.Burger && !flags.or(Flags.FLAG_DISABLE_BURGER_ALL, Flags.FLAG_DISABLE_BURGER)) {
+        //     burger.swap(inToken, outToken, amount);
+        // }
+        // if (dex == Dex.BurgerETH && !flags.or(Flags.FLAG_DISABLE_BURGER_ALL, Flags.FLAG_DISABLE_BURGER_ETH)) {
+        //     burger.swapTransitional(inToken, Tokens.WETH, outToken, amount);
+        // }
+        // if (dex == Dex.BurgerDGAS && !flags.or(Flags.FLAG_DISABLE_BURGER_ALL, Flags.FLAG_DISABLE_BURGER_DGAS)) {
+        //     burger.swapTransitional(inToken, Tokens.DGAS, outToken, amount);
+        // }
         // Thugswap
         if (dex == Dex.Thugswap && !flags.or(Flags.FLAG_DISABLE_THUGSWAP_ALL, Flags.FLAG_DISABLE_THUGSWAP)) {
             thugswap.swap(inToken, outToken, amount);
@@ -577,9 +571,9 @@ library Dexes {
             stablex.swapTransitional(inToken, Tokens.BUSD, outToken, amount);
         }
         // Unifi
-        if (dex == Dex.Unifi && !flags.or(Flags.FLAG_DISABLE_UNIFI_ALL, Flags.FLAG_DISABLE_UNIFI)) {
-            unifi.swap(inToken, outToken, amount);
-        }
+        // if (dex == Dex.Unifi && !flags.or(Flags.FLAG_DISABLE_UNIFI_ALL, Flags.FLAG_DISABLE_UNIFI)) {
+        //     unifi.swap(inToken, outToken, amount);
+        // }
         // WETH
         if (dex == Dex.WETH && !flags.on(Flags.FLAG_DISABLE_WETH)) {
             weth.swap(inToken, outToken, amount);
@@ -679,7 +673,7 @@ library Dexes {
             mdex.swapTransitional(inToken, Tokens.BUSD, outToken, amount);
         }
 
-        // Pancake
+        // Pancake V2
         if (dex == Dex.PancakeV2 && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL_V2, Flags.FLAG_DISABLE_PANCAKE_V2)) {
             pancakeV2.swap(inToken, outToken, amount);
         }
@@ -698,5 +692,26 @@ library Dexes {
         if (dex == Dex.PancakeDOTV2 && !flags.or(Flags.FLAG_DISABLE_PANCAKE_ALL_V2, Flags.FLAG_DISABLE_PANCAKE_DOT_V2)) {
             pancakeV2.swapTransitional(inToken, Tokens.DOT, outToken, amount);
         }
+
+        // Nerve
+        if (dex == Dex.NervePOOL3 && !flags.or(Flags.FLAG_DISABLE_NERVE_ALL, Flags.FLAG_DISABLE_NERVE_POOL3)) {
+            return INerveExtension.POOL3.swap(inToken, outToken, amount);
+        }
+        if (dex == Dex.NerveBTC && !flags.or(Flags.FLAG_DISABLE_NERVE_ALL, Flags.FLAG_DISABLE_NERVE_BTC)) {
+            return INerveExtension.BTC.swap(inToken, outToken, amount);
+        }
+        if (dex == Dex.NerveETH && !flags.or(Flags.FLAG_DISABLE_NERVE_ALL, Flags.FLAG_DISABLE_NERVE_ETH)) {
+            return INerveExtension.ETH.swap(inToken, outToken, amount);
+        }
+
+        // Cafeswap
+        if (dex == Dex.Cafeswap && !flags.on(Flags.FLAG_DISABLE_CAFESWAP_ALL)) {
+            cafeswap.swap(inToken, outToken, amount);
+        }
+
+        // Beltswap
+        // if (dex == Dex.Beltswap && !flags.on(Flags.FLAG_DISABLE_BELTSWAP_ALL)) {
+        //     IBeltSwapExtension.BELT4.swap(inToken, outToken, amount);
+        // }
     }
 }

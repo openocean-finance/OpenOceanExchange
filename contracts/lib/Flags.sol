@@ -135,11 +135,13 @@ library Flags {
 
     // nerve
     uint256 internal constant FLAG_DISABLE_NERVE_ALL = 1 << 73;
+    uint256 internal constant FLAG_DISABLE_NERVE_POOL3 = 1 << 74;
+    uint256 internal constant FLAG_DISABLE_NERVE_BTC = 1 << 75;
+    uint256 internal constant FLAG_DISABLE_NERVE_ETH = 1 << 76;
     // cafeswap
-    uint256 internal constant FLAG_DISABLE_CAFESWAP_ALL = 1 << 74;
-    // beltswap
-    uint256 internal constant FLAG_DISABLE_BELTSWAP_ALL = 1 << 75;
-
+    uint256 internal constant FLAG_DISABLE_CAFESWAP_ALL = 1 << 77;
+    // Beltswap
+    uint256 internal constant FLAG_DISABLE_BELTSWAP_ALL = 1 << 78;
 
     function on(uint256 flags, uint256 flag) internal pure returns (bool) {
         return (flags & flag) != 0;

@@ -7,13 +7,10 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../lib/UniversalERC20.sol";
 import "../lib/Tokens.sol";
 
-
 /**
  * @notice  https://github.com/nerve-finance/contracts
  */
 interface INerve {
-    function getTokenIndex(address tokenAddress) external view returns (uint8);
-
     function calculateSwap(
         uint8 tokenIndexFrom,
         uint8 tokenIndexTo,
@@ -31,93 +28,110 @@ interface INerve {
 
 library INerveExtension {
     using UniversalERC20 for IERC20;
-    using Tokens for IERC20;
 
-
-    function calculateSwapReturn(
-        INerve nerve,
-        IERC20 inToken,
-        IERC20 outToken,
-        uint256 amount
-    ) internal view returns (uint256) {
-        if (amount == 0) {
-            return 0;
-        }
-        uint8 inIndex = nerve.getTokenIndex(address(inToken));
-        uint8 outIndex = nerve.getTokenIndex(address(outToken));
-        return nerve.calculateSwap(inIndex, outIndex, amount);
-    }
+    INerve internal constant POOL3 = INerve(0x1B3771a66ee31180906972580adE9b81AFc5fCDc);
+    INerve internal constant BTC = INerve(0x6C341938bB75dDe823FAAfe7f446925c66E6270c);
+    INerve internal constant ETH = INerve(0x146CD24dCc9f4EB224DFd010c5Bf2b0D25aFA9C0);
 
     function calculateSwapReturn(
-        INerve nerve,
+        INerve beltswap,
         IERC20 inToken,
         IERC20 outToken,
         uint256[] memory inAmounts
     ) internal view returns (uint256[] memory outAmounts, uint256 gas) {
         outAmounts = new uint256[](inAmounts.length);
+        IERC20[] memory tokens;
+        bool underlying;
+        (tokens, underlying, gas) = getPoolConfig(beltswap);
 
-        IERC20 realInToken = inToken.wrapETH();
-        IERC20 realOutToken = outToken.wrapETH();
-        for (uint256 i = 0; i < inAmounts.length; i++) {
-            outAmounts[i] = calculateSwapReturn(nerve, realInToken, realOutToken, inAmounts[i]);
+        (int128 i, int128 j) = determineTokenIndex(inToken, outToken, tokens);
+        if (i == -1 || j == -1) {
+            return (outAmounts, 0);
         }
-        //todo gas
-        return (outAmounts, 50_000);
-    }
-
-    function calculateTransitionalSwapReturn(
-        INerve nerve,
-        IERC20 inToken,
-        IERC20 transitionToken,
-        IERC20 outToken,
-        uint256[] memory inAmounts
-    ) internal view returns (uint256[] memory outAmounts, uint256 gas) {
-        IERC20 realInToken = inToken.wrapETH();
-        IERC20 realTransitionToken = transitionToken.wrapETH();
-        IERC20 realOutToken = outToken.wrapETH();
-
-        if (realInToken == realTransitionToken || realOutToken == realTransitionToken) {
-            return (new uint256[](inAmounts.length), 0);
+        if (underlying && i != 0 && j != 0) {
+            return (outAmounts, 0);
         }
-        uint256 firstGas;
-        uint256 secondGas;
-        (outAmounts, firstGas) = calculateSwapReturn(nerve, realInToken, realTransitionToken, inAmounts);
-        (outAmounts, secondGas) = calculateSwapReturn(nerve, realTransitionToken, realOutToken, outAmounts);
-        return (outAmounts, firstGas + secondGas);
-    }
 
+        for (uint256 k = 0; k < inAmounts.length; k++) {
+            if (underlying) {
+                outAmounts[k] = 0;
+            } else {
+                outAmounts[k] = beltswap.calculateSwap(uint8(i), uint8(j), inAmounts[k]);
+            }
+        }
+    }
 
     function swap(
-        INerve nerve,
+        INerve pool,
         IERC20 inToken,
-        IERC20 outToken,
-        uint256 inAmount
-    ) internal returns (uint256 outAmount) {
-        inToken.depositToWETH(inAmount);
-
-        IERC20 realInToken = inToken.wrapETH();
-        IERC20 realOutToken = outToken.wrapETH();
-
-        realInToken.approve(address(nerve), inAmount);
-
-        outAmount = calculateSwapReturn(nerve, realInToken, realOutToken, inAmount);
-
-        uint8 inIndex = nerve.getTokenIndex(address(inToken));
-        uint8 outIndex = nerve.getTokenIndex(address(outToken));
-        uint nowTime = block.timestamp;
-        //todo deadline
-        nerve.swap(inIndex, outIndex, inAmount, outAmount, nowTime + 1000);
-        outToken.withdrawFromWETH();
-    }
-
-    function swapTransitional(
-        INerve nerve,
-        IERC20 inToken,
-        IERC20 transitionToken,
         IERC20 outToken,
         uint256 inAmount
     ) internal {
-        swap(nerve, transitionToken, outToken, swap(nerve, inToken, transitionToken, inAmount));
+        (IERC20[] memory tokens, bool underlying, ) = getPoolConfig(pool);
+
+        (int128 i, int128 j) = determineTokenIndex(inToken, outToken, tokens);
+        if (i == -1 || j == -1) {
+            return;
+        }
+        if (underlying && i != 0 && j != 0) {
+            return;
+        }
+
+        inToken.universalApprove(address(pool), inAmount);
+        if (underlying) {
+            // empty
+        } else {
+            pool.swap(uint8(i), uint8(j), inAmount, 0, block.timestamp + 3600);
+        }
+    }
+
+    function determineTokenIndex(
+        IERC20 inToken,
+        IERC20 outToken,
+        IERC20[] memory tokens
+    ) private pure returns (int128, int128) {
+        int128 i = -1;
+        int128 j = -1;
+        for (uint256 k = 0; k < tokens.length; k++) {
+            IERC20 token = tokens[k];
+            if (inToken == token) {
+                i = int128(k);
+            }
+            if (outToken == token) {
+                j = int128(k);
+            }
+        }
+        return (i, j);
+    }
+
+    function getPoolConfig(INerve pool)
+        private
+        pure
+        returns (
+            IERC20[] memory tokens,
+            bool underlying,
+            uint256 gas
+        )
+    {
+        if (pool == POOL3) {
+            tokens = new IERC20[](3);
+            tokens[0] = Tokens.BUSD;
+            tokens[1] = Tokens.USDT;
+            tokens[2] = Tokens.USDC;
+            underlying = false;
+            gas = 720_000;
+        } else if (pool == BTC) {
+            tokens = new IERC20[](2);
+            tokens[0] = Tokens.BTCB;
+            tokens[1] = IERC20(0x54261774905f3e6E9718f2ABb10ed6555cae308a); // anyBTC
+            underlying = false;
+            gas = 720_000;
+        } else if (pool == ETH) {
+            tokens = new IERC20[](2);
+            tokens[0] = IERC20(0x2170Ed0880ac9A755fd29B2688956BD959F933F8); // ETH
+            tokens[1] = IERC20(0x6F817a0cE8F7640Add3bC0c1C2298635043c2423); // anyETH
+            underlying = false;
+            gas = 720_000;
+        }
     }
 }
-
