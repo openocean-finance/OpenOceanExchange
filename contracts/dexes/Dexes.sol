@@ -30,7 +30,7 @@ library Dexes {
     IUniswapV2Factory internal constant honeyswap = IUniswapV2Factory(0xA818b4F111Ccac7AA31D0BCc0806d64F2E0737D7);
     using IUniswapV2FactoryExtension for IUniswapV2Factory;
 
-    ISushiSwapFactory internal constant sushiswap = ISushiSwapFactory(0xC0AEe478e3658e2610c5F7A4A2E1777cE9e4f2Ac);
+    ISushiSwapFactory internal constant sushiswap = ISushiSwapFactory(0xc35DADB65012eC5796536bD9864eD8773aBc74C4);
     using ISushiSwapFactoryExtension for ISushiSwapFactory;
 
     function allDexes() internal pure returns (Dex[] memory dexes) {
@@ -50,13 +50,6 @@ library Dexes {
     ) internal view returns (uint256[] memory, uint256) {
         // add quick swap
         if (dex == Dex.UniswapV2 && !flags.or(Flags.FLAG_DISABLE_UNISWAP_V2_ALL, Flags.FLAG_DISABLE_UNISWAP_V2)) {
-            if (false) {
-                uint256[] memory out = new uint256[](inAmounts.length);
-                for (uint i = 0; i < inAmounts.length; i++) {
-                    out[i] = 100000000;
-                }
-                return (out, 100000);
-            }
             return honeyswap.calculateSwapReturn(inToken, outToken, inAmounts);
         }
         if (dex == Dex.UniswapV2 && !flags.or(Flags.FLAG_DISABLE_UNISWAP_V2_ALL, Flags.FLAG_DISABLE_UNISWAP_V2)) {

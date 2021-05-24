@@ -24,9 +24,7 @@ const DisableSushiswapDAI = new BN(1).shln(8);
 const DisableSushiswapUSDC = new BN(1).shln(9);
 
 
-const DexOneView = artifacts.require("DexOneView");
 const DexOne = artifacts.require("DexOne");
-const DexOneAll = artifacts.require("DexOneAll");
 const ERC20 = artifacts.require("IERC20");
 const Factory = artifacts.require("IUniswapV2Factory");
 
@@ -53,6 +51,7 @@ contract('DexOne', (accounts) => {
             let fAddress = "0xA818b4F111Ccac7AA31D0BCc0806d64F2E0737D7";//honeyswap
             // sushiswap 地址不对
             // fAddress = "0xC0AEe478e3658e2610c5F7A4A2E1777cE9e4f2Ac";//sushiswap
+            fAddress = "0xc35DADB65012eC5796536bD9864eD8773aBc74C4";
             let f = await Factory.at(fAddress);
             let res = await f.getPair(wxdaiAddress, usdcAddress);
             console.log("res:", res.toString());
@@ -66,6 +65,7 @@ contract('DexOne', (accounts) => {
         console.log(`balance of ${accounts[0]}: (${balanceBefore}) USDT`);
 
         let testName = "sushiswap";
+
         if (testName == "honeyswap") {
             // xdai -> usdc
             pass = pass.sub(DisableUniswapV2All);
