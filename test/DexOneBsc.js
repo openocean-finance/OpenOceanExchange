@@ -28,6 +28,7 @@ const DexOneView = artifacts.require("DexOneView");
 const DexOne = artifacts.require("DexOne");
 const DexOneAll = artifacts.require("DexOneAll");
 const ERC20 = artifacts.require("IERC20");
+const ISushiSwapFactory = artifacts.require("ISushiSwapFactory");
 
 var pass = DisableUniswapV2All.add(DisableUniswapV2).add(DisableUniswapV2ETH)
     .add(DisableUniswapV2DAI).add(DisableUniswapV2USDC).add(DisableSushiswapAll)
@@ -43,17 +44,26 @@ contract('DexOne', (accounts) => {
 
         let maticAddress = "0x0000000000000000000000000000000000001010";
 
+        if (true) {
+            // sushi 合约地址在polygon浏览器里面找不到
+            let faddr = "0xC0AEe478e3658e2610c5F7A4A2E1777cE9e4f2Ac";
+            let sushiswap = await ISushiSwapFactory.at(faddr);
+            let res = await sushiswap.getPair(maticAddress, usdtAddress);
+            console.log("res:", res);
+            return;
+        }
+
         var balance = await web3.eth.getBalance(accounts[0]);
-        console.log("***:",balance); //
+        console.log("***:", balance); //
 
         let balanceBefore = await usdt.balanceOf(accounts[0])
         console.log(`balance of ${accounts[0]}: (${balanceBefore}) USDT`);
 
-        let testName = "quickswap";
-        if (testName == "quickswap"){
+        let testName = "sushiswap";
+        if (testName == "quickswap") {
             pass = pass.sub(DisableUniswapV2All);
             pass = pass.sub(DisableUniswapV2);
-        } else if(testName == "") {
+        } else if (testName == "sushiswap") {
             pass = pass.sub(DisableSushiswapAll);
             pass = pass.sub(DisableSushiswap);
         }
@@ -155,7 +165,6 @@ contract('DexOne', (accounts) => {
     //         console.log(amount.toString());
     //     });
     // });
-
 
 
     // it('DexOneAll should swap CAKE to BNB', async () => {
