@@ -10,14 +10,14 @@ import "../lib/Tokens.sol";
 /**
  * @notice Uniswap V2 factory contract interface. See https://uniswap.org/docs/v2/smart-contracts/factory/
  */
-interface IUniswapV2Factory {
-    function getPair(IERC20 tokenA, IERC20 tokenB) external view returns (IUniswapV2Pair pair);
+interface IQuickswapFactory {
+    function getPair(IERC20 tokenA, IERC20 tokenB) external view returns (IQuickswapPair pair);
 }
 
 /**
  * @notice Uniswap V2 pair pool interface. See https://uniswap.org/docs/v2/smart-contracts/pair/
  */
-interface IUniswapV2Pair {
+interface IQuickswapPair {
     function swap(
         uint256 amount0Out,
         uint256 amount1Out,
@@ -39,19 +39,18 @@ interface IUniswapV2Pair {
     function sync() external;
 }
 
-library IUniswapV2PairExtension {
+library IQuickswapPairExtension {
     using SafeMath for uint256;
     using UniversalERC20 for IERC20;
 
-    // TODO
-    address private constant SKIM_TARGET = 0xe523182610482b8C0DD65d5A08F1Bbd256B1EA0c;
+    address private constant SKIM_TARGET = 0x89F2F964c6F1EFd4CAfAD893CE9521096290Fa94;
 
     /**
      * @notice Use Uniswap's constant product formula to calculate expected swap return.
      * See https://github.com/runtimeverification/verified-smart-contracts/blob/uniswap/uniswap/x-y-k.pdf
      */
     function calculateSwapReturn(
-        IUniswapV2Pair pair,
+        IQuickswapPair pair,
         IERC20 inToken,
         IERC20 outToken,
         uint256 amount
@@ -65,7 +64,7 @@ library IUniswapV2PairExtension {
     }
 
     function calculateRealSwapReturn(
-        IUniswapV2Pair pair,
+        IQuickswapPair pair,
         IERC20 inToken,
         IERC20 outToken,
         uint256 amount
@@ -98,14 +97,14 @@ library IUniswapV2PairExtension {
     }
 }
 
-library IUniswapV2FactoryExtension {
+library IQuickswapFactoryExtension {
     using SafeMath for uint256;
     using UniversalERC20 for IERC20;
-    using IUniswapV2PairExtension for IUniswapV2Pair;
+    using IQuickswapPairExtension for IQuickswapPair;
     using Tokens for IERC20;
 
     function calculateSwapReturn(
-        IUniswapV2Factory factory,
+        IQuickswapFactory factory,
         IERC20 inToken,
         IERC20 outToken,
         uint256[] memory inAmounts
@@ -114,18 +113,17 @@ library IUniswapV2FactoryExtension {
 
         IERC20 realInToken = inToken.wrapMATIC();
         IERC20 realOutToken = outToken.wrapMATIC();
-        IUniswapV2Pair pair = factory.getPair(realInToken, realOutToken);
-        if (pair != IUniswapV2Pair(0)) {
+        IQuickswapPair pair = factory.getPair(realInToken, realOutToken);
+        if (pair != IQuickswapPair(0)) {
             for (uint256 i = 0; i < inAmounts.length; i++) {
                 outAmounts[i] = pair.calculateSwapReturn(realInToken, realOutToken, inAmounts[i]);
             }
-            // todo fee
             return (outAmounts, 50_000);
         }
     }
 
     function calculateTransitionalSwapReturn(
-        IUniswapV2Factory factory,
+        IQuickswapFactory factory,
         IERC20 inToken,
         IERC20 transitionToken,
         IERC20 outToken,
@@ -146,7 +144,7 @@ library IUniswapV2FactoryExtension {
     }
 
     function swap(
-        IUniswapV2Factory factory,
+        IQuickswapFactory factory,
         IERC20 inToken,
         IERC20 outToken,
         uint256 inAmount
@@ -155,7 +153,7 @@ library IUniswapV2FactoryExtension {
 
         IERC20 realInToken = inToken.wrapMATIC();
         IERC20 realOutToken = outToken.wrapMATIC();
-        IUniswapV2Pair pair = factory.getPair(realInToken, realOutToken);
+        IQuickswapPair pair = factory.getPair(realInToken, realOutToken);
 
         outAmount = pair.calculateRealSwapReturn(realInToken, realOutToken, inAmount);
 
@@ -170,7 +168,7 @@ library IUniswapV2FactoryExtension {
     }
 
     function swapTransitional(
-        IUniswapV2Factory factory,
+        IQuickswapFactory factory,
         IERC20 inToken,
         IERC20 transitionToken,
         IERC20 outToken,

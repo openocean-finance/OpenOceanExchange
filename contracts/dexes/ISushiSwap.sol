@@ -43,8 +43,7 @@ library ISushiSwapPairExtension {
     using SafeMath for uint256;
     using UniversalERC20 for IERC20;
 
-    //TODO
-    address private constant SKIM_TARGET = 0xe523182610482b8C0DD65d5A08F1Bbd256B1EA0c;
+    address private constant SKIM_TARGET = 0x89F2F964c6F1EFd4CAfAD893CE9521096290Fa94;
 
     /**
      * @notice Use Uniswap's constant product formula to calculate expected swap return.

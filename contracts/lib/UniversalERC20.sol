@@ -14,7 +14,6 @@ library UniversalERC20 {
 
     IERC20 internal constant ZERO_ADDRESS = IERC20(0x0000000000000000000000000000000000000000);
     IERC20 internal constant ETH_ADDRESS = IERC20(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
-
     IERC20 internal constant MATIC_ADDRESS = IERC20(0x0000000000000000000000000000000000001010);
 
     function universalTransfer(
