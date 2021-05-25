@@ -166,6 +166,6 @@ contract DexOneAll is IDexOneTransitional {
         uint256 flags
     ) internal {
         inToken.universalApprove(address(dexOne), inAmount);
-        dexOne.swap{value: inToken.isFTM() ? inAmount : 0}(inToken, outToken, inAmount, 0, distribution, flags);
+        dexOne.swap{value: inToken.isONE() ? inAmount : 0}(inToken, outToken, inAmount, 0, distribution, flags);
     }
 }

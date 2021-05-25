@@ -6,14 +6,11 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../lib/UniversalERC20.sol";
 import "../lib/Tokens.sol";
 import "../lib/Flags.sol";
-import "./ISushiSwap.sol";
+import "./ISeeSwap.sol";
 
 
     enum Dex {
-        SushiSwap,
-        SushiSwapETH,
-        SushiSwapDAI,
-        SushiSwapUSDC,
+        SeeSwap,
         NoDex
     }
 
@@ -21,8 +18,8 @@ library Dexes {
     using UniversalERC20 for IERC20;
     using Flags for uint256;
 
-    ISushiSwapFactory internal constant sushiswap = ISushiSwapFactory(0xc35DADB65012eC5796536bD9864eD8773aBc74C4);
-    using ISushiSwapFactoryExtension for ISushiSwapFactory;
+
+    using IBPoolExtension for IBPool;
 
     function allDexes() internal pure returns (Dex[] memory dexes) {
         uint256 dexCount = uint256(Dex.NoDex);
@@ -40,19 +37,21 @@ library Dexes {
         uint256 flags
     ) internal view returns (uint256[] memory, uint256) {
         // add SushiSwap
-        if (dex == Dex.SushiSwap && !flags.or(Flags.FLAG_DISABLE_SUSHISWAP_ALL, Flags.FLAG_DISABLE_SUSHISWAP)) {
-            return sushiswap.calculateSwapReturn(inToken, outToken, inAmounts);
+        if (dex == Dex.SeeSwap && !flags.or(Flags.FLAG_DISABLE_SEESWAP_ALL, Flags.FLAG_DISABLE_SEESWAP)) {
+            address poolAddr = IBPoolExtension.getISeeSwapPool(inToken, outToken);
+            IBPool  pool = IBPool(poolAddr);
+            return pool.calculateSwapReturn(inToken, outToken, inAmounts);
         }
-        if (dex == Dex.SushiSwapETH && !flags.or(Flags.FLAG_DISABLE_SUSHISWAP_ALL, Flags.FLAG_DISABLE_SUSHISWAP_ETH)) {
-            return sushiswap.calculateTransitionalSwapReturn(inToken, Tokens.WAVAX, outToken, inAmounts);
-        }
-        if (dex == Dex.SushiSwapDAI && !flags.or(Flags.FLAG_DISABLE_SUSHISWAP_ALL, Flags.FLAG_DISABLE_SUSHISWAP_DAI)) {
-            return sushiswap.calculateTransitionalSwapReturn(inToken, Tokens.DAI, outToken, inAmounts);
+        if (dex == Dex.SeeSwap && !flags.or(Flags.FLAG_DISABLE_SEESWAP_ALL,Flags.FLAG_DISABLE_SEESWAP_WONE)) {
+            address poolAddr = IBPoolExtension.getISeeSwapPool(inToken, Tokens.WONE);
+            IBPool  pool = IBPool(poolAddr);
+            return pool.calculateTransitionalSwapReturn(inToken, Tokens.WONE, outToken, inAmounts);
         }
 
         // fallback
         return (new uint256[](inAmounts.length), 0);
     }
+
 
     function swap(
         Dex dex,
@@ -62,15 +61,16 @@ library Dexes {
         uint256 flags
     ) internal {
 
-        // add SushiSwap
-        if (dex == Dex.SushiSwap && !flags.or(Flags.FLAG_DISABLE_SUSHISWAP_ALL, Flags.FLAG_DISABLE_SUSHISWAP)) {
-            sushiswap.swap(inToken, outToken, amount);
+        if (dex == Dex.SeeSwap && !flags.or(Flags.FLAG_DISABLE_SEESWAP_ALL, Flags.FLAG_DISABLE_SEESWAP)) {
+            address poolAddr = IBPoolExtension.getISeeSwapPool(inToken, outToken);
+            IBPool  pool = IBPool(poolAddr);
+            pool.swap(inToken, outToken, amount);
         }
-        if (dex == Dex.SushiSwapETH && !flags.or(Flags.FLAG_DISABLE_SUSHISWAP_ALL, Flags.FLAG_DISABLE_SUSHISWAP_ETH)) {
-            sushiswap.swapTransitional(inToken, Tokens.WAVAX, outToken, amount);
-        }
-        if (dex == Dex.SushiSwapDAI && !flags.or(Flags.FLAG_DISABLE_SUSHISWAP_ALL, Flags.FLAG_DISABLE_SUSHISWAP_DAI)) {
-            sushiswap.swapTransitional(inToken, Tokens.DAI, outToken, amount);
+
+        if (dex == Dex.SeeSwap && !flags.or(Flags.FLAG_DISABLE_SEESWAP_ALL,Flags.FLAG_DISABLE_SEESWAP_WONE)) {
+            address poolAddr = IBPoolExtension.getISeeSwapPool(inToken, Tokens.WONE);
+            IBPool  pool = IBPool(poolAddr);
+            pool.swapTransitional(inToken, Tokens.WONE, outToken, amount);
         }
     }
 }

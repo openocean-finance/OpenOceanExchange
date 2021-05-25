@@ -11,71 +11,53 @@ const {
     web3
 } = require('@openzeppelin/test-helpers/src/setup');
 
-const DisableSushiswapAll = new BN(1).shln(0);
-const DisableSushiswap = new BN(1).shln(1);
-const DisableSushiswapETH = new BN(1).shln(2);
-const DisableSushiswapDAI = new BN(1).shln(3);
-const DisableSushiswapUSDC = new BN(1).shln(4);
-
+const DisableSeeswapAll = new BN(1).shln(0);
+const DisableSeeswap = new BN(1).shln(1);
+const DisableSeeswapONE = new BN(1).shln(2);
 
 const DexOne = artifacts.require("DexOne");
 const ERC20 = artifacts.require("IERC20");
-const Factory = artifacts.require("IUniswapV2Factory");
 
 
-var pass = DisableSushiswapAll.add(DisableSushiswap)
-    .add(DisableSushiswapETH).add(DisableSushiswapDAI)
-    .add(DisableSushiswapUSDC);
+var pass = DisableSeeswapAll.add(DisableSeeswap).add(DisableSeeswapONE);
+
 
 
 contract('DexOne', (accounts) => {
 
     it('DexOneAll should swap ETH to CAKE', async () => {
 
-        // 合约地址 不对  TODO
-        let usdtAddress = "0x13D0D85fE3534E02c30Ad87Bc55a3f361E358c09";
-        const usdt = await ERC20.at(usdtAddress);
+        // 合约地址
+        let usdsAddress = "0xFCE523163e2eE1F5f0828eCe554E9D839bEA17F5";
+        const usdt = await ERC20.at(usdsAddress);
 
-        let avaxAddress = "0x0000000000000000000000000000000000000000";
-        let wavaxAddress = "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7";
+        let oneAddress = "0x0000000000000000000000000000000000000000";
 
-        if (true) {
-            let fAddress = "0xA818b4F111Ccac7AA31D0BCc0806d64F2E0737D7";//honeyswap
-
-            fAddress = "0xc35DADB65012eC5796536bD9864eD8773aBc74C4";//sushiswap
-            let f = await Factory.at(fAddress);
-            let res = await f.getPair(wavaxAddress, usdtAddress);
-            console.log("res:", res.toString());
-            return;
-        }
 
         var balance = await web3.eth.getBalance(accounts[0]);
-        console.log("xDAI balance:", balance); //
+        console.log("one balance:", balance); //
 
         let balanceBefore = await usdt.balanceOf(accounts[0])
-        console.log(`balance of ${accounts[0]}: (${balanceBefore}) USDT`);
+        console.log(`balance of ${accounts[0]}: (${balanceBefore}) USDs`);
 
-        let testName = "sushiswap";
-        if (testName == "sushiswap") {
-            pass = pass.sub(DisableSushiswapAll);
-            pass = pass.sub(DisableSushiswap);
-        }
+        pass = pass.sub(DisableSeeswapAll);
+        pass = pass.sub(DisableSeeswap);
 
 
         const dexOne = await DexOne.deployed();
         const res = await dexOne.calculateSwapReturn(
-            avaxAddress, // matic
-            usdtAddress, // usdt
+            oneAddress,
+            usdsAddress,
             '1000000000000000000', // 1.0
             10,
             pass,
         );
         expectedOutAmount = res.outAmount;
-        console.log(`expect out amount ${res.outAmount.toString()} USDT`);
+        console.log(`expect out amount ${res.outAmount.toString()} USDs`);
         console.log("res.distribution:", res.distribution.toString());
         const swapped = await dexOne.contract.methods.swap(
-            avaxAddress,
-            usdtAddress,
+            oneAddress,
+            usdsAddress,
             '1000000000000000000',
             0,
             res.distribution.map(dist => dist.toString()),
@@ -101,7 +83,7 @@ contract('DexOne', (accounts) => {
         });
 
         balanceAfter = await usdt.balanceOf(accounts[0])
-        console.log(`balance of ${accounts[0]}: (${balanceAfter}) USDT`);
+        console.log(`balance of ${accounts[0]}: (${balanceAfter}) USDs`);
         assert.equal(expectedOutAmount, balanceAfter - balanceBefore);
     });
 });
