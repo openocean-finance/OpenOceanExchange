@@ -19,6 +19,32 @@ library Flags {
     uint256 internal constant FLAG_DISABLE_SUSHISWAP_USDC = 1 << 11;
     uint256 internal constant FLAG_DISABLE_SUSHISWAP_USDT = 1 << 12;
 
+    // WETH
+    uint256 internal constant FLAG_DISABLE_WETH = 1 << 13;
+
+    // add Cometh
+    uint256 internal constant FLAG_DISABLE_COMETH_ALL = 1 << 14;
+    uint256 internal constant FLAG_DISABLE_COMETH = 1 << 15;
+    uint256 internal constant FLAG_DISABLE_COMETH_ETH = 1 << 16;
+    uint256 internal constant FLAG_DISABLE_COMETH_MUST = 1 << 17;
+
+    // add Dfyn
+    uint256 internal constant FLAG_DISABLE_DFYN_ALL = 1 << 18;
+    uint256 internal constant FLAG_DISABLE_DFYN = 1 << 19;
+    uint256 internal constant FLAG_DISABLE_DFYN_ETH = 1 << 20;
+    uint256 internal constant FLAG_DISABLE_DFYN_USDC = 1 << 21;
+    uint256 internal constant FLAG_DISABLE_DFYN_USDT = 1 << 22;
+
+    // add PolyZap
+    uint256 internal constant FLAG_DISABLE_POLYZAP_ALL = 1 << 23;
+    uint256 internal constant FLAG_DISABLE_POLYZAP = 1 << 24;
+    uint256 internal constant FLAG_DISABLE_POLYZAP_ETH = 1 << 25;
+    uint256 internal constant FLAG_DISABLE_POLYZAP_USDC = 1 << 26;
+
+    // add Curve
+    uint256 internal constant FLAG_DISABLE_CURVE_ALL = 1 << 27;
+    uint256 internal constant FLAG_DISABLE_CURVE_AAVE = 1 << 28;
+
     function on(uint256 flags, uint256 flag) internal pure returns (bool) {
         return (flags & flag) != 0;
     }
