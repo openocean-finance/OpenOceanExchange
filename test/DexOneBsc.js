@@ -11,17 +11,41 @@ const {
     web3
 } = require('@openzeppelin/test-helpers/src/setup');
 
-const DisableUniswapV2All = new BN(1 << 0);
-const DisableUniswapV2 = new BN(1).shln(1);
-const DisableUniswapV2ETH = new BN(1).shln(2);
-const DisableUniswapV2DAI = new BN(1).shln(3);
-const DisableUniswapV2USDC = new BN(1).shln(4);
+const DisableQuickSwapAll = new BN(1 << 0);
+const DisableQuickSwap = new BN(1).shln(1);
+const DisableQuickSwapETH = new BN(1).shln(2);
+const DisableQuickSwapDAI = new BN(1).shln(3);
+const DisableQuickSwapUSDC = new BN(1).shln(4);
+const DisableQuickSwapUSDT = new BN(1).shln(5);
+const DisableQuickSwapQUICK = new BN(1).shln(6);
 
-const DisableSushiswapAll = new BN(1).shln(5);
-const DisableSushiswap = new BN(1).shln(6);
-const DisableSushiswapETH = new BN(1).shln(7);
-const DisableSushiswapDAI = new BN(1).shln(8);
-const DisableSushiswapUSDC = new BN(1).shln(9);
+const DisableSushiswapAll = new BN(1).shln(7);
+const DisableSushiswap = new BN(1).shln(8);
+const DisableSushiswapETH = new BN(1).shln(9);
+const DisableSushiswapDAI = new BN(1).shln(10);
+const DisableSushiswapUSDC = new BN(1).shln(11);
+const DisableSushiswapUSDT = new BN(1).shln(12);
+
+const DisableWETH = new BN(1).shln(13);
+
+const DisableComethALL = new BN(1).shln(14);
+const DisableCometh = new BN(1).shln(15);
+const DisableComethETH = new BN(1).shln(16);
+const DisableComethMUST = new BN(1).shln(17);
+
+const DisableDfynALL = new BN(1).shln(18);
+const DisableDfyn = new BN(1).shln(19);
+const DisableDfynETH = new BN(1).shln(20);
+const DisableDfynUSDC = new BN(1).shln(21);
+const DisableDfynUSDT = new BN(1).shln(22);
+
+const DisablePolyzapALL = new BN(1).shln(23);
+const DisablePolyzap = new BN(1).shln(24);
+const DisablePolyzapETH = new BN(1).shln(25);
+const DisablePolyzapUSDC = new BN(1).shln(26);
+
+const DisableCurveALL = new BN(1).shln(27);
+const DisableCurveAAVE = new BN(1).shln(28);
 
 
 const DexOneView = artifacts.require("DexOneView");
@@ -30,10 +54,16 @@ const DexOneAll = artifacts.require("DexOneAll");
 const ERC20 = artifacts.require("IERC20");
 const ISushiSwapFactory = artifacts.require("ISushiSwapFactory");
 
-var pass = DisableUniswapV2All.add(DisableUniswapV2).add(DisableUniswapV2ETH)
-    .add(DisableUniswapV2DAI).add(DisableUniswapV2USDC).add(DisableSushiswapAll)
+var pass = DisableQuickSwapAll.add(DisableQuickSwap).add(DisableQuickSwapETH)
+    .add(DisableQuickSwapDAI).add(DisableQuickSwapUSDC).add(DisableQuickSwapUSDT)
+    .add(DisableQuickSwapQUICK).add(DisableSushiswapAll)
     .add(DisableSushiswap).add(DisableSushiswapETH).add(DisableSushiswapDAI)
-    .add(DisableSushiswapUSDC);
+    .add(DisableSushiswapUSDC).add(DisableSushiswapUSDT).add(DisableWETH)
+    .add(DisableComethALL).add(DisableCometh).add(DisableComethETH)
+    .add(DisableComethMUST).add(DisableDfynALL).add(DisableDfyn)
+    .add(DisableDfynETH).add(DisableDfynUSDC).add(DisableDfynUSDT)
+    .add(DisablePolyzapALL).add(DisablePolyzap).add(DisablePolyzapETH)
+    .add(DisablePolyzapUSDC).add(DisableCurveALL).add(DisableCurveAAVE);
 
 
 contract('DexOne', (accounts) => {
@@ -53,29 +83,39 @@ contract('DexOne', (accounts) => {
             return;
         }
 
-        var balance = await web3.eth.getBalance(accounts[0]);
-        console.log("***:", balance); //
-
         let balanceBefore = await usdt.balanceOf(accounts[0])
         console.log(`balance of ${accounts[0]}: (${balanceBefore}) USDT`);
 
-        let testName = "sushiswap";
+        let testName = "cometh";// TODO
+        // testName = "sushiswap";
         if (testName == "quickswap") {
-            pass = pass.sub(DisableUniswapV2All);
-            pass = pass.sub(DisableUniswapV2);
+            pass = pass.sub(DisableQuickSwapAll);
+            pass = pass.sub(DisableQuickSwap);
         } else if (testName == "sushiswap") {
             pass = pass.sub(DisableSushiswapAll);
             pass = pass.sub(DisableSushiswap);
+        } else if (testName == "weth") { // 0
+            pass = pass.sub(DisableWETH);
+        } else if (testName == "cometh") {
+            pass = pass.sub(DisableComethALL);
+            pass = pass.sub(DisableCometh);
+        } else if (testName == "dfyn") {  //0
+            pass = pass.sub(DisableDfynALL);
+            pass = pass.sub(DisableDfyn);
+        } else if (testName == "polyzap") {
+            pass = pass.sub(DisablePolyzapALL);
+            pass = pass.sub(DisablePolyzap);
+        } else if (testName == "curve") {
+            pass = pass.sub(DisableCurveALL);
+            pass = pass.sub(DisableCurveAAVE);
         }
-
 
         const dexOne = await DexOne.deployed();
         const res = await dexOne.calculateSwapReturn(
-            maticAddress, // matic
-            usdtAddress, // usdt
+            maticAddress,
+            usdtAddress,
             '1000000000000000000', // 1.0
             10,
-            // 0,
             pass,
         );
         expectedOutAmount = res.outAmount;
@@ -90,7 +130,6 @@ contract('DexOne', (accounts) => {
             pass.toString(),
         ).encodeABI();
         const nonce = await web3.eth.getTransactionCount(accounts[0]);
-        console.log(`nonce: ${nonce}`);
 
         const account = accounts[0];
         console.log(`account: ${account}`);
@@ -100,18 +139,13 @@ contract('DexOne', (accounts) => {
             gas: "0x166691b7",
             gasPrice: "0x4a817c800",
             data: swapped,
-            // value: "0xde0b6b3a7640000",
             value: '1000000000000000000',
             nonce: web3.utils.toHex(nonce),
         }
-        // console.log(rawTx);
-
 
         const sign = await web3.eth.accounts.signTransaction(rawTx, '0x94e6de53e500b9fec28037c583f5214c854c7229329ce9baf6f5577bd95f9c9a');
-        // console.log(sign);
 
         web3.eth.sendSignedTransaction(sign.rawTransaction).on('receipt', receipt => {
-            // console.log(JSON.stringify(receipt));
         });
 
         balanceAfter = await usdt.balanceOf(accounts[0])
@@ -144,7 +178,7 @@ contract('DexOne', (accounts) => {
     //         '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE', // ETH
     //         '0x6B175474E89094C44Da98b954EedeAC495271d0F', // DAI
     //         '1000000000000000000', // 1.0
-    //         DisableUniswapV2All.add(DisableUniswap).add(DisableSushiSwapAll).add(DisableMooniswapAll).add(DisableBalancerAll)
+    //         DisableQuickswapAll.add(DisableUniswap).add(DisableSushiSwapAll).add(DisableMooniswapAll).add(DisableBalancerAll)
     //     );
     //     // console.log(`expect out amount ${res.outAmount.toString()} DAI`);
     //     res.forEach(dist => {
@@ -277,7 +311,7 @@ contract('DexOne', (accounts) => {
     //         '0x4Fabb145d64652a948d72533023f6E7A623C7C53', // BUSD
     //         '1000000000000000000', // 1.0
     //         10,
-    //         DisableUniswapV2All
+    //         DisableQuickswapAll
     //     );
 
     //     console.log(res.outAmount.toString());
@@ -294,7 +328,7 @@ contract('DexOne', (accounts) => {
     //         '1000000000000000000',
     //         0,
     //         res.distribution,
-    //         DisableUniswapV2All, {
+    //         DisableQuickswapAll, {
     //             from: accounts[0]
     //         }
     //     );
