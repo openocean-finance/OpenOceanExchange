@@ -5,7 +5,7 @@ library Flags {
     // add Quickswap
     uint256 internal constant FLAG_DISABLE_QUICKSWAP_ALL = 1 << 0;
     uint256 internal constant FLAG_DISABLE_QUICKSWAP = 1 << 1;
-    uint256 internal constant FLAG_DISABLE_QUICKSWAP_ETH = 1 << 2;
+    uint256 internal constant FLAG_DISABLE_QUICKSWAP_WMATIC = 1 << 2;
     uint256 internal constant FLAG_DISABLE_QUICKSWAP_DAI = 1 << 3;
     uint256 internal constant FLAG_DISABLE_QUICKSWAP_USDC = 1 << 4;
     uint256 internal constant FLAG_DISABLE_QUICKSWAP_USDT = 1 << 5;

@@ -13,7 +13,7 @@ const {
 
 const DisableQuickSwapAll = new BN(1 << 0);
 const DisableQuickSwap = new BN(1).shln(1);
-const DisableQuickSwapETH = new BN(1).shln(2);
+const DisableQuickSwapMATIC = new BN(1).shln(2);
 const DisableQuickSwapDAI = new BN(1).shln(3);
 const DisableQuickSwapUSDC = new BN(1).shln(4);
 const DisableQuickSwapUSDT = new BN(1).shln(5);
@@ -54,7 +54,7 @@ const DexOneAll = artifacts.require("DexOneAll");
 const ERC20 = artifacts.require("IERC20");
 const ISushiSwapFactory = artifacts.require("ISushiSwapFactory");
 
-var pass = DisableQuickSwapAll.add(DisableQuickSwap).add(DisableQuickSwapETH)
+var pass = DisableQuickSwapAll.add(DisableQuickSwap).add(DisableQuickSwapMATIC)
     .add(DisableQuickSwapDAI).add(DisableQuickSwapUSDC).add(DisableQuickSwapUSDT)
     .add(DisableQuickSwapQUICK).add(DisableSushiswapAll)
     .add(DisableSushiswap).add(DisableSushiswapETH).add(DisableSushiswapDAI)
@@ -90,7 +90,8 @@ contract('DexOne', (accounts) => {
         // testName = "sushiswap";
         if (testName == "quickswap") {
             pass = pass.sub(DisableQuickSwapAll);
-            pass = pass.sub(DisableQuickSwap);
+            // pass = pass.sub(DisableQuickSwap);
+            pass = pass.sub(DisableQuickSwapDAI); //todo
         } else if (testName == "sushiswap") {
             pass = pass.sub(DisableSushiswapAll);
             pass = pass.sub(DisableSushiswap);

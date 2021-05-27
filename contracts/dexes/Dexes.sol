@@ -96,7 +96,7 @@ library Dexes {
         if (dex == Dex.Quickswap && !flags.or(Flags.FLAG_DISABLE_QUICKSWAP_ALL, Flags.FLAG_DISABLE_QUICKSWAP)) {
             return quickswap.calculateSwapReturn(inToken, outToken, inAmounts);
         }
-        if (dex == Dex.QuickswapETH && !flags.or(Flags.FLAG_DISABLE_QUICKSWAP_ALL, Flags.FLAG_DISABLE_QUICKSWAP_ETH)) {
+        if (dex == Dex.QuickswapETH && !flags.or(Flags.FLAG_DISABLE_QUICKSWAP_ALL, Flags.FLAG_DISABLE_QUICKSWAP_WMATIC)) {
             return quickswap.calculateTransitionalSwapReturn(inToken, Tokens.WMATIC, outToken, inAmounts);
         }
         if (dex == Dex.QuickswapDAI && !flags.or(Flags.FLAG_DISABLE_QUICKSWAP_ALL, Flags.FLAG_DISABLE_QUICKSWAP_DAI)) {
@@ -189,7 +189,7 @@ library Dexes {
         if (dex == Dex.Quickswap && !flags.or(Flags.FLAG_DISABLE_QUICKSWAP_ALL, Flags.FLAG_DISABLE_QUICKSWAP)) {
             quickswap.swap(inToken, outToken, amount);
         }
-        if (dex == Dex.QuickswapETH && !flags.or(Flags.FLAG_DISABLE_QUICKSWAP_ALL, Flags.FLAG_DISABLE_QUICKSWAP_ETH)) {
+        if (dex == Dex.QuickswapWMATIC && !flags.or(Flags.FLAG_DISABLE_QUICKSWAP_ALL, Flags.FLAG_DISABLE_QUICKSWAP_WMATIC)) {
             quickswap.swapTransitional(inToken, Tokens.WMATIC, outToken, amount);
         }
         if (dex == Dex.QuickswapDAI && !flags.or(Flags.FLAG_DISABLE_QUICKSWAP_ALL, Flags.FLAG_DISABLE_QUICKSWAP_DAI)) {
