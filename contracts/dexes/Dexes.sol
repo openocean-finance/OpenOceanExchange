@@ -16,7 +16,7 @@ import "./ICurvePool.sol";
 
 enum Dex {
     Quickswap,
-    QuickswapETH,
+    QuickswapWMATIC,
     QuickswapDAI,
     QuickswapUSDC,
     QuickswapUSDT,
@@ -96,7 +96,7 @@ library Dexes {
         if (dex == Dex.Quickswap && !flags.or(Flags.FLAG_DISABLE_QUICKSWAP_ALL, Flags.FLAG_DISABLE_QUICKSWAP)) {
             return quickswap.calculateSwapReturn(inToken, outToken, inAmounts);
         }
-        if (dex == Dex.QuickswapETH && !flags.or(Flags.FLAG_DISABLE_QUICKSWAP_ALL, Flags.FLAG_DISABLE_QUICKSWAP_WMATIC)) {
+        if (dex == Dex.QuickswapWMATIC && !flags.or(Flags.FLAG_DISABLE_QUICKSWAP_ALL, Flags.FLAG_DISABLE_QUICKSWAP_WMATIC)) {
             return quickswap.calculateTransitionalSwapReturn(inToken, Tokens.WMATIC, outToken, inAmounts);
         }
         if (dex == Dex.QuickswapDAI && !flags.or(Flags.FLAG_DISABLE_QUICKSWAP_ALL, Flags.FLAG_DISABLE_QUICKSWAP_DAI)) {
