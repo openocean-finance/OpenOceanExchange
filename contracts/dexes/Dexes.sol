@@ -252,17 +252,6 @@ library Dexes {
             dfyn.swapTransitional(inToken, Tokens.USDT, outToken, amount);
         }
 
-        // add Cometh
-        if (dex == Dex.Cometh && !flags.or(Flags.FLAG_DISABLE_COMETH_ALL, Flags.FLAG_DISABLE_COMETH)) {
-            cometh.swap(inToken, outToken, amount);
-        }
-        if (dex == Dex.ComethETH && !flags.or(Flags.FLAG_DISABLE_COMETH_ALL, Flags.FLAG_DISABLE_COMETH_ETH)) {
-            cometh.swapTransitional(inToken, Tokens.WMATIC, outToken, amount);
-        }
-        if (dex == Dex.ComethMUST && !flags.or(Flags.FLAG_DISABLE_COMETH_ALL, Flags.FLAG_DISABLE_COMETH_MUST)) {
-            cometh.swapTransitional(inToken, Tokens.MUST, outToken, amount);
-        }
-
         // add PolyZap
         if (dex == Dex.PolyZap && !flags.or(Flags.FLAG_DISABLE_POLYZAP_ALL, Flags.FLAG_DISABLE_POLYZAP)) {
             polyZap.swap(inToken, outToken, amount);

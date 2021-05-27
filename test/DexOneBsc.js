@@ -68,38 +68,34 @@ var pass = DisableQuickSwapAll.add(DisableQuickSwap).add(DisableQuickSwapMATIC)
 
 contract('DexOne', (accounts) => {
 
-    it('DexOneAll should swap ETH to CAKE', async () => {
+    it('test swap', async () => {
+
         let usdtAddress = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F";
-        const usdt = await ERC20.at(usdtAddress);
+        let usdt = await ERC20.at(usdtAddress);
 
         let maticAddress = "0x0000000000000000000000000000000000001010";
 
-        if (false) {
-            // sushi 合约地址在polygon浏览器里面找不到
-            let faddr = "0xC0AEe478e3658e2610c5F7A4A2E1777cE9e4f2Ac";
-            let sushiswap = await ISushiSwapFactory.at(faddr);
-            let res = await sushiswap.getPair(maticAddress, usdtAddress);
-            console.log("res:", res);
-            return;
-        }
+        let mustAddress = "0x9C78EE466D6Cb57A4d01Fd887D2b5dFb2D46288f";
 
-        let balanceBefore = await usdt.balanceOf(accounts[0])
-        console.log(`balance of ${accounts[0]}: (${balanceBefore}) USDT`);
-
-        let testName = "cometh";// TODO
-        // testName = "sushiswap";
+        let testName = "";// TODO
+        testName = "cometh";
         if (testName == "quickswap") {
             pass = pass.sub(DisableQuickSwapAll);
             // pass = pass.sub(DisableQuickSwap);
-            pass = pass.sub(DisableQuickSwapDAI); //todo
+            // pass = pass.sub(DisableQuickSwapDAI);
+            // pass = pass.sub(DisableQuickSwapUSDC);
+            pass = pass.sub(DisableQuickSwapQUICK);
         } else if (testName == "sushiswap") {
             pass = pass.sub(DisableSushiswapAll);
-            pass = pass.sub(DisableSushiswap);
+            // pass = pass.sub(DisableSushiswap);
+            // pass = pass.sub(DisableSushiswapDAI);
+            pass = pass.sub(DisableSushiswapUSDC);
         } else if (testName == "weth") { // 0
             pass = pass.sub(DisableWETH);
         } else if (testName == "cometh") {
             pass = pass.sub(DisableComethALL);
             pass = pass.sub(DisableCometh);
+            // pass = pass.sub(DisableComethMUST);
         } else if (testName == "dfyn") {  //0
             pass = pass.sub(DisableDfynALL);
             pass = pass.sub(DisableDfyn);
@@ -109,50 +105,58 @@ contract('DexOne', (accounts) => {
         } else if (testName == "curve") {
             pass = pass.sub(DisableCurveALL);
             pass = pass.sub(DisableCurveAAVE);
+        } else {
+            return;
         }
 
+        let balanceBefore = await usdt.balanceOf(accounts[0])
+        console.log(`balance of ${accounts[0]}: (${balanceBefore}) USDT`);
+
         const dexOne = await DexOne.deployed();
+        const amount = '1000000000000000000';
         const res = await dexOne.calculateSwapReturn(
             maticAddress,
             usdtAddress,
-            '1000000000000000000', // 1.0
+            amount, // 1.0
             10,
             pass,
         );
         expectedOutAmount = res.outAmount;
         console.log(`expect out amount ${res.outAmount.toString()} USDT`);
         console.log("res.distribution:", res.distribution.toString());
+        const account = accounts[0];
+
+        await swap(account, dexOne, web3, maticAddress, usdtAddress, amount, res, pass);
+
+        balanceAfter = await usdt.balanceOf(accounts[0]);
+        console.log(`balance of ${accounts[0]}: (${balanceAfter}) USDT`);
+        // assert.equal(expectedOutAmount, balanceAfter - balanceBefore);
+    });
+
+    async function swap(account, dexOne, web3, maticAddress, usdtAddress, amount, res, pass) {
+        const nonce = await web3.eth.getTransactionCount(accounts[0]);
         const swapped = await dexOne.contract.methods.swap(
             maticAddress,
             usdtAddress,
-            '1000000000000000000',
+            amount,
             0,
             res.distribution.map(dist => dist.toString()),
             pass.toString(),
         ).encodeABI();
-        const nonce = await web3.eth.getTransactionCount(accounts[0]);
 
-        const account = accounts[0];
-        console.log(`account: ${account}`);
         const rawTx = {
             from: account,
             to: dexOne.address,
             gas: "0x166691b7",
             gasPrice: "0x4a817c800",
             data: swapped,
-            value: '1000000000000000000',
+            value: amount,
             nonce: web3.utils.toHex(nonce),
         }
-
         const sign = await web3.eth.accounts.signTransaction(rawTx, '0x94e6de53e500b9fec28037c583f5214c854c7229329ce9baf6f5577bd95f9c9a');
-
         web3.eth.sendSignedTransaction(sign.rawTransaction).on('receipt', receipt => {
         });
-
-        balanceAfter = await usdt.balanceOf(accounts[0])
-        console.log(`balance of ${accounts[0]}: (${balanceAfter}) USDT`);
-        assert.equal(expectedOutAmount, balanceAfter - balanceBefore);
-    });
+    }
 
     // it('DexOneView should calculate', async () => {
     //     // const dexOne = await DexOneView.at('0x8338D73536699acFfEf9A2FD24311B85fa515F7F');
