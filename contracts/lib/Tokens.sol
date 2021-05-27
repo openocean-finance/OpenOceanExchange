@@ -45,8 +45,4 @@ library Tokens {
             // library methods will be called in the current contract's context
         }
     }
-
-    function isWETH(IERC20 token) internal pure returns (bool) {
-        return address(token) == address(WXDAI);
-    }
 }
