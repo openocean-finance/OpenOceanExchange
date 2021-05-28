@@ -718,7 +718,7 @@ library Flags {
     // add Quickswap
     uint256 internal constant FLAG_DISABLE_QUICKSWAP_ALL = 1 << 0;
     uint256 internal constant FLAG_DISABLE_QUICKSWAP = 1 << 1;
-    uint256 internal constant FLAG_DISABLE_QUICKSWAP_ETH = 1 << 2;
+    uint256 internal constant FLAG_DISABLE_QUICKSWAP_WMATIC = 1 << 2;
     uint256 internal constant FLAG_DISABLE_QUICKSWAP_DAI = 1 << 3;
     uint256 internal constant FLAG_DISABLE_QUICKSWAP_USDC = 1 << 4;
     uint256 internal constant FLAG_DISABLE_QUICKSWAP_USDT = 1 << 5;
@@ -1908,7 +1908,7 @@ pragma solidity ^0.6.0;
 
 enum Dex {
     Quickswap,
-    QuickswapETH,
+    QuickswapWMATIC,
     QuickswapDAI,
     QuickswapUSDC,
     QuickswapUSDT,
@@ -1988,7 +1988,7 @@ library Dexes {
         if (dex == Dex.Quickswap && !flags.or(Flags.FLAG_DISABLE_QUICKSWAP_ALL, Flags.FLAG_DISABLE_QUICKSWAP)) {
             return quickswap.calculateSwapReturn(inToken, outToken, inAmounts);
         }
-        if (dex == Dex.QuickswapETH && !flags.or(Flags.FLAG_DISABLE_QUICKSWAP_ALL, Flags.FLAG_DISABLE_QUICKSWAP_ETH)) {
+        if (dex == Dex.QuickswapWMATIC && !flags.or(Flags.FLAG_DISABLE_QUICKSWAP_ALL, Flags.FLAG_DISABLE_QUICKSWAP_WMATIC)) {
             return quickswap.calculateTransitionalSwapReturn(inToken, Tokens.WMATIC, outToken, inAmounts);
         }
         if (dex == Dex.QuickswapDAI && !flags.or(Flags.FLAG_DISABLE_QUICKSWAP_ALL, Flags.FLAG_DISABLE_QUICKSWAP_DAI)) {
@@ -2081,7 +2081,7 @@ library Dexes {
         if (dex == Dex.Quickswap && !flags.or(Flags.FLAG_DISABLE_QUICKSWAP_ALL, Flags.FLAG_DISABLE_QUICKSWAP)) {
             quickswap.swap(inToken, outToken, amount);
         }
-        if (dex == Dex.QuickswapETH && !flags.or(Flags.FLAG_DISABLE_QUICKSWAP_ALL, Flags.FLAG_DISABLE_QUICKSWAP_ETH)) {
+        if (dex == Dex.QuickswapWMATIC && !flags.or(Flags.FLAG_DISABLE_QUICKSWAP_ALL, Flags.FLAG_DISABLE_QUICKSWAP_WMATIC)) {
             quickswap.swapTransitional(inToken, Tokens.WMATIC, outToken, amount);
         }
         if (dex == Dex.QuickswapDAI && !flags.or(Flags.FLAG_DISABLE_QUICKSWAP_ALL, Flags.FLAG_DISABLE_QUICKSWAP_DAI)) {
@@ -2142,17 +2142,6 @@ library Dexes {
         }
         if (dex == Dex.DfynUSDT && !flags.or(Flags.FLAG_DISABLE_DFYN_ALL, Flags.FLAG_DISABLE_DFYN_USDT)) {
             dfyn.swapTransitional(inToken, Tokens.USDT, outToken, amount);
-        }
-
-        // add Cometh
-        if (dex == Dex.Cometh && !flags.or(Flags.FLAG_DISABLE_COMETH_ALL, Flags.FLAG_DISABLE_COMETH)) {
-            cometh.swap(inToken, outToken, amount);
-        }
-        if (dex == Dex.ComethETH && !flags.or(Flags.FLAG_DISABLE_COMETH_ALL, Flags.FLAG_DISABLE_COMETH_ETH)) {
-            cometh.swapTransitional(inToken, Tokens.WMATIC, outToken, amount);
-        }
-        if (dex == Dex.ComethMUST && !flags.or(Flags.FLAG_DISABLE_COMETH_ALL, Flags.FLAG_DISABLE_COMETH_MUST)) {
-            cometh.swapTransitional(inToken, Tokens.MUST, outToken, amount);
         }
 
         // add PolyZap
