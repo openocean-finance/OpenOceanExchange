@@ -52,9 +52,6 @@ library Dexes {
         if (dex == Dex.UniswapV2 && !flags.or(Flags.FLAG_DISABLE_UNISWAP_V2_ALL, Flags.FLAG_DISABLE_UNISWAP_V2)) {
             return honeyswap.calculateSwapReturn(inToken, outToken, inAmounts);
         }
-        if (dex == Dex.UniswapV2 && !flags.or(Flags.FLAG_DISABLE_UNISWAP_V2_ALL, Flags.FLAG_DISABLE_UNISWAP_V2)) {
-            return honeyswap.calculateTransitionalSwapReturn(inToken, Tokens.WXDAI, outToken, inAmounts);
-        }
         if (dex == Dex.UniswapV2ETH && !flags.or(Flags.FLAG_DISABLE_UNISWAP_V2_ALL, Flags.FLAG_DISABLE_UNISWAP_V2_ETH)) {
             return honeyswap.calculateTransitionalSwapReturn(inToken, Tokens.ETH, outToken, inAmounts);
         }
