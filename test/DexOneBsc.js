@@ -33,16 +33,14 @@ contract('DexOne', (accounts) => {
     it('DexOneAll should swap ETH to CAKE', async () => {
 
         // 合约地址 不对  TODO
-        let usdtAddress = "0x13D0D85fE3534E02c30Ad87Bc55a3f361E358c09";
+        let usdtAddress = "0xde3A24028580884448a5397872046a019649b084";
         const usdt = await ERC20.at(usdtAddress);
 
         let avaxAddress = "0x0000000000000000000000000000000000000000";
         let wavaxAddress = "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7";
 
-        if (true) {
-            let fAddress = "0xA818b4F111Ccac7AA31D0BCc0806d64F2E0737D7";//honeyswap
-
-            fAddress = "0xc35DADB65012eC5796536bD9864eD8773aBc74C4";//sushiswap
+        if (false) {
+            let fAddress = "0xc35DADB65012eC5796536bD9864eD8773aBc74C4";//sushiswap
             let f = await Factory.at(fAddress);
             let res = await f.getPair(wavaxAddress, usdtAddress);
             console.log("res:", res.toString());
