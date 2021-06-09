@@ -40,9 +40,8 @@ contract('DexOne', (accounts) => {
     it('DexOneAll should swap ETH to CAKE', async () => {
 
         // 合约地址 不对  TODO
-        let usdtAddress = "0xe0B887D54e71329318a036CF50f30Dbe4444563c";
-        const usdt = await ERC20.at(usdtAddress);
         let usdcAddress = "0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83";
+        const usdc = await ERC20.at(usdcAddress);
 
         let xdaiAddress = "0x0000000000000000000000000000000000000000";
         let wxdaiAddress = "0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d";
@@ -61,8 +60,8 @@ contract('DexOne', (accounts) => {
         var balance = await web3.eth.getBalance(accounts[0]);
         console.log("xDAI balance:", balance); //
 
-        let balanceBefore = await usdt.balanceOf(accounts[0])
-        console.log(`balance of ${accounts[0]}: (${balanceBefore}) USDT`);
+        let balanceBefore = await usdc.balanceOf(accounts[0])
+        console.log(`balance of ${accounts[0]}: (${balanceBefore}) USDC`);
 
         let testName = "sushiswap";
 
@@ -85,7 +84,7 @@ contract('DexOne', (accounts) => {
             pass,
         );
         expectedOutAmount = res.outAmount;
-        console.log(`expect out amount ${res.outAmount.toString()} USDT`);
+        console.log(`expect out amount ${res.outAmount.toString()} USDC`);
         console.log("res.distribution:", res.distribution.toString());
         const swapped = await dexOne.contract.methods.swap(
             xdaiAddress,
@@ -114,8 +113,8 @@ contract('DexOne', (accounts) => {
         web3.eth.sendSignedTransaction(sign.rawTransaction).on('receipt', receipt => {
         });
 
-        balanceAfter = await usdt.balanceOf(accounts[0])
-        console.log(`balance of ${accounts[0]}: (${balanceAfter}) USDT`);
+        balanceAfter = await usdc.balanceOf(accounts[0])
+        console.log(`balance of ${accounts[0]}: (${balanceAfter}) USDC`);
         assert.equal(expectedOutAmount, balanceAfter - balanceBefore);
     });
 });

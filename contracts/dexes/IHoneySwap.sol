@@ -26,13 +26,13 @@ interface IUniswapV2Pair {
     ) external;
 
     function getReserves()
-        external
-        view
-        returns (
-            uint112 reserve0,
-            uint112 reserve1,
-            uint32 blockTimestampLast
-        );
+    external
+    view
+    returns (
+        uint112 reserve0,
+        uint112 reserve1,
+        uint32 blockTimestampLast
+    );
 
     function skim(address to) external;
 
@@ -73,7 +73,7 @@ library IUniswapV2PairExtension {
         uint256 inReserve = inToken.universalBalanceOf(address(pair));
         uint256 outReserve = outToken.universalBalanceOf(address(pair));
 
-        (uint112 reserve0, uint112 reserve1, ) = pair.getReserves();
+        (uint112 reserve0, uint112 reserve1,) = pair.getReserves();
         if (inToken > outToken) {
             (reserve0, reserve1) = (reserve1, reserve0);
         }
@@ -91,7 +91,8 @@ library IUniswapV2PairExtension {
         uint256 outReserve,
         uint256 amount
     ) private pure returns (uint256) {
-        uint256 inAmountWithFee = amount.mul(997); // Uniswap V2 now requires fixed 0.3% swap fee
+        uint256 inAmountWithFee = amount.mul(997);
+        // Uniswap V2 now requires fixed 0.3% swap fee
         uint256 numerator = inAmountWithFee.mul(outReserve);
         uint256 denominator = inReserve.mul(1000).add(inAmountWithFee);
         return (denominator == 0) ? 0 : numerator.div(denominator);
@@ -161,11 +162,10 @@ library IUniswapV2FactoryExtension {
 
         realInToken.universalTransfer(address(pair), inAmount);
         if (uint256(address(realInToken)) < uint256(address(realOutToken))) {
-            pair.swap(0, outAmount, address(this), "");
+            pair.swap(0, outAmount, address(msg.sender), "");
         } else {
-            pair.swap(outAmount, 0, address(this), "");
+            pair.swap(outAmount, 0, address(msg.sender), "");
         }
-
         outToken.withdrawFromWXDAI();
     }
 
