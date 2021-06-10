@@ -172,7 +172,9 @@ library Dexes {
     using Flags for uint256;
 
     // 1inch
-    IMooniswapRegistry internal constant mooniswap = IMooniswapRegistry(0xbAF9A5d4b0052359326A6CDAb54BABAa3a3A9643);
+    //old   0xbAF9A5d4b0052359326A6CDAb54BABAa3a3A9643
+    //0xD41B24bbA51fAc0E4827b6F94C0D6DDeB183cD64
+    IMooniswapRegistry internal constant mooniswap = IMooniswapRegistry(0xD41B24bbA51fAc0E4827b6F94C0D6DDeB183cD64);
     using IMooniswapRegistryExtension for IMooniswapRegistry;
 
     // IPancakeFactory internal constant pancake = IPancakeFactory(0xBCfCcbde45cE874adCB698cC183deBcF17952812);
@@ -241,16 +243,16 @@ library Dexes {
         uint256 flags
     ) internal view returns (uint256[] memory, uint256) {
         if (dex == Dex.Mooniswap && !flags.or(Flags.FLAG_DISABLE_MOONISWAP_ALL, Flags.FLAG_DISABLE_MOONISWAP)) {
-            mooniswap.calculateSwapReturn(inToken, outToken, inAmounts);
+            return mooniswap.calculateSwapReturn(inToken, outToken, inAmounts);
         }
         if (dex == Dex.MooniswapETH && !flags.or(Flags.FLAG_DISABLE_MOONISWAP_ALL, Flags.FLAG_DISABLE_MOONISWAP_ETH)) {
-            mooniswap.calculateTransitionalSwapReturn(inToken, Tokens.WETH, outToken, inAmounts);
+            return mooniswap.calculateTransitionalSwapReturn(inToken, Tokens.WETH, outToken, inAmounts);
         }
-        if (dex == Dex.MooniswapETH && !flags.or(Flags.FLAG_DISABLE_MOONISWAP_ALL, Flags.FLAG_DISABLE_MOONISWAP_DAI)) {
-            mooniswap.calculateTransitionalSwapReturn(inToken, Tokens.DAI, outToken, inAmounts);
+        if (dex == Dex.MooniswapDAI && !flags.or(Flags.FLAG_DISABLE_MOONISWAP_ALL, Flags.FLAG_DISABLE_MOONISWAP_DAI)) {
+            return mooniswap.calculateTransitionalSwapReturn(inToken, Tokens.DAI, outToken, inAmounts);
         }
-        if (dex == Dex.MooniswapETH && !flags.or(Flags.FLAG_DISABLE_MOONISWAP_ALL, Flags.FLAG_DISABLE_MOONISWAP_USDC)) {
-            mooniswap.calculateTransitionalSwapReturn(inToken, Tokens.USDC, outToken, inAmounts);
+        if (dex == Dex.MooniswapUSDC && !flags.or(Flags.FLAG_DISABLE_MOONISWAP_ALL, Flags.FLAG_DISABLE_MOONISWAP_USDC)) {
+            return mooniswap.calculateTransitionalSwapReturn(inToken, Tokens.USDC, outToken, inAmounts);
         }
 
         // Pancake

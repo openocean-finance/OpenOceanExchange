@@ -50,20 +50,11 @@ library IMooniswapExtenstion {
         uint256[] memory inAmounts
     ) internal view returns (uint256[] memory outAmounts, uint256 gas) {
         outAmounts = new uint256[](inAmounts.length);
-
-        uint256 fee = mooniswap.fee();
-        uint256 fromBalance = mooniswap.getBalanceForAddition(inToken.isETH() ? UniversalERC20.ZERO_ADDRESS : inToken);
-        uint256 toBalance = mooniswap.getBalanceForRemoval(outToken.isETH() ? UniversalERC20.ZERO_ADDRESS : outToken);
-        if (fromBalance == 0 || toBalance == 0) {
-            return (outAmounts, 0);
-        }
-
         for (uint256 i = 0; i < inAmounts.length; i++) {
-            uint256 amount = inAmounts[i].sub(inAmounts[i].mul(fee).div(1e18));
-            outAmounts[i] = amount.mul(toBalance).div(fromBalance.add(amount));
+            outAmounts[i] = mooniswap.getReturn(inToken, outToken, inAmounts[i]);
         }
-
         return (outAmounts, (inToken.isETH() || outToken.isETH()) ? 80_000 : 110_000);
+        //TODO
     }
 }
 
@@ -79,10 +70,10 @@ library IMooniswapRegistryExtension {
         uint256[] memory inAmounts
     ) internal view returns (uint256[] memory outAmounts, uint256 gas) {
         IMooniswap mooniswap =
-            registry.pools(
-                inToken.isETH() ? UniversalERC20.ZERO_ADDRESS : inToken,
-                outToken.isETH() ? UniversalERC20.ZERO_ADDRESS : outToken
-            );
+        registry.pools(
+            inToken.isETH() ? UniversalERC20.ZERO_ADDRESS : inToken,
+            outToken.isETH() ? UniversalERC20.ZERO_ADDRESS : outToken
+        );
         if (mooniswap == IMooniswap(0)) {
             return (new uint256[](inAmounts.length), 0);
         }
@@ -106,12 +97,12 @@ library IMooniswapRegistryExtension {
         }
 
         (uint256[] memory outAmounts1, uint256 gas1) =
-            calculateSwapReturn(
-                registry,
-                inToken,
-                transitionToken.isETH() ? UniversalERC20.ZERO_ADDRESS : transitionToken,
-                inAmounts
-            );
+        calculateSwapReturn(
+            registry,
+            inToken,
+            transitionToken.isETH() ? UniversalERC20.ZERO_ADDRESS : transitionToken,
+            inAmounts
+        );
         (outAmounts, gas) = calculateSwapReturn(
             registry,
             transitionToken.isETH() ? UniversalERC20.ZERO_ADDRESS : transitionToken,
@@ -128,22 +119,21 @@ library IMooniswapRegistryExtension {
         uint256 inAmount
     ) internal {
         IMooniswap mooniswap =
-            registry.pools(
-                inToken.isETH() ? UniversalERC20.ZERO_ADDRESS : inToken,
-                outToken.isETH() ? UniversalERC20.ZERO_ADDRESS : outToken
-            );
+        registry.pools(
+            inToken.isETH() ? UniversalERC20.ZERO_ADDRESS : inToken,
+            outToken.isETH() ? UniversalERC20.ZERO_ADDRESS : outToken
+        );
         if (mooniswap == IMooniswap(0)) {
             return;
         }
 
         inToken.universalApprove(address(mooniswap), inAmount);
-
-        mooniswap.swap{value: inToken.isETH() ? inAmount : 0}(
+        mooniswap.swap{value : inToken.isETH() ? inAmount : 0}(
             inToken.isETH() ? UniversalERC20.ZERO_ADDRESS : inToken,
             outToken.isETH() ? UniversalERC20.ZERO_ADDRESS : outToken,
             inAmount,
             0,
-            0xe523182610482b8C0DD65d5A08F1Bbd256B1EA0c
+            0xe523182610482b8C0DD65d5A08F1Bbd256B1EA0c// TODO
         );
     }
 
