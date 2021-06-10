@@ -25,12 +25,7 @@ library Flags {
     // uint256 internal constant FLAG_DISABLE_SUSHISWAP_ETH = 1 << 19;
     // uint256 internal constant FLAG_DISABLE_SUSHISWAP_DAI = 1 << 20;
     // uint256 internal constant FLAG_DISABLE_SUSHISWAP_USDC = 1 << 21;
-    // // add Mooniswap
-    // uint256 internal constant FLAG_DISABLE_MOONISWAP_ALL = 1 << 22;
-    // uint256 internal constant FLAG_DISABLE_MOONISWAP = 1 << 23;
-    // uint256 internal constant FLAG_DISABLE_MOONISWAP_ETH = 1 << 24;
-    // uint256 internal constant FLAG_DISABLE_MOONISWAP_DAI = 1 << 25;
-    // uint256 internal constant FLAG_DISABLE_MOONISWAP_USDC = 1 << 26;
+
     // // add Balancer
     // uint256 internal constant FLAG_DISABLE_BALANCER_ALL = 1 << 27;
     // uint256 internal constant FLAG_DISABLE_BALANCER_1 = 1 << 28;
@@ -142,6 +137,13 @@ library Flags {
     uint256 internal constant FLAG_DISABLE_CAFESWAP_ALL = 1 << 77;
     // Beltswap
     uint256 internal constant FLAG_DISABLE_BELTSWAP_ALL = 1 << 78;
+
+    // add Mooniswap
+    uint256 internal constant FLAG_DISABLE_MOONISWAP_ALL = 1 << 79;
+    uint256 internal constant FLAG_DISABLE_MOONISWAP = 1 << 80;
+    uint256 internal constant FLAG_DISABLE_MOONISWAP_ETH = 1 << 81;
+    uint256 internal constant FLAG_DISABLE_MOONISWAP_DAI = 1 << 82;
+    uint256 internal constant FLAG_DISABLE_MOONISWAP_USDC = 1 << 83;
 
     function on(uint256 flags, uint256 flag) internal pure returns (bool) {
         return (flags & flag) != 0;
