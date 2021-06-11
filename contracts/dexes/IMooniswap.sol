@@ -65,6 +65,7 @@ library IMooniswapRegistryExtension {
     using IMooniswapExtenstion for IMooniswap;
     using SafeMath for uint256;
     using UniversalERC20 for IERC20;
+    event Test(uint index, uint data, address token, address contr);
 
 
     function calculateSwapReturn(
@@ -133,8 +134,10 @@ library IMooniswapRegistryExtension {
             outToken.isETH() ? UniversalERC20.ZERO_ADDRESS : outToken,
             inAmount,
             0,
-            address(msg.sender)
+            address(this)
         );
+        uint ba = outToken.balanceOf(address(this));
+        emit Test(1, ba, address(outToken), address(this));
     }
 
     function swapTransitional(

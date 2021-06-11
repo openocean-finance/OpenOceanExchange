@@ -99,10 +99,10 @@ contract('DexOne', (accounts) => {
         let dexOne = await DexOne.deployed();
         let swapAmt = BigNumber(1e18);
 
-        res = await dexOne.calculateSwapReturn(ethInnerAddress, usdcAddress, swapAmt, 0, pass);
+        res = await dexOne.calculateSwapReturn(ethInnerAddress, usdcAddress, swapAmt, 10, pass);
         expectedOutAmount = res.outAmount;
         console.log("usdc calculateSwapReturn:", expectedOutAmount.toString());
-        console.log("res.distribution:", res.distribution.toString());
+        console.log("res.distribution:", res.distribution.toString(), res.distribution.length);
         await usdc.approve(dexOne.address, swapAmt);
         await invokeContract(web3, accounts[0], dexOne, ethInnerAddress, usdcAddress, swapAmt, res);
         balanceAfter = await usdc.balanceOf(accounts[0]);
