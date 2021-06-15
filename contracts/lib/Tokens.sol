@@ -51,6 +51,7 @@ library Tokens {
     // BURGER Token
     IERC20 internal constant DGAS = IERC20(0xAe9269f27437f0fcBC232d39Ec814844a51d6b8f);
 
+
     /**
      * @notice Wrap the ETH token to meet the ERC20 standard.
      * @param token token to wrap

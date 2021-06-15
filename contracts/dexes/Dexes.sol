@@ -32,6 +32,8 @@ import "./IMDex.sol";
 import "./INerve.sol";
 import "./ICafeswap.sol";
 // import "./IBeltswap.sol";
+import "./IPantherSwap.sol";
+import "./IPancakeBunny.sol";
 
     enum Dex {
         // UniswapV2,
@@ -162,6 +164,8 @@ import "./ICafeswap.sol";
         NerveBTC,
         NerveETH,
         Cafeswap,
+        PantherSwap,
+        PancakeBunny,
         // Beltswap,
         // bottom mark
         NoDex
@@ -170,6 +174,14 @@ import "./ICafeswap.sol";
 library Dexes {
     using UniversalERC20 for IERC20;
     using Flags for uint256;
+
+    IZapBsc internal constant zap = IZapBsc(0xdC2bBB0D33E0e7Dea9F5b98F46EDBaC823586a0C);
+    using IZapBscExtension for IZapBsc;
+
+    // https://docs.pantherswap.com/others/contracts
+    //PantherSwap
+    IPantherSwapFactory internal constant pantherSwap = IPantherSwapFactory(0x670f55c6284c629c23baE99F585e3f17E8b9FC31);
+    using IPantherSwapFactoryExtension for IPantherSwapFactory;
 
     // 1inch
     //old   0xbAF9A5d4b0052359326A6CDAb54BABAa3a3A9643
@@ -242,6 +254,21 @@ library Dexes {
         uint256[] memory inAmounts,
         uint256 flags
     ) internal view returns (uint256[] memory, uint256) {
+        if (dex == Dex.PancakeBunny && !flags.on(Flags.FLAG_DISABLE_ZAPBSC)) {
+            return zap.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+        if (dex == Dex.PantherSwap && !flags.or(Flags.FLAG_DISABLE_PANTHERSWAP_ALL, Flags.FLAG_DISABLE_PANTHERSWAP)) {
+            return pantherSwap.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+        if (dex == Dex.PantherSwap && !flags.or(Flags.FLAG_DISABLE_PANTHERSWAP_ALL, Flags.FLAG_DISABLE_PANTHERSWAP_BNB)) {
+            return pantherSwap.calculateTransitionalSwapReturn(inToken, Tokens.WETH, outToken, inAmounts);
+        }
+        if (dex == Dex.PantherSwap && !flags.or(Flags.FLAG_DISABLE_PANTHERSWAP_ALL, Flags.FLAG_DISABLE_PANTHERSWAP_USDC)) {
+            return pantherSwap.calculateTransitionalSwapReturn(inToken, Tokens.USDC, outToken, inAmounts);
+        }
+        if (dex == Dex.PantherSwap && !flags.or(Flags.FLAG_DISABLE_PANTHERSWAP_ALL, Flags.FLAG_DISABLE_PANTHERSWAP_USDT)) {
+            return pantherSwap.calculateTransitionalSwapReturn(inToken, Tokens.USDT, outToken, inAmounts);
+        }
         if (dex == Dex.Mooniswap && !flags.or(Flags.FLAG_DISABLE_MOONISWAP_ALL, Flags.FLAG_DISABLE_MOONISWAP)) {
             return mooniswap.calculateSwapReturn(inToken, outToken, inAmounts);
         }
@@ -500,6 +527,14 @@ library Dexes {
         uint256 amount,
         uint256 flags
     ) internal {
+        // pancakeBunny
+        if (dex == Dex.PancakeBunny && !flags.on(Flags.FLAG_DISABLE_ZAPBSC)) {
+            zap.swap(inToken, outToken, amount);
+        }
+        // PantherSwap
+        if (dex == Dex.PantherSwap && !flags.or(Flags.FLAG_DISABLE_PANTHERSWAP_ALL, Flags.FLAG_DISABLE_PANTHERSWAP)) {
+            pantherSwap.swap(inToken, outToken, amount);
+        }
         // add 1inch
         if (dex == Dex.Mooniswap && !flags.or(Flags.FLAG_DISABLE_MOONISWAP_ALL, Flags.FLAG_DISABLE_MOONISWAP)) {
             mooniswap.swap(inToken, outToken, amount);

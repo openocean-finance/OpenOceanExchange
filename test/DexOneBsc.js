@@ -40,6 +40,11 @@ const DisableMooniswapETH = new BN(1).shln(81);
 const DisableMooniswapDAI = new BN(1).shln(82);
 const DisableMooniswapUSDC = new BN(1).shln(83);
 
+const DisablePantherSwapALL = new BN(1).shln(84);
+const DisablePantherSwap = new BN(1).shln(85);
+
+const DisablePancakeBunny = new BN(1).shln(86);
+
 
 const DexOne = artifacts.require("DexOne");
 const ERC20 = artifacts.require("IERC20");
@@ -52,12 +57,8 @@ var pass = DisablePancakeAll.add(DisableBurgerAll).add(DisableThugswapAll)
     .add(DisableEllipsis).add(DisableMdexAll).add(DisableBakeryAll).add(DisableNerveAll)
     .add(DisableCafeswapAll).add(DisableBeltswapAll).add(DisableMooniswapAll)
     .add(DisableMooniswap).add(DisableMooniswapETH).add(DisableMooniswapDAI)
-    .add(DisableMooniswapUSDC);
-
-
-const flags = DisablePancakeAll.add(DisableBakeryAll).add(DisableBurgerAll).add(DisableThugswapAll)
-    .add(DisableStablexAll).add(DisableUnifiAll).add(DisableJulswapAll).add(DisableDODOAll)
-    .add(DisableApeswapAll).add(DisableAcryptosAll);
+    .add(DisableMooniswapUSDC).add(DisablePantherSwapALL).add(DisablePantherSwap)
+    .add(DisablePancakeBunny);
 
 
 contract('DexOne', (accounts) => {
@@ -92,7 +93,7 @@ contract('DexOne', (accounts) => {
         console.log(`balance of ${accounts[0]}: (${balanceAfter}) BUSD`);
         // assert.equal(expectedOutAmount, balanceAfter - balanceBefore);
 
-        let testName = "mooniswap";
+        let testName = "pantherswap";
         // busd swap usdt
         if (testName == "nerve") {
             console.log("*************** nerve ***************");
@@ -110,6 +111,13 @@ contract('DexOne', (accounts) => {
             pass = pass.add(DisablePancakeAllV2);
             pass = pass.sub(DisableMooniswapAll);
             pass = pass.sub(DisableMooniswap);
+        } else if (testName == "pantherswap") {
+            pass = pass.add(DisablePancakeAllV2);
+            pass = pass.sub(DisablePantherSwapALL);
+            pass = pass.sub(DisablePantherSwap);
+        } else if (testName == "pancakeBunny") {
+            pass = pass.add(DisablePancakeAllV2);
+            pass = pass.sub(DisablePancakeBunny);
         }
 
         const usdt = await ERC20.at(usdtAddress);
