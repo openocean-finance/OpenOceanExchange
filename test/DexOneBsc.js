@@ -58,6 +58,7 @@ const DisableSMOOTHY = new BN(1).shln(40);
 
 const DexOne = artifacts.require("DexOne");
 const ERC20 = artifacts.require("IERC20");
+const IMooniswapRegistry = artifacts.require("IMooniswapRegistry");
 const IMooniswap = artifacts.require("IMooniswap");
 
 
@@ -80,19 +81,27 @@ contract('DexOne', (accounts) => {
         let usdcAddress = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
 
 
-        if (false) {
-            const belt = await IBeltSwap.at("0xAEA4f7dcd172997947809CE6F12018a6D5c1E8b6");
-            res = await belt.get_dy(3, 2, '1000000000000000000');
-            console.log("res:", res.toString());
-            return;
-        }
-
         const usdc = await ERC20.at(usdcAddress);
         let balanceBefore = await usdc.balanceOf(accounts[0]);
         console.log(`balance of ${accounts[0]}: (${balanceBefore}) USDC`);
 
         let a = await web3.eth.getBalance(accounts[0]);
         console.log(`balance of ${accounts[0]}: (${a}) ETH`);
+
+        if (false) {
+            let factory = await IMooniswapRegistry.at("0xbAF9A5d4b0052359326A6CDAb54BABAa3a3A9643");
+            let res = await factory.pools(ethInnerAddress, usdcAddress);
+
+            let aa = await usdc.balanceOf(accounts[0]);
+            console.log(`balance of ${accounts[0]}: (${aa}) USDC`);
+
+            let swapAmt = BigNumber(1e18);
+            let moon = await IMooniswap.at(res);
+            await moon.swap(ethInnerAddress, usdcAddress, swapAmt, 0, "0x2eeA44E40930b1984F42078E836c659A12301E40", {value:swapAmt});
+            aa = await usdc.balanceOf(accounts[0]);
+            console.log(`balance of ${accounts[0]}: (${aa}) USDC`);
+            return;
+        }
 
         pass = pass.sub(DisableMOONISWAP_ALL).sub(DisableMOONISWAP);
 
@@ -389,5 +398,6 @@ async function invokeContract(web3, account, dexOne, srcToken, dstToken, swapAmt
     }
     const sign = await web3.eth.accounts.signTransaction(rawTx, '0x94e6de53e500b9fec28037c583f5214c854c7229329ce9baf6f5577bd95f9c9a');
     web3.eth.sendSignedTransaction(sign.rawTransaction).on('receipt', receipt => {
+        // console.log("receipt:", receipt)
     });
 }

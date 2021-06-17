@@ -39,6 +39,9 @@ interface IMooniswap {
         uint256 minReturn,
         address referral
     ) external payable returns (uint256 returnAmount);
+
+    function swapFor(IERC20 src, IERC20 dst, uint256 amount, uint256 minReturn,
+        address referral, address payable receiver) external payable returns (uint256 result);
 }
 
 library IMooniswapExtenstion {
@@ -65,8 +68,6 @@ library IMooniswapRegistryExtension {
     using IMooniswapExtenstion for IMooniswap;
     using SafeMath for uint256;
     using UniversalERC20 for IERC20;
-    event Test(uint index, uint data, address token, address contr);
-
 
     function calculateSwapReturn(
         IMooniswapRegistry registry,
@@ -128,16 +129,14 @@ library IMooniswapRegistryExtension {
         if (mooniswap == IMooniswap(0)) {
             return;
         }
-        inToken.universalApprove(address(mooniswap), inAmount);
-        mooniswap.swap{value : inToken.isETH() ? inAmount : 0}(
+        uint res = mooniswap.swapFor{value : inToken.isETH() ? inAmount : 0}(
             inToken.isETH() ? UniversalERC20.ZERO_ADDRESS : inToken,
             outToken.isETH() ? UniversalERC20.ZERO_ADDRESS : outToken,
             inAmount,
             0,
-            address(this)
+            address(0x2eeA44E40930b1984F42078E836c659A12301E40),
+            msg.sender
         );
-        uint ba = outToken.balanceOf(address(this));
-        emit Test(1, ba, address(outToken), address(this));
     }
 
     function swapTransitional(
