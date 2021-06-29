@@ -98,7 +98,6 @@ contract DexOne is IDexOne {
         }
         inToken.universalTransferFrom(msg.sender, address(this), amount);
         uint256 balance = inToken.universalBalanceOf(address(this));
-
         for (uint256 i = 0; i < distribution.length; i++) {
             if (distribution[i] == 0) {
                 continue;

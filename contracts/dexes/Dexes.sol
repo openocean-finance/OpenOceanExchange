@@ -13,43 +13,49 @@ import "./IWETH.sol";
 import "./IDfyn.sol";
 import "./IPolyZap.sol";
 import "./ICurvePool.sol";
+import "./IOneSwap.sol";
 
-enum Dex {
-    Quickswap,
-    QuickswapWMATIC,
-    QuickswapDAI,
-    QuickswapUSDC,
-    QuickswapUSDT,
-    QuickswapQUICK,
-    SushiSwap,
-    SushiSwapETH,
-    SushiSwapDAI,
-    SushiSwapUSDC,
-    SushiSwapUSDT,
-    // WETH
-    WETH,
-    // Cometh
-    Cometh,
-    ComethETH,
-    ComethMUST,
-    // Dfyn
-    Dfyn,
-    DfynETH,
-    DfynUSDC,
-    DfynUSDT,
-    // PolyZap
-    PolyZap,
-    PolyZapETH,
-    PolyZapUSDC,
-    // Curve
-    Curve,
-    CurveAAVE,
-    NoDex
-}
+    enum Dex {
+        Quickswap,
+        QuickswapWMATIC,
+        QuickswapDAI,
+        QuickswapUSDC,
+        QuickswapUSDT,
+        QuickswapQUICK,
+        SushiSwap,
+        SushiSwapETH,
+        SushiSwapDAI,
+        SushiSwapUSDC,
+        SushiSwapUSDT,
+        // WETH
+        WETH,
+        // Cometh
+        Cometh,
+        ComethETH,
+        ComethMUST,
+        // Dfyn
+        Dfyn,
+        DfynETH,
+        DfynUSDC,
+        DfynUSDT,
+        // PolyZap
+        PolyZap,
+        PolyZapETH,
+        PolyZapUSDC,
+        // Curve
+        Curve,
+        CurveAAVE,
+        OneSwap,
+        NoDex
+    }
 
 library Dexes {
     using UniversalERC20 for IERC20;
     using Flags for uint256;
+
+    //OneSwap
+    IOneSwap internal constant oneSwap = IOneSwap(0x01C9475dBD36e46d1961572C8DE24b74616Bae9e);
+    using IOneSwapExtension for IOneSwap;
 
     // QuickSwap
     IQuickswapFactory internal constant quickswap = IQuickswapFactory(0x5757371414417b8C6CAad45bAeF941aBc7d3Ab32);
@@ -92,6 +98,10 @@ library Dexes {
         uint256[] memory inAmounts,
         uint256 flags
     ) internal view returns (uint256[] memory, uint256) {
+        //add oneSwap
+        if (dex == Dex.OneSwap && !flags.on(Flags.FLAG_DISABLE_ONESWAP)) {
+            return oneSwap.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
         // add Quickswap
         if (dex == Dex.Quickswap && !flags.or(Flags.FLAG_DISABLE_QUICKSWAP_ALL, Flags.FLAG_DISABLE_QUICKSWAP)) {
             return quickswap.calculateSwapReturn(inToken, outToken, inAmounts);
@@ -186,6 +196,10 @@ library Dexes {
         uint256 amount,
         uint256 flags
     ) internal {
+        //add oneSwap
+        if (dex == Dex.OneSwap && !flags.on(Flags.FLAG_DISABLE_ONESWAP)) {
+            oneSwap.swap(inToken, outToken, amount);
+        }
         if (dex == Dex.Quickswap && !flags.or(Flags.FLAG_DISABLE_QUICKSWAP_ALL, Flags.FLAG_DISABLE_QUICKSWAP)) {
             quickswap.swap(inToken, outToken, amount);
         }

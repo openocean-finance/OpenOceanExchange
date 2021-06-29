@@ -45,6 +45,9 @@ library Flags {
     uint256 internal constant FLAG_DISABLE_CURVE_ALL = 1 << 27;
     uint256 internal constant FLAG_DISABLE_CURVE_AAVE = 1 << 28;
 
+    //add oneswap
+    uint256 internal constant FLAG_DISABLE_ONESWAP = 1 << 29;
+
     function on(uint256 flags, uint256 flag) internal pure returns (bool) {
         return (flags & flag) != 0;
     }

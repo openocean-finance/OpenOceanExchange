@@ -18,34 +18,29 @@ const DisableQuickSwapDAI = new BN(1).shln(3);
 const DisableQuickSwapUSDC = new BN(1).shln(4);
 const DisableQuickSwapUSDT = new BN(1).shln(5);
 const DisableQuickSwapQUICK = new BN(1).shln(6);
-
 const DisableSushiswapAll = new BN(1).shln(7);
 const DisableSushiswap = new BN(1).shln(8);
 const DisableSushiswapETH = new BN(1).shln(9);
 const DisableSushiswapDAI = new BN(1).shln(10);
 const DisableSushiswapUSDC = new BN(1).shln(11);
 const DisableSushiswapUSDT = new BN(1).shln(12);
-
 const DisableWETH = new BN(1).shln(13);
-
 const DisableComethALL = new BN(1).shln(14);
 const DisableCometh = new BN(1).shln(15);
 const DisableComethETH = new BN(1).shln(16);
 const DisableComethMUST = new BN(1).shln(17);
-
 const DisableDfynALL = new BN(1).shln(18);
 const DisableDfyn = new BN(1).shln(19);
 const DisableDfynETH = new BN(1).shln(20);
 const DisableDfynUSDC = new BN(1).shln(21);
 const DisableDfynUSDT = new BN(1).shln(22);
-
 const DisablePolyzapALL = new BN(1).shln(23);
 const DisablePolyzap = new BN(1).shln(24);
 const DisablePolyzapETH = new BN(1).shln(25);
 const DisablePolyzapUSDC = new BN(1).shln(26);
-
 const DisableCurveALL = new BN(1).shln(27);
 const DisableCurveAAVE = new BN(1).shln(28);
+const DisableOneSwap = new BN(1).shln(29);
 
 
 const DexOneView = artifacts.require("DexOneView");
@@ -63,7 +58,8 @@ var pass = DisableQuickSwapAll.add(DisableQuickSwap).add(DisableQuickSwapMATIC)
     .add(DisableComethMUST).add(DisableDfynALL).add(DisableDfyn)
     .add(DisableDfynETH).add(DisableDfynUSDC).add(DisableDfynUSDT)
     .add(DisablePolyzapALL).add(DisablePolyzap).add(DisablePolyzapETH)
-    .add(DisablePolyzapUSDC).add(DisableCurveALL).add(DisableCurveAAVE);
+    .add(DisablePolyzapUSDC).add(DisableCurveALL).add(DisableCurveAAVE)
+    .add(DisableOneSwap);
 
 
 contract('DexOne', (accounts) => {
@@ -78,7 +74,7 @@ contract('DexOne', (accounts) => {
         let mustAddress = "0x9C78EE466D6Cb57A4d01Fd887D2b5dFb2D46288f";
 
         let testName = "";// TODO
-        testName = "cometh";
+        testName = "quickswap";
         if (testName == "quickswap") {
             pass = pass.sub(DisableQuickSwapAll);
             // pass = pass.sub(DisableQuickSwap);
@@ -109,7 +105,7 @@ contract('DexOne', (accounts) => {
             return;
         }
 
-        let balanceBefore = await usdt.balanceOf(accounts[0])
+        let balanceBefore = await usdt.balanceOf(accounts[0]);
         console.log(`balance of ${accounts[0]}: (${balanceBefore}) USDT`);
 
         const dexOne = await DexOne.deployed();
@@ -131,6 +127,31 @@ contract('DexOne', (accounts) => {
         balanceAfter = await usdt.balanceOf(accounts[0]);
         console.log(`balance of ${accounts[0]}: (${balanceAfter}) USDT`);
         // assert.equal(expectedOutAmount, balanceAfter - balanceBefore);
+        //test oneSwap
+        if (testName == "quickswap") {
+            pass = pass.add(DisableQuickSwapAll);
+            pass = pass.add(DisableQuickSwapQUICK);
+            pass= pass.sub(DisableOneSwap);
+
+            let usdcAddress = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174";
+            let usdc = await ERC20.at(usdcAddress);
+
+            await usdt.approve(dexOne.address, balanceAfter);
+
+            const res = await dexOne.calculateSwapReturn(
+                usdtAddress,
+                usdcAddress,
+                balanceAfter, // 1.0
+                10,
+                pass,
+            );
+            console.log(`expect out amount ${res.outAmount.toString()} USDC`);
+            console.log("res.distribution:", res.distribution.toString());
+            await swap(account, dexOne, web3, usdtAddress, usdcAddress, balanceAfter, res, pass);
+            balanceAfter2 = await usdc.balanceOf(accounts[0]);
+            console.log(`balance of ${accounts[0]}: (${balanceAfter2}) USDC`);
+            assert.equal(res.outAmount, balanceAfter2);
+        }
     });
 
     async function swap(account, dexOne, web3, maticAddress, usdtAddress, amount, res, pass) {
