@@ -14,6 +14,7 @@ import "./IDfyn.sol";
 import "./IPolyZap.sol";
 import "./ICurvePool.sol";
 import "./IOneSwap.sol";
+import "./IPolyDex.sol";
 
     enum Dex {
         Quickswap,
@@ -46,6 +47,12 @@ import "./IOneSwap.sol";
         Curve,
         CurveAAVE,
         OneSwap,
+        //polyDex
+        PolyDex,
+        PolyDexWETH,
+        PolyDexDAI,
+        PolyDexUSDC,
+        PolyDexUSDT,
         NoDex
     }
 
@@ -53,6 +60,9 @@ library Dexes {
     using UniversalERC20 for IERC20;
     using Flags for uint256;
 
+    //polydex
+    IPolydexFactory internal constant polyDex = IPolydexFactory(0xEAA98F7b5f7BfbcD1aF14D0efAa9d9e68D82f640);
+    using IPolydexFactoryExtension for IPolydexFactory;
     //OneSwap
     IOneSwap internal constant oneSwap = IOneSwap(0x01C9475dBD36e46d1961572C8DE24b74616Bae9e);
     using IOneSwapExtension for IOneSwap;
@@ -98,6 +108,22 @@ library Dexes {
         uint256[] memory inAmounts,
         uint256 flags
     ) internal view returns (uint256[] memory, uint256) {
+        //add polydex
+        if (dex == Dex.PolyDex && !flags.or(Flags.FLAG_DISABLE_POLYDEX_ALL, Flags.FLAG_DISABLE_POLYDEX)) {
+            return polyDex.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+        if (dex == Dex.PolyDexWETH && !flags.or(Flags.FLAG_DISABLE_POLYDEX_ALL, Flags.FLAG_DISABLE_POLYDEX_WETH)) {
+            return polyDex.calculateTransitionalSwapReturn(inToken, Tokens.WETH, outToken, inAmounts);
+        }
+        if (dex == Dex.PolyDexDAI && !flags.or(Flags.FLAG_DISABLE_POLYDEX_ALL, Flags.FLAG_DISABLE_POLYDEX_DAI)) {
+            return polyDex.calculateTransitionalSwapReturn(inToken, Tokens.DAI, outToken, inAmounts);
+        }
+        if (dex == Dex.PolyDexUSDC && !flags.or(Flags.FLAG_DISABLE_POLYDEX_ALL, Flags.FLAG_DISABLE_POLYDEX_USDC)) {
+            return polyDex.calculateTransitionalSwapReturn(inToken, Tokens.USDC, outToken, inAmounts);
+        }
+        if (dex == Dex.PolyDexUSDT && !flags.or(Flags.FLAG_DISABLE_POLYDEX_ALL, Flags.FLAG_DISABLE_POLYDEX_USDT)) {
+            return polyDex.calculateTransitionalSwapReturn(inToken, Tokens.USDT, outToken, inAmounts);
+        }
         //add oneSwap
         if (dex == Dex.OneSwap && !flags.on(Flags.FLAG_DISABLE_ONESWAP)) {
             return oneSwap.calculateSwapReturn(inToken, outToken, inAmounts);
@@ -196,6 +222,22 @@ library Dexes {
         uint256 amount,
         uint256 flags
     ) internal {
+        //add polyDex
+        if (dex == Dex.PolyDex && !flags.or(Flags.FLAG_DISABLE_POLYDEX_ALL, Flags.FLAG_DISABLE_POLYDEX)) {
+            polyDex.swap(inToken, outToken, amount);
+        }
+        if (dex == Dex.PolyDexWETH && !flags.or(Flags.FLAG_DISABLE_POLYDEX_ALL, Flags.FLAG_DISABLE_POLYDEX_WETH)) {
+            polyDex.swapTransitional(inToken, Tokens.WETH, outToken, amount);
+        }
+        if (dex == Dex.PolyDexDAI && !flags.or(Flags.FLAG_DISABLE_POLYDEX_ALL, Flags.FLAG_DISABLE_POLYDEX_DAI)) {
+            polyDex.swapTransitional(inToken, Tokens.DAI, outToken, amount);
+        }
+        if (dex == Dex.PolyDexUSDC && !flags.or(Flags.FLAG_DISABLE_POLYDEX_ALL, Flags.FLAG_DISABLE_POLYDEX_USDC)) {
+            polyDex.swapTransitional(inToken, Tokens.USDC, outToken, amount);
+        }
+        if (dex == Dex.PolyDexUSDT && !flags.or(Flags.FLAG_DISABLE_POLYDEX_ALL, Flags.FLAG_DISABLE_POLYDEX_USDT)) {
+            polyDex.swapTransitional(inToken, Tokens.USDT, outToken, amount);
+        }
         //add oneSwap
         if (dex == Dex.OneSwap && !flags.on(Flags.FLAG_DISABLE_ONESWAP)) {
             oneSwap.swap(inToken, outToken, amount);

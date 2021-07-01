@@ -48,6 +48,15 @@ library Flags {
     //add oneswap
     uint256 internal constant FLAG_DISABLE_ONESWAP = 1 << 29;
 
+    // add polydex
+    uint256 internal constant FLAG_DISABLE_POLYDEX_ALL = 1 << 30;
+    uint256 internal constant FLAG_DISABLE_POLYDEX = 1 << 31;
+    uint256 internal constant FLAG_DISABLE_POLYDEX_WETH = 1 << 32;
+    uint256 internal constant FLAG_DISABLE_POLYDEX_DAI = 1 << 33;
+    uint256 internal constant FLAG_DISABLE_POLYDEX_USDC = 1 << 34;
+    uint256 internal constant FLAG_DISABLE_POLYDEX_USDT = 1 << 35;
+
+
     function on(uint256 flags, uint256 flag) internal pure returns (bool) {
         return (flags & flag) != 0;
     }
