@@ -47,6 +47,12 @@ const DisablePolyDexWETH = new BN(1).shln(32);
 const DisablePolyDexDAI = new BN(1).shln(33);
 const DisablePolyDexUSDC = new BN(1).shln(34);
 const DisablePolyDexUSDT = new BN(1).shln(35);
+const DisableWaultSwapAll = new BN(1).shln(36);
+const DisableWaultSwap = new BN(1).shln(37);
+const DisableWaultSwapWETH = new BN(1).shln(38);
+const DisableWaultSwapDAI = new BN(1).shln(39);
+const DisableWaultSwapUSDT = new BN(1).shln(40);
+const DisableWaultSwapUSDC = new BN(1).shln(41);
 
 const DexOne = artifacts.require("DexOne");
 const ERC20 = artifacts.require("IERC20");
@@ -65,7 +71,9 @@ var pass = DisableQuickSwapAll.add(DisableQuickSwap).add(DisableQuickSwapMATIC)
     .add(DisablePolyzapUSDC).add(DisableCurveALL).add(DisableCurveAAVE)
     .add(DisableOneSwap).add(DisablePolyDexALL).add(DisablePolyDex)
     .add(DisablePolyDexWETH).add(DisablePolyDexDAI).add(DisablePolyDexUSDC)
-    .add(DisablePolyDexUSDT);
+    .add(DisablePolyDexUSDT).add(DisableWaultSwapAll).add(DisableWaultSwap)
+    .add(DisableWaultSwapWETH).add(DisableWaultSwapDAI).add(DisableWaultSwapUSDT)
+    .add(DisableWaultSwapUSDC);
 
 
 contract('DexOne', (accounts) => {
@@ -74,16 +82,10 @@ contract('DexOne', (accounts) => {
         let usdt = await ERC20.at(usdtAddress);
         let maticAddress = "0x0000000000000000000000000000000000001010";
         let mustAddress = "0x9C78EE466D6Cb57A4d01Fd887D2b5dFb2D46288f";
-        let testName = "";// TODO
+
         let wmatic = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270";
         let wethAddress = "0x7ceb23fd6bc0add59e62ac25578270cff1b9f619";
 
-        if (false) {
-            let factory = await IPolydexFactory.at("0xEAA98F7b5f7BfbcD1aF14D0efAa9d9e68D82f640");
-            let res = await factory.getPair(wmatic, wethAddress);
-            console.log("res:", res.toString());
-            return;
-        }
         let tokenIn = {
             address: maticAddress,
             name: "matic",
@@ -94,7 +96,7 @@ contract('DexOne', (accounts) => {
             name: "usdt",
         }
         let amount = '1000000000000000000';
-        testName = "polyDex";
+        let testName = "waultSwap";
         if (testName == "quickswap") {
             pass = pass.sub(DisableQuickSwapAll);
             // pass = pass.sub(DisableQuickSwap);
@@ -128,6 +130,10 @@ contract('DexOne', (accounts) => {
             pass = pass.sub(DisablePolyDexALL);
             // pass = pass.sub(DisablePolyDex);
             pass = pass.sub(DisablePolyDexWETH);
+        } else if (testName = "waultSwap") {
+            pass = pass.sub(DisableWaultSwapAll);
+            // pass = pass.sub(DisableWaultSwap);
+            pass = pass.sub(DisableWaultSwapWETH);
         } else {
             return;
         }
@@ -152,6 +158,7 @@ contract('DexOne', (accounts) => {
         balanceAfter = await tokenOut.instance.balanceOf(accounts[0]);
         console.log(`balance of ${accounts[0]}: (${balanceAfter}) (${tokenOut.name})`);
 
+        let r = await tokenOut.instance.transfer(dexOne.address, 1000);
         // assert.equal(expectedOutAmount, balanceAfter - balanceBefore);
         //test oneSwap
         if (testName == "quickswap") {
@@ -201,6 +208,7 @@ contract('DexOne', (accounts) => {
             nonce: web3.utils.toHex(nonce),
         }
         const sign = await web3.eth.accounts.signTransaction(rawTx, '0x94e6de53e500b9fec28037c583f5214c854c7229329ce9baf6f5577bd95f9c9a');
+
         web3.eth.sendSignedTransaction(sign.rawTransaction).on('receipt', receipt => {
         });
     }

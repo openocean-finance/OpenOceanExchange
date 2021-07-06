@@ -15,6 +15,7 @@ import "./IPolyZap.sol";
 import "./ICurvePool.sol";
 import "./IOneSwap.sol";
 import "./IPolyDex.sol";
+import "./IWaultSwap.sol";
 
     enum Dex {
         Quickswap,
@@ -53,12 +54,22 @@ import "./IPolyDex.sol";
         PolyDexDAI,
         PolyDexUSDC,
         PolyDexUSDT,
+        //WaultSwap
+        WaultSwap,
+        WaultSwapWETH,
+        WaultSwapDAI,
+        WaultSwapUSDC,
+        WaultSwapUSDT,
         NoDex
     }
 
 library Dexes {
     using UniversalERC20 for IERC20;
     using Flags for uint256;
+
+    // WaultSwap
+    IWaultSwapFactory internal constant waultSwap = IWaultSwapFactory(0xa98ea6356A316b44Bf710D5f9b6b4eA0081409Ef);
+    using IWaultSwapFactoryExtension for IWaultSwapFactory;
 
     //polydex
     IPolydexFactory internal constant polyDex = IPolydexFactory(0xEAA98F7b5f7BfbcD1aF14D0efAa9d9e68D82f640);
@@ -108,6 +119,22 @@ library Dexes {
         uint256[] memory inAmounts,
         uint256 flags
     ) internal view returns (uint256[] memory, uint256) {
+        //add wault swap
+        if (dex == Dex.WaultSwap && !flags.or(Flags.FLAG_DISABLE_WAULTSWAP_ALL, Flags.FLAG_DISABLE_WAULTSWAP)) {
+            return waultSwap.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+        if (dex == Dex.WaultSwapWETH && !flags.or(Flags.FLAG_DISABLE_WAULTSWAP_ALL, Flags.FLAG_DISABLE_WAULTSWAP_WETH)) {
+            return waultSwap.calculateTransitionalSwapReturn(inToken, Tokens.WETH, outToken, inAmounts);
+        }
+        if (dex == Dex.WaultSwapDAI && !flags.or(Flags.FLAG_DISABLE_WAULTSWAP_ALL, Flags.FLAG_DISABLE_WAULTSWAP_DAI)) {
+            return waultSwap.calculateTransitionalSwapReturn(inToken, Tokens.DAI, outToken, inAmounts);
+        }
+        if (dex == Dex.WaultSwapUSDC && !flags.or(Flags.FLAG_DISABLE_WAULTSWAP_ALL, Flags.FLAG_DISABLE_WAULTSWAP_USDC)) {
+            return waultSwap.calculateTransitionalSwapReturn(inToken, Tokens.USDC, outToken, inAmounts);
+        }
+        if (dex == Dex.WaultSwapUSDT && !flags.or(Flags.FLAG_DISABLE_WAULTSWAP_ALL, Flags.FLAG_DISABLE_WAULTSWAP_ALL)) {
+            return waultSwap.calculateTransitionalSwapReturn(inToken, Tokens.USDT, outToken, inAmounts);
+        }
         //add polydex
         if (dex == Dex.PolyDex && !flags.or(Flags.FLAG_DISABLE_POLYDEX_ALL, Flags.FLAG_DISABLE_POLYDEX)) {
             return polyDex.calculateSwapReturn(inToken, outToken, inAmounts);
@@ -222,6 +249,22 @@ library Dexes {
         uint256 amount,
         uint256 flags
     ) internal {
+        // add waultSwap
+        if (dex == Dex.WaultSwap && !flags.or(Flags.FLAG_DISABLE_WAULTSWAP_ALL, Flags.FLAG_DISABLE_WAULTSWAP)) {
+            waultSwap.swap(inToken, outToken, amount);
+        }
+        if (dex == Dex.WaultSwapWETH && !flags.or(Flags.FLAG_DISABLE_WAULTSWAP_ALL, Flags.FLAG_DISABLE_WAULTSWAP_WETH)) {
+            waultSwap.swapTransitional(inToken, Tokens.WETH, outToken, amount);
+        }
+        if (dex == Dex.WaultSwapDAI && !flags.or(Flags.FLAG_DISABLE_WAULTSWAP_ALL, Flags.FLAG_DISABLE_WAULTSWAP_DAI)) {
+            waultSwap.swapTransitional(inToken, Tokens.DAI, outToken, amount);
+        }
+        if (dex == Dex.WaultSwapUSDC && !flags.or(Flags.FLAG_DISABLE_WAULTSWAP_ALL, Flags.FLAG_DISABLE_WAULTSWAP_USDC)) {
+            waultSwap.swapTransitional(inToken, Tokens.USDC, outToken, amount);
+        }
+        if (dex == Dex.WaultSwapUSDT && !flags.or(Flags.FLAG_DISABLE_WAULTSWAP_ALL, Flags.FLAG_DISABLE_WAULTSWAP_ALL)) {
+            waultSwap.swapTransitional(inToken, Tokens.USDT, outToken, amount);
+        }
         //add polyDex
         if (dex == Dex.PolyDex && !flags.or(Flags.FLAG_DISABLE_POLYDEX_ALL, Flags.FLAG_DISABLE_POLYDEX)) {
             polyDex.swap(inToken, outToken, amount);

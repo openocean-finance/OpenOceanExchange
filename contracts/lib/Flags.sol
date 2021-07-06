@@ -56,6 +56,13 @@ library Flags {
     uint256 internal constant FLAG_DISABLE_POLYDEX_USDC = 1 << 34;
     uint256 internal constant FLAG_DISABLE_POLYDEX_USDT = 1 << 35;
 
+    //add WaultSwap
+    uint256 internal constant FLAG_DISABLE_WAULTSWAP_ALL = 1 << 36;
+    uint256 internal constant FLAG_DISABLE_WAULTSWAP = 1 << 37;
+    uint256 internal constant FLAG_DISABLE_WAULTSWAP_WETH = 1 << 38;
+    uint256 internal constant FLAG_DISABLE_WAULTSWAP_DAI = 1 << 39;
+    uint256 internal constant FLAG_DISABLE_WAULTSWAP_USDC = 1 << 40;
+    uint256 internal constant FLAG_DISABLE_WAULTSWAP_USDT = 1 << 41;
 
     function on(uint256 flags, uint256 flag) internal pure returns (bool) {
         return (flags & flag) != 0;
