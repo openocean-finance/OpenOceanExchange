@@ -16,6 +16,7 @@ import "./ICurvePool.sol";
 import "./IOneSwap.sol";
 import "./IPolyDex.sol";
 import "./IWaultSwap.sol";
+import "./IMasset.sol";
 
     enum Dex {
         Quickswap,
@@ -60,12 +61,18 @@ import "./IWaultSwap.sol";
         WaultSwapDAI,
         WaultSwapUSDC,
         WaultSwapUSDT,
+        //Masset
+        Masset,
         NoDex
     }
 
 library Dexes {
     using UniversalERC20 for IERC20;
     using Flags for uint256;
+
+    //TODO  mUSD support  USDC, DAI or USDT
+    IMasset internal constant masset = IMasset(0xE840B73E5287865EEc17d250bFb1536704B43B21);
+    using IMassetExtension for IMasset;
 
     // WaultSwap
     IWaultSwapFactory internal constant waultSwap = IWaultSwapFactory(0xa98ea6356A316b44Bf710D5f9b6b4eA0081409Ef);
@@ -119,6 +126,10 @@ library Dexes {
         uint256[] memory inAmounts,
         uint256 flags
     ) internal view returns (uint256[] memory, uint256) {
+        //add masset
+        if (dex == Dex.Masset && !flags.or(Flags.FLAG_DISABLE_MASSET_ALL, Flags.FLAG_DISABLE_MASSET)) {
+            return masset.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
         //add wault swap
         if (dex == Dex.WaultSwap && !flags.or(Flags.FLAG_DISABLE_WAULTSWAP_ALL, Flags.FLAG_DISABLE_WAULTSWAP)) {
             return waultSwap.calculateSwapReturn(inToken, outToken, inAmounts);
@@ -249,6 +260,10 @@ library Dexes {
         uint256 amount,
         uint256 flags
     ) internal {
+        //add masset
+        if (dex == Dex.Masset && !flags.or(Flags.FLAG_DISABLE_MASSET_ALL, Flags.FLAG_DISABLE_MASSET)) {
+            masset.swap(inToken, outToken, amount);
+        }
         // add waultSwap
         if (dex == Dex.WaultSwap && !flags.or(Flags.FLAG_DISABLE_WAULTSWAP_ALL, Flags.FLAG_DISABLE_WAULTSWAP)) {
             waultSwap.swap(inToken, outToken, amount);

@@ -64,6 +64,10 @@ library Flags {
     uint256 internal constant FLAG_DISABLE_WAULTSWAP_USDC = 1 << 40;
     uint256 internal constant FLAG_DISABLE_WAULTSWAP_USDT = 1 << 41;
 
+    // add masset
+    uint256 internal constant FLAG_DISABLE_MASSET_ALL = 1 << 42;
+    uint256 internal constant FLAG_DISABLE_MASSET = 1 << 43;
+
     function on(uint256 flags, uint256 flag) internal pure returns (bool) {
         return (flags & flag) != 0;
     }
