@@ -152,12 +152,11 @@ library Flags {
     uint256 internal constant FLAG_DISABLE_PANTHERSWAP_USDC = 1 << 87;
     uint256 internal constant FLAG_DISABLE_PANTHERSWAP_USDT = 1 << 88;
 
-    // IZapBsc pancakeBunny
+    // PancakeBunny
     uint256 internal constant FLAG_DISABLE_ZAPBSC = 1 << 89;
 
-    // ooswap
-    uint256 internal constant FLAG_DISABLE_OOSWAP = 1 << 90;
-
+    // Innoswap
+    uint256 internal constant FLAG_DISABLE_INNOSWAP = 1 << 90;
 
     function on(uint256 flags, uint256 flag) internal pure returns (bool) {
         return (flags & flag) != 0;

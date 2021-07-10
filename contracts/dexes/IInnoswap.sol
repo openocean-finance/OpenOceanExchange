@@ -10,14 +10,14 @@ import "../lib/Tokens.sol";
 /**
  * @notice Uniswap V2 factory contract interface. See https://uniswap.org/docs/v2/smart-contracts/factory/
  */
-interface IOoswapFactory {
-    function getPair(IERC20 tokenA, IERC20 tokenB) external view returns (IOoswapPair pair);
+interface IInnoswapFactory {
+    function getPair(IERC20 tokenA, IERC20 tokenB) external view returns (IInnoswapPair pair);
 }
 
 /**
  * @notice Uniswap V2 pair pool interface. See https://uniswap.org/docs/v2/smart-contracts/pair/
  */
-interface IOoswapPair {
+interface IInnoswapPair {
     function swap(
         uint256 amount0Out,
         uint256 amount1Out,
@@ -26,20 +26,20 @@ interface IOoswapPair {
     ) external;
 
     function getReserves()
-    external
-    view
-    returns (
-        uint112 reserve0,
-        uint112 reserve1,
-        uint32 blockTimestampLast
-    );
+        external
+        view
+        returns (
+            uint112 reserve0,
+            uint112 reserve1,
+            uint32 blockTimestampLast
+        );
 
     function skim(address to) external;
 
     function sync() external;
 }
 
-library IOoswapPairExtension {
+library IInnoswapPairExtension {
     using SafeMath for uint256;
     using UniversalERC20 for IERC20;
 
@@ -50,7 +50,7 @@ library IOoswapPairExtension {
      * See https://github.com/runtimeverification/verified-smart-contracts/blob/uniswap/uniswap/x-y-k.pdf
      */
     function calculateSwapReturn(
-        IOoswapPair pair,
+        IInnoswapPair pair,
         IERC20 inToken,
         IERC20 outToken,
         uint256 amount
@@ -64,7 +64,7 @@ library IOoswapPairExtension {
     }
 
     function calculateRealSwapReturn(
-        IOoswapPair pair,
+        IInnoswapPair pair,
         IERC20 inToken,
         IERC20 outToken,
         uint256 amount
@@ -72,7 +72,7 @@ library IOoswapPairExtension {
         uint256 inReserve = inToken.universalBalanceOf(address(pair));
         uint256 outReserve = outToken.universalBalanceOf(address(pair));
 
-        (uint112 reserve0, uint112 reserve1,) = pair.getReserves();
+        (uint112 reserve0, uint112 reserve1, ) = pair.getReserves();
         if (inToken > outToken) {
             (reserve0, reserve1) = (reserve1, reserve0);
         }
@@ -90,21 +90,21 @@ library IOoswapPairExtension {
         uint256 outReserve,
         uint256 amount
     ) private pure returns (uint256) {
-        uint256 inAmountWithFee = amount.mul(9975);
+        uint256 inAmountWithFee = amount.mul(998);
         // Pancake now requires fixed 0.2% swap fee
         uint256 numerator = inAmountWithFee.mul(outReserve);
-        uint256 denominator = inReserve.mul(10000).add(inAmountWithFee);
+        uint256 denominator = inReserve.mul(1000).add(inAmountWithFee);
         return (denominator == 0) ? 0 : numerator.div(denominator);
     }
 }
 
-library IOoswapFactoryExtension {
+library IInnoswapFactoryExtension {
     using UniversalERC20 for IERC20;
-    using IOoswapPairExtension for IOoswapPair;
+    using IInnoswapPairExtension for IInnoswapPair;
     using Tokens for IERC20;
 
     function calculateSwapReturn(
-        IOoswapFactory factory,
+        IInnoswapFactory factory,
         IERC20 inToken,
         IERC20 outToken,
         uint256[] memory inAmounts
@@ -113,8 +113,8 @@ library IOoswapFactoryExtension {
 
         IERC20 realInToken = inToken.wrapETH();
         IERC20 realOutToken = outToken.wrapETH();
-        IOoswapPair pair = factory.getPair(realInToken, realOutToken);
-        if (pair != IOoswapPair(0)) {
+        IInnoswapPair pair = factory.getPair(realInToken, realOutToken);
+        if (pair != IInnoswapPair(0)) {
             for (uint256 i = 0; i < inAmounts.length; i++) {
                 outAmounts[i] = pair.calculateSwapReturn(realInToken, realOutToken, inAmounts[i]);
             }
@@ -123,7 +123,7 @@ library IOoswapFactoryExtension {
     }
 
     function calculateTransitionalSwapReturn(
-        IOoswapFactory factory,
+        IInnoswapFactory factory,
         IERC20 inToken,
         IERC20 transitionToken,
         IERC20 outToken,
@@ -144,7 +144,7 @@ library IOoswapFactoryExtension {
     }
 
     function swap(
-        IOoswapFactory factory,
+        IInnoswapFactory factory,
         IERC20 inToken,
         IERC20 outToken,
         uint256 inAmount
@@ -153,7 +153,7 @@ library IOoswapFactoryExtension {
 
         IERC20 realInToken = inToken.wrapETH();
         IERC20 realOutToken = outToken.wrapETH();
-        IOoswapPair pair = factory.getPair(realInToken, realOutToken);
+        IInnoswapPair pair = factory.getPair(realInToken, realOutToken);
 
         outAmount = pair.calculateRealSwapReturn(realInToken, realOutToken, inAmount);
 
@@ -168,7 +168,7 @@ library IOoswapFactoryExtension {
     }
 
     function swapTransitional(
-        IOoswapFactory factory,
+        IInnoswapFactory factory,
         IERC20 inToken,
         IERC20 transitionToken,
         IERC20 outToken,
