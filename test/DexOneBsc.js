@@ -97,8 +97,14 @@ contract('DexOne', (accounts) => {
         balanceAfter = await busd.balanceOf(accounts[0])
         console.log(`balance of ${accounts[0]}: (${balanceAfter}) BUSD`);
         // assert.equal(expectedOutAmount, balanceAfter - balanceBefore);
-
-        let testName = "ooswap";
+        const ooe = await ERC20.at(ooeAddress);
+        const usdt = await ERC20.at(usdtAddress);
+        let tokenOut = {
+            name:"usdt",
+            instance:usdt,
+            address:usdtAddress,
+        }
+        let testName = "pancakeBunny";
         // busd swap usdt
         if (testName == "nerve") {
             console.log("*************** nerve ***************");
@@ -119,26 +125,32 @@ contract('DexOne', (accounts) => {
         } else if (testName == "pantherswap") {
             pass = pass.add(DisablePancakeAllV2);
             pass = pass.sub(DisablePantherSwapALL);
-            pass = pass.sub(DisablePantherSwap);
+            // pass = pass.sub(DisablePantherSwap);
+            pass = pass.sub(DisablePancakeBunnyBNB);
         } else if (testName == "pancakeBunny") {
             pass = pass.add(DisablePancakeAllV2);
             pass = pass.sub(DisablePancakeBunny);
         } else if (testName == "ooswap") {
             pass = pass.add(DisablePancakeAllV2);
             pass = pass.sub(DisableOOSWAP);
+            tokenOut = {
+                name:"ooe",
+                instance:ooe,
+                address:ooeAddress,
+            }
         }
 
-        const ooe = await ERC20.at(ooeAddress);
-        balanceBefore = await ooe.balanceOf(accounts[0]);
-        console.log(`balance of ${accounts[0]}: (${balanceBefore}) ooe`);
-        res = await dexOne.calculateSwapReturn(busdAddress, ooeAddress, swapAmt, 5, pass);
+
+        balanceBefore = await tokenOut.instance.balanceOf(accounts[0]);
+        console.log(`balance of ${accounts[0]}: (${balanceBefore}) (${tokenOut.name})`);
+        res = await dexOne.calculateSwapReturn(busdAddress, tokenOut.address, swapAmt, 5, pass);
         expectedOutAmount = res.outAmount;
         console.log("ooe calculateSwapReturn:", expectedOutAmount.toString());
         console.log("res.distribution:", res.distribution.toString());
         await busd.approve(dexOne.address, swapAmt);
-        await invokeContract(web3, accounts[0], dexOne, busdAddress, ooeAddress, swapAmt, res);
-        balanceAfter = await ooe.balanceOf(accounts[0]);
-        console.log(`balance of ${accounts[0]}: (${balanceAfter}) ooe`);
+        await invokeContract(web3, accounts[0], dexOne, busdAddress, tokenOut.address, swapAmt, res);
+        balanceAfter = await tokenOut.instance.balanceOf(accounts[0]);
+        console.log(`balance of ${accounts[0]}: (${balanceAfter}) (${tokenOut.name})`);
         // assert.equal(expectedOutAmount, balanceAfter - balanceBefore);
     });
 
