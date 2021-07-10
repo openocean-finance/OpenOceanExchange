@@ -104,7 +104,7 @@ contract('DexOne', (accounts) => {
             instance:usdt,
             address:usdtAddress,
         }
-        let testName = "pancakeBunny";
+        let testName = "pantherswap";
         // busd swap usdt
         if (testName == "nerve") {
             console.log("*************** nerve ***************");
@@ -126,7 +126,9 @@ contract('DexOne', (accounts) => {
             pass = pass.add(DisablePancakeAllV2);
             pass = pass.sub(DisablePantherSwapALL);
             // pass = pass.sub(DisablePantherSwap);
-            pass = pass.sub(DisablePancakeBunnyBNB);
+            // pass = pass.sub(DisablePantherSwapBNB);
+            pass = pass.sub(DisablePantherSwapUSDC);
+            // pass = pass.sub(DisablePantherSwapUSDT);
         } else if (testName == "pancakeBunny") {
             pass = pass.add(DisablePancakeAllV2);
             pass = pass.sub(DisablePancakeBunny);
