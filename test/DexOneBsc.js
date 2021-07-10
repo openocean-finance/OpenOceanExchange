@@ -42,8 +42,13 @@ const DisableMooniswapUSDC = new BN(1).shln(83);
 
 const DisablePantherSwapALL = new BN(1).shln(84);
 const DisablePantherSwap = new BN(1).shln(85);
+const DisablePantherSwapBNB = new BN(1).shln(86);
+const DisablePantherSwapUSDC = new BN(1).shln(87);
+const DisablePantherSwapUSDT = new BN(1).shln(88);
 
-const DisablePancakeBunny = new BN(1).shln(86);
+const DisablePancakeBunny = new BN(1).shln(89);
+
+const DisableOOSWAP = new BN(1).shln(90);
 
 
 const DexOne = artifacts.require("DexOne");
@@ -58,7 +63,8 @@ var pass = DisablePancakeAll.add(DisableBurgerAll).add(DisableThugswapAll)
     .add(DisableCafeswapAll).add(DisableBeltswapAll).add(DisableMooniswapAll)
     .add(DisableMooniswap).add(DisableMooniswapETH).add(DisableMooniswapDAI)
     .add(DisableMooniswapUSDC).add(DisablePantherSwapALL).add(DisablePantherSwap)
-    .add(DisablePancakeBunny);
+    .add(DisablePantherSwapBNB).add(DisablePantherSwapUSDC).add(DisablePantherSwapUSDT)
+    .add(DisablePancakeBunny).add(DisableOOSWAP);
 
 
 contract('DexOne', (accounts) => {
@@ -67,8 +73,6 @@ contract('DexOne', (accounts) => {
         let busdAddress = "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56";
         let ethInnerAddress = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
         let usdtAddress = "0x55d398326f99059fF775485246999027B3197955";
-
-
         if (false) {
             const belt = await IBeltSwap.at("0xAEA4f7dcd172997947809CE6F12018a6D5c1E8b6");
             res = await belt.get_dy(3, 2, '1000000000000000000');
@@ -93,7 +97,7 @@ contract('DexOne', (accounts) => {
         console.log(`balance of ${accounts[0]}: (${balanceAfter}) BUSD`);
         // assert.equal(expectedOutAmount, balanceAfter - balanceBefore);
 
-        let testName = "pantherswap";
+        let testName = "ooswap";
         // busd swap usdt
         if (testName == "nerve") {
             console.log("*************** nerve ***************");
@@ -118,14 +122,17 @@ contract('DexOne', (accounts) => {
         } else if (testName == "pancakeBunny") {
             pass = pass.add(DisablePancakeAllV2);
             pass = pass.sub(DisablePancakeBunny);
+        } else if (testName == "ooswap") {
+            pass = pass.add(DisablePancakeAllV2);
+            pass = pass.sub(DisableOOSWAP);
         }
 
         const usdt = await ERC20.at(usdtAddress);
         balanceBefore = await usdt.balanceOf(accounts[0]);
         console.log(`balance of ${accounts[0]}: (${balanceBefore}) usdt`);
-        let ddd = await IMooniswap.at("0xa5Fb4BD21dC8cc18dB039F35DfF5706035d06FB3");
-        let dddd = await ddd.getReturn(busdAddress, usdtAddress, swapAmt);
-        console.log("usdt calculateSwapReturn:", dddd.toString());
+        // let ddd = await IMooniswap.at("0xa5Fb4BD21dC8cc18dB039F35DfF5706035d06FB3");
+        // let dddd = await ddd.getReturn(busdAddress, usdtAddress, swapAmt);
+        // console.log("usdt calculateSwapReturn:", dddd.toString());
         res = await dexOne.calculateSwapReturn(busdAddress, usdtAddress, swapAmt, 5, pass);
         expectedOutAmount = res.outAmount;
         console.log("usdt calculateSwapReturn:", expectedOutAmount.toString());

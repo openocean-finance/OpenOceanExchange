@@ -34,6 +34,7 @@ import "./ICafeswap.sol";
 // import "./IBeltswap.sol";
 import "./IPantherSwap.sol";
 import "./IPancakeBunny.sol";
+import "./IOoswap.sol";
 
     enum Dex {
         // UniswapV2,
@@ -168,12 +169,17 @@ import "./IPancakeBunny.sol";
         PancakeBunny,
         // Beltswap,
         // bottom mark
+        Ooswap,
         NoDex
     }
 
 library Dexes {
     using UniversalERC20 for IERC20;
     using Flags for uint256;
+
+
+    IOoswapFactory internal constant ooswap = IOoswapFactory(0xd76d8C2A7CA0a1609Aea0b9b5017B3F7782891bf);
+    using IOoswapFactoryExtension for IOoswapFactory;
 
     IZapBsc internal constant zap = IZapBsc(0xdC2bBB0D33E0e7Dea9F5b98F46EDBaC823586a0C);
     using IZapBscExtension for IZapBsc;
@@ -254,6 +260,9 @@ library Dexes {
         uint256[] memory inAmounts,
         uint256 flags
     ) internal view returns (uint256[] memory, uint256) {
+        if (dex == Dex.Ooswap && !flags.on(Flags.FLAG_DISABLE_OOSWAP)) {
+            return ooswap.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
         if (dex == Dex.PancakeBunny && !flags.on(Flags.FLAG_DISABLE_ZAPBSC)) {
             return zap.calculateSwapReturn(inToken, outToken, inAmounts);
         }
@@ -527,6 +536,10 @@ library Dexes {
         uint256 amount,
         uint256 flags
     ) internal {
+        //ooswap
+        if (dex == Dex.Ooswap && !flags.on(Flags.FLAG_DISABLE_OOSWAP)) {
+            ooswap.swap(inToken, outToken, amount);
+        }
         // pancakeBunny
         if (dex == Dex.PancakeBunny && !flags.on(Flags.FLAG_DISABLE_ZAPBSC)) {
             zap.swap(inToken, outToken, amount);
