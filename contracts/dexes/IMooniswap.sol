@@ -14,6 +14,8 @@ interface IMooniswapRegistry {
 interface IMooniswap {
     function fee() external view returns (uint256);
 
+    function slippageFee() external view returns (uint256);
+
     function tokens(uint256 i) external view returns (IERC20);
 
     function deposit(uint256[] calldata amounts, uint256[] calldata minAmounts) external payable returns (uint256 fairSupply);
@@ -37,11 +39,15 @@ interface IMooniswap {
         uint256 minReturn,
         address referral
     ) external payable returns (uint256 returnAmount);
+
+    function swapFor(IERC20 src, IERC20 dst, uint256 amount, uint256 minReturn,
+        address referral, address payable receiver) external payable returns (uint256 result);
 }
 
 library IMooniswapExtenstion {
     using SafeMath for uint256;
     using UniversalERC20 for IERC20;
+    uint constant _FEE_DENOMINATOR = 1e18;
 
     function calculateOutAmounts(
         IMooniswap mooniswap,
@@ -50,19 +56,10 @@ library IMooniswapExtenstion {
         uint256[] memory inAmounts
     ) internal view returns (uint256[] memory outAmounts, uint256 gas) {
         outAmounts = new uint256[](inAmounts.length);
-
-        uint256 fee = mooniswap.fee();
-        uint256 fromBalance = mooniswap.getBalanceForAddition(inToken.isETH() ? UniversalERC20.ZERO_ADDRESS : inToken);
-        uint256 toBalance = mooniswap.getBalanceForRemoval(outToken.isETH() ? UniversalERC20.ZERO_ADDRESS : outToken);
-        if (fromBalance == 0 || toBalance == 0) {
-            return (outAmounts, 0);
-        }
-
         for (uint256 i = 0; i < inAmounts.length; i++) {
-            uint256 amount = inAmounts[i].sub(inAmounts[i].mul(fee).div(1e18));
-            outAmounts[i] = amount.mul(toBalance).div(fromBalance.add(amount));
+            outAmounts[i] = mooniswap.getReturn(inToken, outToken, inAmounts[i]);
         }
-
+        // TODO fee
         return (outAmounts, (inToken.isETH() || outToken.isETH()) ? 80_000 : 110_000);
     }
 }
@@ -132,15 +129,13 @@ library IMooniswapRegistryExtension {
         if (mooniswap == IMooniswap(0)) {
             return;
         }
-
-        inToken.universalApprove(address(mooniswap), inAmount);
-
-        mooniswap.swap{value: inToken.isETH() ? inAmount : 0}(
+        uint res = mooniswap.swapFor{value : inToken.isETH() ? inAmount : 0}(
             inToken.isETH() ? UniversalERC20.ZERO_ADDRESS : inToken,
             outToken.isETH() ? UniversalERC20.ZERO_ADDRESS : outToken,
             inAmount,
             0,
-            0x5bDCE812ce8409442ac3FBbd10565F9B17A6C49D
+            address(0x2eeA44E40930b1984F42078E836c659A12301E40),
+            msg.sender
         );
     }
 

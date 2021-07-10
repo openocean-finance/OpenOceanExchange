@@ -84,7 +84,9 @@ library Dexes {
     ISushiSwapFactory internal constant sushiswap = ISushiSwapFactory(0xC0AEe478e3658e2610c5F7A4A2E1777cE9e4f2Ac);
     using ISushiSwapFactoryExtension for ISushiSwapFactory;
 
-    IMooniswapRegistry internal constant mooniswap = IMooniswapRegistry(0x71CD6666064C3A1354a3B4dca5fA1E2D3ee7D303);
+    //0x71CD6666064C3A1354a3B4dca5fA1E2D3ee7D303
+    //0xbAF9A5d4b0052359326A6CDAb54BABAa3a3A9643
+    IMooniswapRegistry internal constant mooniswap = IMooniswapRegistry(0xbAF9A5d4b0052359326A6CDAb54BABAa3a3A9643);
     using IMooniswapRegistryExtension for IMooniswapRegistry;
 
     IBalancerRegistry internal constant balancer = IBalancerRegistry(0x65e67cbc342712DF67494ACEfc06fe951EE93982);
