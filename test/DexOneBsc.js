@@ -70,6 +70,7 @@ var pass = DisablePancakeAll.add(DisableBurgerAll).add(DisableThugswapAll)
 contract('DexOne', (accounts) => {
 
     it('DexOneAll should swap ETH to CAKE', async () => {
+        let ooeAddress = "0x9029fdfae9a03135846381c7ce16595c3554e10a";
         let busdAddress = "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56";
         let ethInnerAddress = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
         let usdtAddress = "0x55d398326f99059fF775485246999027B3197955";
@@ -127,20 +128,17 @@ contract('DexOne', (accounts) => {
             pass = pass.sub(DisableOOSWAP);
         }
 
-        const usdt = await ERC20.at(usdtAddress);
-        balanceBefore = await usdt.balanceOf(accounts[0]);
-        console.log(`balance of ${accounts[0]}: (${balanceBefore}) usdt`);
-        // let ddd = await IMooniswap.at("0xa5Fb4BD21dC8cc18dB039F35DfF5706035d06FB3");
-        // let dddd = await ddd.getReturn(busdAddress, usdtAddress, swapAmt);
-        // console.log("usdt calculateSwapReturn:", dddd.toString());
-        res = await dexOne.calculateSwapReturn(busdAddress, usdtAddress, swapAmt, 5, pass);
+        const ooe = await ERC20.at(ooeAddress);
+        balanceBefore = await ooe.balanceOf(accounts[0]);
+        console.log(`balance of ${accounts[0]}: (${balanceBefore}) ooe`);
+        res = await dexOne.calculateSwapReturn(busdAddress, ooeAddress, swapAmt, 5, pass);
         expectedOutAmount = res.outAmount;
-        console.log("usdt calculateSwapReturn:", expectedOutAmount.toString());
+        console.log("ooe calculateSwapReturn:", expectedOutAmount.toString());
         console.log("res.distribution:", res.distribution.toString());
         await busd.approve(dexOne.address, swapAmt);
-        await invokeContract(web3, accounts[0], dexOne, busdAddress, usdtAddress, swapAmt, res);
-        balanceAfter = await usdt.balanceOf(accounts[0]);
-        console.log(`balance of ${accounts[0]}: (${balanceAfter}) usdt`);
+        await invokeContract(web3, accounts[0], dexOne, busdAddress, ooeAddress, swapAmt, res);
+        balanceAfter = await ooe.balanceOf(accounts[0]);
+        console.log(`balance of ${accounts[0]}: (${balanceAfter}) ooe`);
         // assert.equal(expectedOutAmount, balanceAfter - balanceBefore);
     });
 

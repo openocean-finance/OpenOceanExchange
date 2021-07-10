@@ -27,7 +27,7 @@ library IZapBscExtension {
     IPancakeFactoryV2 private constant pancakeFactory = IPancakeFactoryV2(0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73);
 
     function calculateSwapReturn(
-        IZapBsc factory,
+        IZapBsc _zap,
         IERC20 inToken,
         IERC20 outToken,
         uint256[] memory inAmounts
@@ -47,7 +47,7 @@ library IZapBscExtension {
     }
 
     function calculateRealSwapReturn(
-        IZapBsc factory,
+        IZapBsc _zap,
         IERC20 inToken,
         IERC20 outToken,
         uint256 inAmount
@@ -64,7 +64,7 @@ library IZapBscExtension {
     }
 
     function calculateTransitionalSwapReturn(
-        IZapBsc factory,
+        IZapBsc zap,
         IERC20 inToken,
         IERC20 transitionToken,
         IERC20 outToken,
@@ -79,8 +79,8 @@ library IZapBscExtension {
         }
         uint256 firstGas;
         uint256 secondGas;
-        (outAmounts, firstGas) = calculateSwapReturn(factory, realInToken, realTransitionToken, inAmounts);
-        (outAmounts, secondGas) = calculateSwapReturn(factory, realTransitionToken, realOutToken, outAmounts);
+        (outAmounts, firstGas) = calculateSwapReturn(zap, realInToken, realTransitionToken, inAmounts);
+        (outAmounts, secondGas) = calculateSwapReturn(zap, realTransitionToken, realOutToken, outAmounts);
         return (outAmounts, firstGas + secondGas);
     }
 
