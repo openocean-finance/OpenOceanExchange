@@ -7,19 +7,26 @@ const {
     web3
 } = require('@openzeppelin/test-helpers/src/setup');
 
-const DisableMDexAll = new BN(1 << 0);
+const DisableMDexALL = new BN(1 << 0);
 const DisableMDex = new BN(1).shln(1);
 const DisableMDexHT = new BN(1).shln(2);
 const DisableMDexBUSD = new BN(1).shln(3);
 const DisableMDexUSDC = new BN(1).shln(4);
 const DisableMDexUSDT = new BN(1).shln(5);
 
+const DisableMaiswapALL = new BN(1).shln(6);
+const DisableMaiswap = new BN(1).shln(7);
+const DisableMaiswapETH = new BN(1).shln(8);
+const DisableMaiswapDAI = new BN(1).shln(9);
+const DisableMaiswapUSDT = new BN(1).shln(10);
+const DisableMaiswapUSDC = new BN(1).shln(10);
+
 
 const DexOne = artifacts.require("DexOne");
 const ERC20 = artifacts.require("IERC20");
 const Factory = artifacts.require("IMDexFactory");
 
-var pass = DisableMDexAll.add(DisableMDex).add(DisableMDexHT)
+var pass = DisableMDexALL.add(DisableMDex).add(DisableMDexHT)
     .add(DisableMDexBUSD).add(DisableMDexUSDC).add(DisableMDexUSDT);
 
 
@@ -28,21 +35,22 @@ contract('DexOne', (accounts) => {
     it('DexOneAll should swap ETH to CAKE', async () => {
         let usdtAddress = "0xa71edc38d189767582c38a3145b5873052c3e47a";
         const usdt = await ERC20.at(usdtAddress);
-
         let htAddress = "0x0000000000000000000000000000000000000000";
-
         let wHT = "0x5545153CCFcA01fbd7Dd11C0b23ba694D9509A6F";
 
         var balance = await web3.eth.getBalance(accounts[0]);
-        console.log("***:", balance); //
+        console.log("HT balance:", balance); //
 
         let balanceBefore = await usdt.balanceOf(accounts[0])
         console.log(`balance of ${accounts[0]}: (${balanceBefore}) USDT`);
 
-        let testName = "MDex";
+        let testName = "Makiswap";
         if (testName == "MDex") {
-            pass = pass.sub(DisableMDexAll);
+            pass = pass.sub(DisableMDexALL);
             pass = pass.sub(DisableMDex);
+        } else if (testName == "Makiswap") {
+            pass = pass.sub(DisableMaiswapALL);
+            pass = pass.sub(DisableMaiswap);
         }
 
         const dexOne = await DexOne.deployed();
