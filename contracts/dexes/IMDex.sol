@@ -13,7 +13,7 @@ import "../lib/Tokens.sol";
 interface IMDexFactory {
     function getPair(IERC20 tokenA, IERC20 tokenB) external view returns (IMDexPair pair);
 
-    function getPairFees(address pair) external view returns (uint256);
+    // function getPairFees(address pair) external view returns (uint256);
 }
 
 /**
@@ -55,23 +55,21 @@ library IMDexPairExtension {
         IMDexPair pair,
         IERC20 inToken,
         IERC20 outToken,
-        uint256 amount,
-        uint256 fee
+        uint256 amount
     ) internal view returns (uint256) {
         if (amount == 0) {
             return 0;
         }
         uint256 inReserve = inToken.universalBalanceOf(address(pair));
         uint256 outReserve = outToken.universalBalanceOf(address(pair));
-        return doCalculate(inReserve, outReserve, amount, fee);
+        return doCalculate(inReserve, outReserve, amount);
     }
 
     function calculateRealSwapReturn(
         IMDexPair pair,
         IERC20 inToken,
         IERC20 outToken,
-        uint256 amount,
-        uint256 fee
+        uint256 amount
     ) internal returns (uint256) {
         uint256 inReserve = inToken.universalBalanceOf(address(pair));
         uint256 outReserve = outToken.universalBalanceOf(address(pair));
@@ -86,18 +84,17 @@ library IMDexPairExtension {
             pair.skim(SKIM_TARGET);
         }
 
-        return doCalculate(Math.min(inReserve, reserve0), Math.min(outReserve, reserve1), amount, fee);
+        return doCalculate(Math.min(inReserve, reserve0), Math.min(outReserve, reserve1), amount);
     }
 
     function doCalculate(
         uint256 inReserve,
         uint256 outReserve,
-        uint256 amount,
-        uint256 fee
+        uint256 amount
     ) private pure returns (uint256) {
-        uint256 inAmountWithFee = amount.mul(10000 - fee); // MDex now requires fixed 0.2% swap fee
+        uint256 inAmountWithFee = amount.mul(997); // MDex now requires fixed 0.3% swap fee
         uint256 numerator = inAmountWithFee.mul(outReserve);
-        uint256 denominator = inReserve.mul(10000).add(inAmountWithFee);
+        uint256 denominator = inReserve.mul(1000).add(inAmountWithFee);
         return (denominator == 0) ? 0 : numerator.div(denominator);
     }
 }
@@ -119,9 +116,8 @@ library IMDexFactoryExtension {
         IERC20 realOutToken = outToken.wrapHT();
         IMDexPair pair = factory.getPair(realInToken, realOutToken);
         if (pair != IMDexPair(0)) {
-            uint256 fee = factory.getPairFees(address(pair));
             for (uint256 i = 0; i < inAmounts.length; i++) {
-                outAmounts[i] = pair.calculateSwapReturn(realInToken, realOutToken, inAmounts[i], fee);
+                outAmounts[i] = pair.calculateSwapReturn(realInToken, realOutToken, inAmounts[i]);
             }
             return (outAmounts, 50_000);
         }
@@ -159,8 +155,7 @@ library IMDexFactoryExtension {
         IERC20 realInToken = inToken.wrapHT();
         IERC20 realOutToken = outToken.wrapHT();
         IMDexPair pair = factory.getPair(realInToken, realOutToken);
-        uint256 fee = factory.getPairFees(address(pair));
-        outAmount = pair.calculateRealSwapReturn(realInToken, realOutToken, inAmount, fee);
+        outAmount = pair.calculateRealSwapReturn(realInToken, realOutToken, inAmount);
 
         realInToken.universalTransfer(address(pair), inAmount);
         if (uint256(address(realInToken)) < uint256(address(realOutToken))) {
