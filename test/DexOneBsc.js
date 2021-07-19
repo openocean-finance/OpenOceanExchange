@@ -10,24 +10,25 @@ const {
 const DisableMDexALL = new BN(1 << 0);
 const DisableMDex = new BN(1).shln(1);
 const DisableMDexHT = new BN(1).shln(2);
-const DisableMDexBUSD = new BN(1).shln(3);
-const DisableMDexUSDC = new BN(1).shln(4);
-const DisableMDexUSDT = new BN(1).shln(5);
+const DisableMDexUSDC = new BN(1).shln(3);
+const DisableMDexUSDT = new BN(1).shln(4);
 
-const DisableMaiswapALL = new BN(1).shln(6);
-const DisableMaiswap = new BN(1).shln(7);
-const DisableMaiswapETH = new BN(1).shln(8);
-const DisableMaiswapDAI = new BN(1).shln(9);
-const DisableMaiswapUSDT = new BN(1).shln(10);
-const DisableMaiswapUSDC = new BN(1).shln(10);
+const DisableMaiswapALL = new BN(1).shln(5);
+const DisableMaiswap = new BN(1).shln(6);
+const DisableMaiswapHT = new BN(1).shln(7);
+const DisableMaiswapUSDC = new BN(1).shln(8);
+const DisableMaiswapUSDT = new BN(1).shln(9);
 
+const DisableWETH = new BN(1).shln(10);
 
 const DexOne = artifacts.require("DexOne");
 const ERC20 = artifacts.require("IERC20");
 const Factory = artifacts.require("IMDexFactory");
 
 var pass = DisableMDexALL.add(DisableMDex).add(DisableMDexHT)
-    .add(DisableMDexBUSD).add(DisableMDexUSDC).add(DisableMDexUSDT);
+    .add(DisableMDexUSDC).add(DisableMDexUSDT)
+    .add(DisableMaiswapALL).add(DisableMaiswap).add(DisableMaiswapHT)
+    .add(DisableMaiswapUSDC).add(DisableMaiswapUSDT).add(DisableWETH);
 
 
 contract('DexOne', (accounts) => {

@@ -15,7 +15,6 @@ abstract contract IWHT is IERC20 {
 
 library Tokens {
     using UniversalERC20 for IERC20;
-
     IERC20 internal constant USDT = IERC20(0xa71EdC38d189767582C38A3145b5873052c3e47a);
     IERC20 internal constant USDC = IERC20(0x9362Bbef4B8313A8Aa9f0c9808B80577Aa26B73B);
     IWHT internal constant WHT = IWHT(0x5545153CCFcA01fbd7Dd11C0b23ba694D9509A6F);
