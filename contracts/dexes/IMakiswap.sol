@@ -10,25 +10,14 @@ import "../lib/Tokens.sol";
 /**
  * @notice Uniswap V2 factory contract interface. See https://uniswap.org/docs/v2/smart-contracts/factory/
  */
-interface IMDexFactory {
-    function getPair(IERC20 tokenA, IERC20 tokenB) external view returns (IMDexPair pair);
-
-    function getPairFees(address pair) external view returns (uint256);
-
-    function getReserves(address tokenA, address tokenB) external view returns (uint256 reserveA, uint256 reserveB);
-
-    // given an input amount of an asset and pair reserves, returns the maximum output amount of the other asset
-    function getAmountOut(
-        uint256 amountIn,
-        uint256 reserveIn,
-        uint256 reserveOut
-    ) external view returns (uint256 amountOut);
+interface IMakiswapFactory {
+    function getPair(IERC20 tokenA, IERC20 tokenB) external view returns (IMakiswapPair pair);
 }
 
 /**
  * @notice Uniswap V2 pair pool interface. See https://uniswap.org/docs/v2/smart-contracts/pair/
  */
-interface IMDexPair {
+interface IMakiswapPair {
     function swap(
         uint256 amount0Out,
         uint256 amount1Out,
@@ -50,12 +39,72 @@ interface IMDexPair {
     function sync() external;
 }
 
-library IMDexFactoryExtension {
+library IMakiswapPairExtension {
+    using SafeMath for uint256;
     using UniversalERC20 for IERC20;
+
+    address private constant SKIM_TARGET = 0x5bDCE812ce8409442ac3FBbd10565F9B17A6C49D;
+
+    /**
+     * @notice Use Uniswap's constant product formula to calculate expected swap return.
+     * See https://github.com/runtimeverification/verified-smart-contracts/blob/uniswap/uniswap/x-y-k.pdf
+     */
+    function calculateSwapReturn(
+        IMakiswapPair pair,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256 amount
+    ) internal view returns (uint256) {
+        if (amount == 0) {
+            return 0;
+        }
+        uint256 inReserve = inToken.universalBalanceOf(address(pair));
+        uint256 outReserve = outToken.universalBalanceOf(address(pair));
+        return doCalculate(inReserve, outReserve, amount);
+    }
+
+    function calculateRealSwapReturn(
+        IMakiswapPair pair,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256 amount
+    ) internal returns (uint256) {
+        uint256 inReserve = inToken.universalBalanceOf(address(pair));
+        uint256 outReserve = outToken.universalBalanceOf(address(pair));
+
+        (uint112 reserve0, uint112 reserve1, ) = pair.getReserves();
+        if (inToken > outToken) {
+            (reserve0, reserve1) = (reserve1, reserve0);
+        }
+        if (inReserve < reserve0 || outReserve < reserve1) {
+            pair.sync();
+        } else if (inReserve > reserve0 || outReserve > reserve1) {
+            pair.skim(SKIM_TARGET);
+        }
+
+        return doCalculate(Math.min(inReserve, reserve0), Math.min(outReserve, reserve1), amount);
+    }
+
+    function doCalculate(
+        uint256 inReserve,
+        uint256 outReserve,
+        uint256 amount
+    ) private pure returns (uint256) {
+        uint256 inAmountWithFee = amount.mul(997); // Uniswap V2 now requires fixed 0.3% swap fee
+        uint256 numerator = inAmountWithFee.mul(outReserve);
+        uint256 denominator = inReserve.mul(1000).add(inAmountWithFee);
+        return (denominator == 0) ? 0 : numerator.div(denominator);
+    }
+}
+
+library IMakiswapFactoryExtension {
+    using SafeMath for uint256;
+    using UniversalERC20 for IERC20;
+    using IMakiswapPairExtension for IMakiswapPair;
     using Tokens for IERC20;
 
     function calculateSwapReturn(
-        IMDexFactory factory,
+        IMakiswapFactory factory,
         IERC20 inToken,
         IERC20 outToken,
         uint256[] memory inAmounts
@@ -64,15 +113,17 @@ library IMDexFactoryExtension {
 
         IERC20 realInToken = inToken.wrapHT();
         IERC20 realOutToken = outToken.wrapHT();
-        (uint256 reserveA, uint256 reserveB) = factory.getReserves(address(realInToken), address(realOutToken));
-        for (uint256 i = 0; i < inAmounts.length; i++) {
-            outAmounts[i] = factory.getAmountOut(inAmounts[i], reserveA, reserveB);
+        IMakiswapPair pair = factory.getPair(realInToken, realOutToken);
+        if (pair != IMakiswapPair(0)) {
+            for (uint256 i = 0; i < inAmounts.length; i++) {
+                outAmounts[i] = pair.calculateSwapReturn(realInToken, realOutToken, inAmounts[i]);
+            }
+            return (outAmounts, 50_000);
         }
-        return (outAmounts, 50_000);
     }
 
     function calculateTransitionalSwapReturn(
-        IMDexFactory factory,
+        IMakiswapFactory factory,
         IERC20 inToken,
         IERC20 transitionToken,
         IERC20 outToken,
@@ -93,7 +144,7 @@ library IMDexFactoryExtension {
     }
 
     function swap(
-        IMDexFactory factory,
+        IMakiswapFactory factory,
         IERC20 inToken,
         IERC20 outToken,
         uint256 inAmount
@@ -102,13 +153,9 @@ library IMDexFactoryExtension {
 
         IERC20 realInToken = inToken.wrapHT();
         IERC20 realOutToken = outToken.wrapHT();
+        IMakiswapPair pair = factory.getPair(realInToken, realOutToken);
 
-        IMDexPair pair = factory.getPair(realInToken, realOutToken);
-        if (address(pair) == address(0)) {
-            return 0;
-        }
-        (uint256 reserveA, uint256 reserveB) = factory.getReserves(address(realInToken), address(realOutToken));
-        outAmount = factory.getAmountOut(inAmount, reserveA, reserveB);
+        outAmount = pair.calculateRealSwapReturn(realInToken, realOutToken, inAmount);
 
         realInToken.universalTransfer(address(pair), inAmount);
         if (uint256(address(realInToken)) < uint256(address(realOutToken))) {
@@ -121,7 +168,7 @@ library IMDexFactoryExtension {
     }
 
     function swapTransitional(
-        IMDexFactory factory,
+        IMakiswapFactory factory,
         IERC20 inToken,
         IERC20 transitionToken,
         IERC20 outToken,
