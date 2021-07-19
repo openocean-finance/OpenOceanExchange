@@ -160,9 +160,9 @@ library ISushiSwapFactoryExtension {
 
         realInToken.universalTransfer(address(pair), inAmount);
         if (uint256(address(realInToken)) < uint256(address(realOutToken))) {
-            pair.swap(0, outAmount, address(msg.sender), "");
+            pair.swap(0, outAmount, address(this), "");
         } else {
-            pair.swap(outAmount, 0, address(msg.sender), "");
+            pair.swap(outAmount, 0, address(this), "");
         }
 
         outToken.withdrawFromWXDAI();
