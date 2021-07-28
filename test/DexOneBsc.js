@@ -13,9 +13,18 @@ const {
 
 const DisableSushiswapAll = new BN(1).shln(0);
 const DisableSushiswap = new BN(1).shln(1);
-const DisableSushiswapETH = new BN(1).shln(2);
+const DisableSushiswapWAVAX = new BN(1).shln(2);
 const DisableSushiswapDAI = new BN(1).shln(3);
-const DisableSushiswapUSDC = new BN(1).shln(4);
+
+const DisablePANGONLINSWAPALL = new BN(1).shln(4);
+const DisablePANGONLINSWAP = new BN(1).shln(5);
+const DisablePANGONLINSWAPWAVAX = new BN(1).shln(6);
+const DisablePANGONLINSWAPDAI = new BN(1).shln(7);
+
+const DisableJOESWAPALL = new BN(1).shln(8);
+const DisableJOESWAP = new BN(1).shln(9);
+const DisableJOESWAPWAVAX = new BN(1).shln(10);
+const DisableJOESWAPDAI = new BN(1).shln(11);
 
 
 const DexOne = artifacts.require("DexOne");
@@ -24,8 +33,10 @@ const Factory = artifacts.require("IUniswapV2Factory");
 
 
 var pass = DisableSushiswapAll.add(DisableSushiswap)
-    .add(DisableSushiswapETH).add(DisableSushiswapDAI)
-    .add(DisableSushiswapUSDC);
+    .add(DisableSushiswapWAVAX).add(DisableSushiswapDAI)
+    .add(DisablePANGONLINSWAPALL).add(DisablePANGONLINSWAP).add(DisablePANGONLINSWAPWAVAX)
+    .add(DisablePANGONLINSWAPDAI).add(DisableJOESWAPALL).add(DisableJOESWAP).add(DisableJOESWAPWAVAX)
+    .add(DisableJOESWAPDAI);
 
 
 contract('DexOne', (accounts) => {
@@ -53,12 +64,17 @@ contract('DexOne', (accounts) => {
         let balanceBefore = await usdt.balanceOf(accounts[0])
         console.log(`balance of ${accounts[0]}: (${balanceBefore}) USDT`);
 
-        let testName = "sushiswap";
+        let testName = "joeswap";
         if (testName == "sushiswap") {
             pass = pass.sub(DisableSushiswapAll);
             pass = pass.sub(DisableSushiswap);
+        } else if (testName == "pangolinSwap") {
+            pass = pass.sub(DisablePANGONLINSWAPALL);
+            pass = pass.sub(DisablePANGONLINSWAP);
+        } else if (testName == "joeswap") {
+            pass = pass.sub(DisableJOESWAPALL);
+            pass = pass.sub(DisableJOESWAP);
         }
-
 
         const dexOne = await DexOne.deployed();
         const res = await dexOne.calculateSwapReturn(
