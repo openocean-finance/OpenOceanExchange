@@ -158,6 +158,10 @@ library Flags {
     // Innoswap
     uint256 internal constant FLAG_DISABLE_INNOSWAP = 1 << 90;
 
+    uint256 internal constant FLAG_DISABLE_WAULTSWAP = 1 << 91;
+
+    uint256 internal constant FLAG_DISABLE_BABYSWAP = 1 << 92;
+
     function on(uint256 flags, uint256 flag) internal pure returns (bool) {
         return (flags & flag) != 0;
     }

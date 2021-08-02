@@ -50,6 +50,9 @@ const DisablePancakeBunny = new BN(1).shln(89);
 
 const DisableOOSWAP = new BN(1).shln(90);
 
+const DisableWAULTSWAP = new BN(1).shln(91);
+
+const DisableBABYSWAP = new BN(1).shln(92);
 
 const DexOne = artifacts.require("DexOne");
 const ERC20 = artifacts.require("IERC20");
@@ -64,7 +67,7 @@ var pass = DisablePancakeAll.add(DisableBurgerAll).add(DisableThugswapAll)
     .add(DisableMooniswap).add(DisableMooniswapETH).add(DisableMooniswapDAI)
     .add(DisableMooniswapUSDC).add(DisablePantherSwapALL).add(DisablePantherSwap)
     .add(DisablePantherSwapBNB).add(DisablePantherSwapUSDC).add(DisablePantherSwapUSDT)
-    .add(DisablePancakeBunny).add(DisableOOSWAP);
+    .add(DisablePancakeBunny).add(DisableOOSWAP).add(DisableWAULTSWAP);
 
 
 contract('DexOne', (accounts) => {
@@ -92,19 +95,18 @@ contract('DexOne', (accounts) => {
         console.log(`expect out amount ${res.outAmount.toString()} BUSD`);
         console.log("res.distribution:", res.distribution.toString());
 
-
         await invokeContract(web3, accounts[0], dexOne, ethInnerAddress, busdAddress, swapAmt, res);
         balanceAfter = await busd.balanceOf(accounts[0])
         console.log(`balance of ${accounts[0]}: (${balanceAfter}) BUSD`);
-        // assert.equal(expectedOutAmount, balanceAfter - balanceBefore);
+        assert.equal(expectedOutAmount, balanceAfter - balanceBefore);
         const ooe = await ERC20.at(ooeAddress);
         const usdt = await ERC20.at(usdtAddress);
         let tokenOut = {
-            name:"usdt",
-            instance:usdt,
-            address:usdtAddress,
+            name: "usdt",
+            instance: usdt,
+            address: usdtAddress,
         }
-        let testName = "pantherswap";
+        let testName = "babySwap";
         // busd swap usdt
         if (testName == "nerve") {
             console.log("*************** nerve ***************");
@@ -136,12 +138,17 @@ contract('DexOne', (accounts) => {
             pass = pass.add(DisablePancakeAllV2);
             pass = pass.sub(DisableOOSWAP);
             tokenOut = {
-                name:"ooe",
-                instance:ooe,
-                address:ooeAddress,
+                name: "ooe",
+                instance: ooe,
+                address: ooeAddress,
             }
+        } else if (testName == "waultSwap") {
+            pass = pass.add(DisablePancakeAllV2);
+            pass = pass.sub(DisableWAULTSWAP);
+        } else if (testName == "babySwap") {
+            pass = pass.add(DisablePancakeAllV2);
+            pass = pass.sub(DisableBABYSWAP);
         }
-
 
         balanceBefore = await tokenOut.instance.balanceOf(accounts[0]);
         console.log(`balance of ${accounts[0]}: (${balanceBefore}) (${tokenOut.name})`);
@@ -153,7 +160,7 @@ contract('DexOne', (accounts) => {
         await invokeContract(web3, accounts[0], dexOne, busdAddress, tokenOut.address, swapAmt, res);
         balanceAfter = await tokenOut.instance.balanceOf(accounts[0]);
         console.log(`balance of ${accounts[0]}: (${balanceAfter}) (${tokenOut.name})`);
-        // assert.equal(expectedOutAmount, balanceAfter - balanceBefore);
+        assert.equal(expectedOutAmount, balanceAfter - balanceBefore);
     });
 
     // it('DexOneView should calculate', async () => {

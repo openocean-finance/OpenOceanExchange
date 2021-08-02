@@ -32,6 +32,7 @@ library IZapBscExtension {
         IERC20 outToken,
         uint256[] memory inAmounts
     ) internal view returns (uint256[] memory outAmounts, uint256 gas) {
+        _zap;
         outAmounts = new uint256[](inAmounts.length);
         IERC20 realInToken = inToken.wrapETH();
         IERC20 realOutToken = outToken.wrapETH();
@@ -52,6 +53,7 @@ library IZapBscExtension {
         IERC20 outToken,
         uint256 inAmount
     ) internal view returns (uint256 outAmount, uint256 gas){
+        _zap;
         IERC20 realInToken = inToken.wrapETH();
         IERC20 realOutToken = outToken.wrapETH();
         IPancakePairV2 pair = pancakeFactory.getPair(realInToken, realOutToken);
@@ -95,9 +97,11 @@ library IZapBscExtension {
         IERC20 realInToken = inToken.wrapETH();
         IERC20 realOutToken = outToken.wrapETH();
 
+        (outAmount,) = calculateRealSwapReturn(factory, inToken, outToken, inAmount);
         realInToken.approve(address(factory), inAmount);
         factory.zapInToken(address(realInToken), inAmount, address(realOutToken));
-
+        uint res = realOutToken.balanceOf(address(this));
+        require(res >= outAmount, "swap outToken is low");
         realOutToken.withdrawFromWETH();
     }
 
