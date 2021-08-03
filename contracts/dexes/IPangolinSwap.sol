@@ -7,8 +7,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../lib/UniversalERC20.sol";
 import "../lib/Tokens.sol";
 
-
-
 /**
  * @notice https://github.com/pangolindex/exchange-contracts/blob/main/contracts/pangolin-core/PangolinFactory.sol
  */
@@ -17,15 +15,26 @@ interface IPangolinFactory {
 }
 
 interface IPangolinPair {
-    function getReserves() external view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast);
+    function getReserves()
+        external
+        view
+        returns (
+            uint112 reserve0,
+            uint112 reserve1,
+            uint32 blockTimestampLast
+        );
 
-    function swap(uint256 amount0Out, uint256 amount1Out, address to, bytes calldata data) external;
+    function swap(
+        uint256 amount0Out,
+        uint256 amount1Out,
+        address to,
+        bytes calldata data
+    ) external;
 
     function skim(address to) external;
 
     function sync() external;
 }
-
 
 library IPangolinPairExtension {
     using SafeMath for uint256;
@@ -61,7 +70,7 @@ library IPangolinPairExtension {
         uint256 inReserve = inToken.universalBalanceOf(address(pair));
         uint256 outReserve = outToken.universalBalanceOf(address(pair));
 
-        (uint112 reserve0, uint112 reserve1,) = pair.getReserves();
+        (uint112 reserve0, uint112 reserve1, ) = pair.getReserves();
         if (inToken > outToken) {
             (reserve0, reserve1) = (reserve1, reserve0);
         }
@@ -86,7 +95,6 @@ library IPangolinPairExtension {
         return (denominator == 0) ? 0 : numerator.div(denominator);
     }
 }
-
 
 library IPangolinFactoryExtension {
     using SafeMath for uint256;

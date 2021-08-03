@@ -7,8 +7,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../lib/UniversalERC20.sol";
 import "../lib/Tokens.sol";
 
-
-
 /**
  * @notice https://github.com/traderjoe-xyz/joe-core/blob/main/contracts/traderjoe/JoeFactory.sol
  */
@@ -28,20 +26,18 @@ interface IJoePair {
     ) external;
 
     function getReserves()
-    external
-    view
-    returns (
-        uint112 reserve0,
-        uint112 reserve1,
-        uint32 blockTimestampLast
-    );
+        external
+        view
+        returns (
+            uint112 reserve0,
+            uint112 reserve1,
+            uint32 blockTimestampLast
+        );
 
     function skim(address to) external;
 
     function sync() external;
 }
-
-
 
 library IJoePairExtension {
     using SafeMath for uint256;
@@ -77,7 +73,7 @@ library IJoePairExtension {
         uint256 inReserve = inToken.universalBalanceOf(address(pair));
         uint256 outReserve = outToken.universalBalanceOf(address(pair));
 
-        (uint112 reserve0, uint112 reserve1,) = pair.getReserves();
+        (uint112 reserve0, uint112 reserve1, ) = pair.getReserves();
         if (inToken > outToken) {
             (reserve0, reserve1) = (reserve1, reserve0);
         }
@@ -102,7 +98,6 @@ library IJoePairExtension {
         return (denominator == 0) ? 0 : numerator.div(denominator);
     }
 }
-
 
 library IJoeFactoryExtension {
     using SafeMath for uint256;
@@ -183,4 +178,3 @@ library IJoeFactoryExtension {
         swap(factory, transitionToken, outToken, swap(factory, inToken, transitionToken, inAmount));
     }
 }
-

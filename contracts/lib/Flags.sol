@@ -18,7 +18,6 @@ library Flags {
     uint256 internal constant FLAG_DISABLE_JOESWAP_WAVAX = 1 << 10;
     uint256 internal constant FLAG_DISABLE_JOESWAP_DAI = 1 << 11;
 
-
     function on(uint256 flags, uint256 flag) internal pure returns (bool) {
         return (flags & flag) != 0;
     }

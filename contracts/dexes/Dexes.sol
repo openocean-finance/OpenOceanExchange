@@ -10,19 +10,18 @@ import "./ISushiSwap.sol";
 import "./IPangolinSwap.sol";
 import "./IJoeSwap.sol";
 
-
-    enum Dex {
-        SushiSwap,
-        SushiSwapETH,
-        SushiSwapDAI,
-        PangolinSwap,
-        PangolinSwapETH,
-        PangolinSwapDAI,
-        JoeSwap,
-        JoeSwapETH,
-        JoeSwapDAI,
-        NoDex
-    }
+enum Dex {
+    SushiSwap,
+    SushiSwapETH,
+    SushiSwapDAI,
+    PangolinSwap,
+    PangolinSwapETH,
+    PangolinSwapDAI,
+    JoeSwap,
+    JoeSwapETH,
+    JoeSwapDAI,
+    NoDex
+}
 
 library Dexes {
     using UniversalERC20 for IERC20;
@@ -63,7 +62,7 @@ library Dexes {
             return joe.calculateTransitionalSwapReturn(inToken, Tokens.DAI, outToken, inAmounts);
         }
 
-        //add pangolinSwap
+        //add PangolinSwap
         if (dex == Dex.PangolinSwap && !flags.or(Flags.FLAG_DISABLE_PANGONLINSWAP_ALL, Flags.FLAG_DISABLE_PANGONLINSWAP)) {
             return pangolin.calculateSwapReturn(inToken, outToken, inAmounts);
         }
@@ -107,7 +106,7 @@ library Dexes {
             joe.swapTransitional(inToken, Tokens.DAI, outToken, amount);
         }
 
-        //add pangolinSwap
+        //add PangolinSwap
         if (dex == Dex.PangolinSwap && !flags.or(Flags.FLAG_DISABLE_PANGONLINSWAP_ALL, Flags.FLAG_DISABLE_PANGONLINSWAP)) {
             pangolin.swap(inToken, outToken, amount);
         }
