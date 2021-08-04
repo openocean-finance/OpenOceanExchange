@@ -803,13 +803,13 @@ interface ISushiSwapPair {
     ) external;
 
     function getReserves()
-    external
-    view
-    returns (
-        uint112 reserve0,
-        uint112 reserve1,
-        uint32 blockTimestampLast
-    );
+        external
+        view
+        returns (
+            uint112 reserve0,
+            uint112 reserve1,
+            uint32 blockTimestampLast
+        );
 
     function skim(address to) external;
 
@@ -850,7 +850,7 @@ library ISushiSwapPairExtension {
         uint256 inReserve = inToken.universalBalanceOf(address(pair));
         uint256 outReserve = outToken.universalBalanceOf(address(pair));
 
-        (uint112 reserve0, uint112 reserve1,) = pair.getReserves();
+        (uint112 reserve0, uint112 reserve1, ) = pair.getReserves();
         if (inToken > outToken) {
             (reserve0, reserve1) = (reserve1, reserve0);
         }
@@ -1376,21 +1376,21 @@ library Dexes {
         if (dex == Dex.JoeSwap && !flags.or(Flags.FLAG_DISABLE_JOESWAP_ALL, Flags.FLAG_DISABLE_JOESWAP)) {
             return joe.calculateSwapReturn(inToken, outToken, inAmounts);
         }
-        if (dex == Dex.JoeSwap && !flags.or(Flags.FLAG_DISABLE_JOESWAP_ALL, Flags.FLAG_DISABLE_JOESWAP_WAVAX)) {
+        if (dex == Dex.JoeSwapETH && !flags.or(Flags.FLAG_DISABLE_JOESWAP_ALL, Flags.FLAG_DISABLE_JOESWAP_WAVAX)) {
             return joe.calculateTransitionalSwapReturn(inToken, Tokens.WAVAX, outToken, inAmounts);
         }
-        if (dex == Dex.JoeSwap && !flags.or(Flags.FLAG_DISABLE_JOESWAP_ALL, Flags.FLAG_DISABLE_JOESWAP_DAI)) {
+        if (dex == Dex.JoeSwapDAI && !flags.or(Flags.FLAG_DISABLE_JOESWAP_ALL, Flags.FLAG_DISABLE_JOESWAP_DAI)) {
             return joe.calculateTransitionalSwapReturn(inToken, Tokens.DAI, outToken, inAmounts);
         }
 
-        //add pangolinSwap
+        //add PangolinSwap
         if (dex == Dex.PangolinSwap && !flags.or(Flags.FLAG_DISABLE_PANGONLINSWAP_ALL, Flags.FLAG_DISABLE_PANGONLINSWAP)) {
             return pangolin.calculateSwapReturn(inToken, outToken, inAmounts);
         }
-        if (dex == Dex.PangolinSwap && !flags.or(Flags.FLAG_DISABLE_PANGONLINSWAP_ALL, Flags.FLAG_DISABLE_PANGONLINSWAP_WAVAX)) {
+        if (dex == Dex.PangolinSwapETH && !flags.or(Flags.FLAG_DISABLE_PANGONLINSWAP_ALL, Flags.FLAG_DISABLE_PANGONLINSWAP_WAVAX)) {
             return pangolin.calculateTransitionalSwapReturn(inToken, Tokens.WAVAX, outToken, inAmounts);
         }
-        if (dex == Dex.PangolinSwap && !flags.or(Flags.FLAG_DISABLE_PANGONLINSWAP_ALL, Flags.FLAG_DISABLE_PANGONLINSWAP_DAI)) {
+        if (dex == Dex.PangolinSwapDAI && !flags.or(Flags.FLAG_DISABLE_PANGONLINSWAP_ALL, Flags.FLAG_DISABLE_PANGONLINSWAP_DAI)) {
             return pangolin.calculateTransitionalSwapReturn(inToken, Tokens.DAI, outToken, inAmounts);
         }
 
@@ -1420,21 +1420,21 @@ library Dexes {
         if (dex == Dex.JoeSwap && !flags.or(Flags.FLAG_DISABLE_JOESWAP_ALL, Flags.FLAG_DISABLE_JOESWAP)) {
             joe.swap(inToken, outToken, amount);
         }
-        if (dex == Dex.JoeSwap && !flags.or(Flags.FLAG_DISABLE_JOESWAP_ALL, Flags.FLAG_DISABLE_JOESWAP_WAVAX)) {
+        if (dex == Dex.JoeSwapETH && !flags.or(Flags.FLAG_DISABLE_JOESWAP_ALL, Flags.FLAG_DISABLE_JOESWAP_WAVAX)) {
             joe.swapTransitional(inToken, Tokens.WAVAX, outToken, amount);
         }
-        if (dex == Dex.JoeSwap && !flags.or(Flags.FLAG_DISABLE_JOESWAP_ALL, Flags.FLAG_DISABLE_JOESWAP_DAI)) {
+        if (dex == Dex.JoeSwapDAI && !flags.or(Flags.FLAG_DISABLE_JOESWAP_ALL, Flags.FLAG_DISABLE_JOESWAP_DAI)) {
             joe.swapTransitional(inToken, Tokens.DAI, outToken, amount);
         }
 
-        //add pangolinSwap
+        //add PangolinSwap
         if (dex == Dex.PangolinSwap && !flags.or(Flags.FLAG_DISABLE_PANGONLINSWAP_ALL, Flags.FLAG_DISABLE_PANGONLINSWAP)) {
             pangolin.swap(inToken, outToken, amount);
         }
-        if (dex == Dex.PangolinSwap && !flags.or(Flags.FLAG_DISABLE_PANGONLINSWAP_ALL, Flags.FLAG_DISABLE_PANGONLINSWAP_WAVAX)) {
+        if (dex == Dex.PangolinSwapETH && !flags.or(Flags.FLAG_DISABLE_PANGONLINSWAP_ALL, Flags.FLAG_DISABLE_PANGONLINSWAP_WAVAX)) {
             pangolin.swapTransitional(inToken, Tokens.WAVAX, outToken, amount);
         }
-        if (dex == Dex.PangolinSwap && !flags.or(Flags.FLAG_DISABLE_PANGONLINSWAP_ALL, Flags.FLAG_DISABLE_PANGONLINSWAP_DAI)) {
+        if (dex == Dex.PangolinSwapDAI && !flags.or(Flags.FLAG_DISABLE_PANGONLINSWAP_ALL, Flags.FLAG_DISABLE_PANGONLINSWAP_DAI)) {
             pangolin.swapTransitional(inToken, Tokens.DAI, outToken, amount);
         }
 
