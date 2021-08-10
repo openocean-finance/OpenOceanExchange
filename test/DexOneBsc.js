@@ -13,73 +13,36 @@ const {
 
 const BigNumber = require('bignumber.js');
 
-const DisableUniswapV2ALL = new BN(1 << 0);
-const DisableUniswapV2 = new BN(1).shln(1);
-const DisableUniswapV2ETH = new BN(1).shln(2);
-const DisableUniswapV2DAI = new BN(1).shln(3);
-const DisableUniswapV2USDC = new BN(1).shln(4);
-const DisableCurveALL = new BN(1).shln(5);
-const DisableCurveCompound = new BN(1).shln(6);
-const DisableCurveUSDT = new BN(1).shln(7);
-const DisableCurveY = new BN(1).shln(8);
-const DisableCurveBINANCE = new BN(1).shln(9);
-const DisableCurveSYNTHETIX = new BN(1).shln(10);
-const DisableCurvePAX = new BN(1).shln(11);
-const DisableCurveRENBTC = new BN(1).shln(12);
-const DisableCurveTBTC = new BN(1).shln(13);
-const DisableCurveSBTC = new BN(1).shln(14);
-const DisableOASIS = new BN(1).shln(15);
-const DisableUNISWAP = new BN(1).shln(16);
-const DisableSUSHISWAPALL = new BN(1).shln(17);
-const DisableSUSHISWAP = new BN(1).shln(18);
-const DisableSUSHISWAPETH = new BN(1).shln(19);
-const DisableSUSHISWAPDAI = new BN(1).shln(20);
-const DisableSUSHISWAPUSDC = new BN(1).shln(21);
-const DisableMOONISWAP_ALL = new BN(1).shln(22);
-const DisableMOONISWAP = new BN(1).shln(23);
-const DisableMOONISWAP_ETH = new BN(1).shln(24);
-const DisableMOONISWAP_DAI = new BN(1).shln(25);
-const DisableMOONISWAP_USDC = new BN(1).shln(26);
-const DisableBALANCER_ALL = new BN(1).shln(27);
-const DisableBALANCER_1 = new BN(1).shln(28);
-const DisableBALANCER_2 = new BN(1).shln(29);
-const DisableBALANCER_3 = new BN(1).shln(30);
-const DisableKYBER_ALL = new BN(1).shln(31);
-const DisableKYBER_1 = new BN(1).shln(32);
-const DisableKYBER_2 = new BN(1).shln(33);
-const DisableKYBER_3 = new BN(1).shln(34);
-const DisableKYBER_4 = new BN(1).shln(35);
-const DisableDODO_ALL = new BN(1).shln(36);
-const DisableDODO = new BN(1).shln(37);
-const DisableDODO_USDC = new BN(1).shln(38);
-const DisableDODO_USDT = new BN(1).shln(39);
-const DisableSMOOTHY = new BN(1).shln(40);
+const DisableKSwapALL = new BN(1 << 0);
+const DisableKSwap = new BN(1 << 1);
+const DisableKSwapUSDT = new BN(1 << 2);
+const DisableKSwapUSDC = new BN(1 << 3);
+
+const DisableCherrySwapALL = new BN(1 << 4);
+const DisableCherrySwap = new BN(1 << 5);
+const DisableCherrySwapUSDT = new BN(1 << 6);
+const DisableCherrySwapUSDC = new BN(1 << 7);
+
+const DisableStakeSwapALL = new BN(1 << 8);
+const DisableStakeSwap = new BN(1 << 9);
+const DisableStakeSwapUSDT = new BN(1 << 10);
+const DisableStakeSwapUSDC = new BN(1 << 11);
 
 
 const DexOne = artifacts.require("DexOne");
 const ERC20 = artifacts.require("IERC20");
-const IMooniswapRegistry = artifacts.require("IMooniswapRegistry");
-const IMooniswap = artifacts.require("IMooniswap");
 
 
-var pass = DisableUniswapV2ALL.add(DisableUniswapV2).add(DisableUniswapV2ETH).add(DisableUniswapV2DAI)
-    .add(DisableUniswapV2USDC).add(DisableCurveALL).add(DisableCurveCompound).add(DisableCurveUSDT)
-    .add(DisableCurveY).add(DisableCurveBINANCE).add(DisableCurveSYNTHETIX).add(DisableCurvePAX)
-    .add(DisableCurveRENBTC).add(DisableCurveTBTC).add(DisableCurveSBTC).add(DisableOASIS)
-    .add(DisableUNISWAP).add(DisableSUSHISWAPALL).add(DisableSUSHISWAP).add(DisableSUSHISWAPETH)
-    .add(DisableSUSHISWAPDAI).add(DisableSUSHISWAPUSDC).add(DisableMOONISWAP_ALL).add(DisableMOONISWAP)
-    .add(DisableMOONISWAP_ETH).add(DisableMOONISWAP_DAI).add(DisableMOONISWAP_USDC).add(DisableBALANCER_ALL)
-    .add(DisableBALANCER_1).add(DisableBALANCER_2).add(DisableBALANCER_3).add(DisableKYBER_ALL).add(DisableKYBER_1)
-    .add(DisableKYBER_2).add(DisableKYBER_3).add(DisableKYBER_4).add(DisableDODO_ALL).add(DisableDODO)
-    .add(DisableDODO_USDC).add(DisableDODO_USDT).add(DisableSMOOTHY);
+var pass = DisableKSwapALL.add(DisableKSwap).add(DisableKSwapUSDT).add(DisableKSwapUSDC)
+    .add(DisableCherrySwapALL).add(DisableCherrySwap).add(DisableCherrySwapUSDT).add(DisableCherrySwapUSDC)
+    .add(DisableStakeSwapALL).add(DisableStakeSwap).add(DisableStakeSwapUSDT).add(DisableStakeSwapUSDC);
 
 
 contract('DexOne', (accounts) => {
 
     it('DexOneAll should swap ETH to CAKE', async () => {
         let ethInnerAddress = "0x0000000000000000000000000000000000000000";
-        let usdcAddress = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
-
+        let usdcAddress = "0xc946daf81b08146b1c7a8da2a851ddf2b3eaaf85";
 
         const usdc = await ERC20.at(usdcAddress);
         let balanceBefore = await usdc.balanceOf(accounts[0]);
@@ -88,22 +51,12 @@ contract('DexOne', (accounts) => {
         let a = await web3.eth.getBalance(accounts[0]);
         console.log(`balance of ${accounts[0]}: (${a}) ETH`);
 
-        if (false) {
-            let factory = await IMooniswapRegistry.at("0xbAF9A5d4b0052359326A6CDAb54BABAa3a3A9643");
-            let res = await factory.pools(ethInnerAddress, usdcAddress);
-
-            let aa = await usdc.balanceOf(accounts[0]);
-            console.log(`balance of ${accounts[0]}: (${aa}) USDC`);
-
-            let swapAmt = BigNumber(1e18);
-            let moon = await IMooniswap.at(res);
-            await moon.swap(ethInnerAddress, usdcAddress, swapAmt, 0, "0x2eeA44E40930b1984F42078E836c659A12301E40", {value:swapAmt});
-            aa = await usdc.balanceOf(accounts[0]);
-            console.log(`balance of ${accounts[0]}: (${aa}) USDC`);
-            return;
+        let testName = "kSwap";
+        if (testName == "kSwap") {
+            pass = pass.sub(DisableKSwapALL).sub(DisableKSwap);
+        } else if (testName == "cherrySwap") {
+            pass = pass.sub(DisableCherrySwapALL).sub(DisableCherrySwap);
         }
-
-        pass = pass.sub(DisableMOONISWAP_ALL).sub(DisableMOONISWAP);
 
         let dexOne = await DexOne.deployed();
         let swapAmt = BigNumber(1e18);
@@ -116,9 +69,6 @@ contract('DexOne', (accounts) => {
         await invokeContract(web3, accounts[0], dexOne, ethInnerAddress, usdcAddress, swapAmt, res);
         balanceAfter = await usdc.balanceOf(accounts[0]);
         console.log(`balance of ${accounts[0]}: (${balanceAfter}) USDC`);
-
-        balanceAfter = await usdc.balanceOf(dexOne.address);
-        console.log(`balance of ${dexOne.address}: (${balanceAfter}) USDC`);
         // assert.equal(expectedOutAmount, balanceAfter - balanceBefore);
     });
 
