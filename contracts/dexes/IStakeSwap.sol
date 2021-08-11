@@ -7,13 +7,16 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../lib/UniversalERC20.sol";
 import "../lib/Tokens.sol";
 
-interface IAiswapFactory {
-    function getPair(IERC20 tokenA, IERC20 tokenB) external view returns (IAiswapPair pair);
+interface IStakeSwapFactory {
+    function getPair(IERC20 tokenA, IERC20 tokenB) external view returns (ISakeSwapPair pair);
 }
 
-
-interface IAiswapPair {
-    function getReserves() external view returns (uint112 _reserve0, uint112 _reserve1, uint32 _blockTimestampLast);
+interface ISakeSwapPair {
+    function getReserves() external view returns (
+        uint112 _reserve0,
+        uint112 _reserve1,
+        uint32 _blockTimestampLast
+    );
 
     function skim(address to) external;
 
@@ -22,13 +25,14 @@ interface IAiswapPair {
     function swap(uint amount0Out, uint amount1Out, address to, bytes calldata data) external;
 }
 
-library IAiswapPairExtension {
+
+library ISakeSwapPairExtension {
     using SafeMath for uint256;
     using UniversalERC20 for IERC20;
 
     address private constant SKIM_TARGET = 0x5bDCE812ce8409442ac3FBbd10565F9B17A6C49D;
 
-    function calculateSwapReturn(IAiswapPair pair, IERC20 inToken, IERC20 outToken, uint256 amount) internal view returns (uint256) {
+    function calculateSwapReturn(ISakeSwapPair pair, IERC20 inToken, IERC20 outToken, uint256 amount) internal view returns (uint256) {
         if (amount == 0) {
             return 0;
         }
@@ -39,7 +43,7 @@ library IAiswapPairExtension {
     }
 
     function calculateRealSwapReturn(
-        IAiswapPair pair, IERC20 inToken, IERC20 outToken, uint256 amount) internal returns (uint256) {
+        ISakeSwapPair pair, IERC20 inToken, IERC20 outToken, uint256 amount) internal returns (uint256) {
         uint256 inReserve = inToken.universalBalanceOf(address(pair));
         uint256 outReserve = outToken.universalBalanceOf(address(pair));
 
@@ -70,14 +74,14 @@ library IAiswapPairExtension {
 }
 
 
-library IAiswapFactoryExtension {
+library ISakeSwapFactoryExtension {
     using SafeMath for uint256;
     using UniversalERC20 for IERC20;
-    using IAiswapPairExtension for IAiswapPair;
+    using ISakeSwapPairExtension for ISakeSwapPair;
     using Tokens for IERC20;
 
     function calculateSwapReturn(
-        IAiswapFactory factory,
+        IStakeSwapFactory factory,
         IERC20 inToken,
         IERC20 outToken,
         uint256[] memory inAmounts
@@ -86,8 +90,8 @@ library IAiswapFactoryExtension {
 
         IERC20 realInToken = inToken.wrapOKT();
         IERC20 realOutToken = outToken.wrapOKT();
-        IAiswapPair pair = factory.getPair(realInToken, realOutToken);
-        if (pair != IAiswapPair(0)) {
+        ISakeSwapPair pair = factory.getPair(realInToken, realOutToken);
+        if (pair != ISakeSwapPair(0)) {
             for (uint256 i = 0; i < inAmounts.length; i++) {
                 outAmounts[i] = pair.calculateSwapReturn(realInToken, realOutToken, inAmounts[i]);
             }
@@ -96,7 +100,7 @@ library IAiswapFactoryExtension {
     }
 
     function calculateTransitionalSwapReturn(
-        IAiswapFactory factory,
+        IStakeSwapFactory factory,
         IERC20 inToken,
         IERC20 transitionToken,
         IERC20 outToken,
@@ -117,7 +121,7 @@ library IAiswapFactoryExtension {
     }
 
     function swap(
-        IAiswapFactory factory,
+        IStakeSwapFactory factory,
         IERC20 inToken,
         IERC20 outToken,
         uint256 inAmount
@@ -126,9 +130,10 @@ library IAiswapFactoryExtension {
 
         IERC20 realInToken = inToken.wrapOKT();
         IERC20 realOutToken = outToken.wrapOKT();
-        IAiswapPair pair = factory.getPair(realInToken, realOutToken);
+        ISakeSwapPair pair = factory.getPair(realInToken, realOutToken);
 
         outAmount = pair.calculateRealSwapReturn(realInToken, realOutToken, inAmount);
+
         realInToken.universalTransfer(address(pair), inAmount);
         if (uint256(address(realInToken)) < uint256(address(realOutToken))) {
             pair.swap(0, outAmount, address(this), "");
@@ -140,7 +145,7 @@ library IAiswapFactoryExtension {
     }
 
     function swapTransitional(
-        IAiswapFactory factory,
+        IStakeSwapFactory factory,
         IERC20 inToken,
         IERC20 transitionToken,
         IERC20 outToken,
