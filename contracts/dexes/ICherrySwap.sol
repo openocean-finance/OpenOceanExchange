@@ -37,14 +37,12 @@ library ICherryPairExtension {
         if (amount == 0) {
             return 0;
         }
-
         uint256 inReserve = inToken.universalBalanceOf(address(pair));
         uint256 outReserve = outToken.universalBalanceOf(address(pair));
         return doCalculate(inReserve, outReserve, amount);
     }
 
-    function calculateRealSwapReturn(
-        ICherryPair pair, IERC20 inToken, IERC20 outToken, uint256 amount) internal returns (uint256) {
+    function calculateRealSwapReturn(ICherryPair pair, IERC20 inToken, IERC20 outToken, uint256 amount) internal returns (uint256) {
         uint256 inReserve = inToken.universalBalanceOf(address(pair));
         uint256 outReserve = outToken.universalBalanceOf(address(pair));
 
@@ -81,8 +79,6 @@ library ICherryFactoryExtension {
     using ICherryPairExtension for ICherryPair;
     using Tokens for IERC20;
 
-    event Test(uint index, uint data);
-
     function calculateSwapReturn(
         ICherryFactory factory,
         IERC20 inToken,
@@ -90,7 +86,6 @@ library ICherryFactoryExtension {
         uint256[] memory inAmounts
     ) internal view returns (uint256[] memory outAmounts, uint256 gas) {
         outAmounts = new uint256[](inAmounts.length);
-
         IERC20 realInToken = inToken.wrapOKT();
         IERC20 realOutToken = outToken.wrapOKT();
         ICherryPair pair = factory.getPair(realInToken, realOutToken);
@@ -134,18 +129,14 @@ library ICherryFactoryExtension {
         IERC20 realInToken = inToken.wrapOKT();
         IERC20 realOutToken = outToken.wrapOKT();
         ICherryPair pair = factory.getPair(realInToken, realOutToken);
-
         outAmount = pair.calculateRealSwapReturn(realInToken, realOutToken, inAmount);
-
         realInToken.universalTransfer(address(pair), inAmount);
         if (uint256(address(realInToken)) < uint256(address(realOutToken))) {
             pair.swap(0, outAmount, address(this), "");
         } else {
             pair.swap(outAmount, 0, address(this), "");
         }
-        emit Test(1, outToken.balanceOf(address(this)));
         outToken.withdrawFromWOKT();
-        emit Test(2, outToken.balanceOf(address(this)));
     }
 
     function swapTransitional(

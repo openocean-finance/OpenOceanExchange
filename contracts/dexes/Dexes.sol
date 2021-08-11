@@ -13,11 +13,13 @@ import "./IStakeSwap.sol";
     enum Dex {
         //kswap
         Kswap,
-        KswapETH,
+        KswapUSDT,
         // cherryswap
         CherrySwap,
+        CherrySwapUSDT,
         //stakeswap
         StakeSwap,
+        StakeSwapUSDT,
         // bottom mark
         NoDex
     }
@@ -55,33 +57,24 @@ library Dexes {
         if (dex == Dex.Kswap && !flags.or(Flags.FLAG_DISABLE_KSWAP_ALL, Flags.FLAG_DISABLE_KSWAP)) {
             return kswap.calculateSwapReturn(inToken, outToken, inAmounts);
         }
-        if (dex == Dex.Kswap && !flags.or(Flags.FLAG_DISABLE_KSWAP_ALL, Flags.FLAG_DISABLE_KSWAP_USDT)) {
+        if (dex == Dex.KswapUSDT && !flags.or(Flags.FLAG_DISABLE_KSWAP_ALL, Flags.FLAG_DISABLE_KSWAP_USDT)) {
             return kswap.calculateTransitionalSwapReturn(inToken, Tokens.USDT, outToken, inAmounts);
-        }
-        if (dex == Dex.Kswap && !flags.or(Flags.FLAG_DISABLE_KSWAP_ALL, Flags.FLAG_DISABLE_KSWAP_USDC)) {
-            return kswap.calculateTransitionalSwapReturn(inToken, Tokens.USDC, outToken, inAmounts);
         }
 
         //cherryswap
-        if (dex == Dex.Kswap && !flags.or(Flags.FLAG_DISABLE_CHERRYSWAP_ALL, Flags.FLAG_DISABLE_CHERRYSWAP)) {
+        if (dex == Dex.CherrySwap && !flags.or(Flags.FLAG_DISABLE_CHERRYSWAP_ALL, Flags.FLAG_DISABLE_CHERRYSWAP)) {
             return cherrySwap.calculateSwapReturn(inToken, outToken, inAmounts);
         }
-        if (dex == Dex.Kswap && !flags.or(Flags.FLAG_DISABLE_CHERRYSWAP_ALL, Flags.FLAG_DISABLE_CHERRYSWAP_USDT)) {
+        if (dex == Dex.CherrySwapUSDT && !flags.or(Flags.FLAG_DISABLE_CHERRYSWAP_ALL, Flags.FLAG_DISABLE_CHERRYSWAP_USDT)) {
             return cherrySwap.calculateTransitionalSwapReturn(inToken, Tokens.USDT, outToken, inAmounts);
-        }
-        if (dex == Dex.Kswap && !flags.or(Flags.FLAG_DISABLE_CHERRYSWAP_ALL, Flags.FLAG_DISABLE_CHERRYSWAP)) {
-            return cherrySwap.calculateTransitionalSwapReturn(inToken, Tokens.USDC, outToken, inAmounts);
         }
 
         //stakeswap
-        if (dex == Dex.Kswap && !flags.or(Flags.FLAG_DISABLE_STAKESWAP_ALL, Flags.FLAG_DISABLE_STAKESWAP)) {
+        if (dex == Dex.StakeSwap && !flags.or(Flags.FLAG_DISABLE_STAKESWAP_ALL, Flags.FLAG_DISABLE_STAKESWAP)) {
             return stakeSwap.calculateSwapReturn(inToken, outToken, inAmounts);
         }
-        if (dex == Dex.Kswap && !flags.or(Flags.FLAG_DISABLE_CHERRYSWAP_ALL, Flags.FLAG_DISABLE_STAKESWAP_USDT)) {
+        if (dex == Dex.StakeSwapUSDT && !flags.or(Flags.FLAG_DISABLE_STAKESWAP_ALL, Flags.FLAG_DISABLE_STAKESWAP_USDT)) {
             return stakeSwap.calculateTransitionalSwapReturn(inToken, Tokens.USDT, outToken, inAmounts);
-        }
-        if (dex == Dex.Kswap && !flags.or(Flags.FLAG_DISABLE_CHERRYSWAP_ALL, Flags.FLAG_DISABLE_STAKESWAP_USDC)) {
-            return stakeSwap.calculateTransitionalSwapReturn(inToken, Tokens.USDC, outToken, inAmounts);
         }
 
         // fallback
@@ -99,31 +92,22 @@ library Dexes {
         if (dex == Dex.Kswap && !flags.or(Flags.FLAG_DISABLE_KSWAP_ALL, Flags.FLAG_DISABLE_KSWAP)) {
             kswap.swap(inToken, outToken, amount);
         }
-        if (dex == Dex.Kswap && !flags.or(Flags.FLAG_DISABLE_KSWAP_ALL, Flags.FLAG_DISABLE_KSWAP_USDT)) {
+        if (dex == Dex.KswapUSDT && !flags.or(Flags.FLAG_DISABLE_KSWAP_ALL, Flags.FLAG_DISABLE_KSWAP_USDT)) {
             kswap.swapTransitional(inToken, Tokens.USDT, outToken, amount);
         }
-        if (dex == Dex.Kswap && !flags.or(Flags.FLAG_DISABLE_KSWAP_ALL, Flags.FLAG_DISABLE_KSWAP_USDC)) {
-            kswap.swapTransitional(inToken, Tokens.USDC, outToken, amount);
-        }
         //cherryswap
-        if (dex == Dex.Kswap && !flags.or(Flags.FLAG_DISABLE_KSWAP_ALL, Flags.FLAG_DISABLE_KSWAP)) {
+        if (dex == Dex.CherrySwap && !flags.or(Flags.FLAG_DISABLE_CHERRYSWAP_ALL, Flags.FLAG_DISABLE_CHERRYSWAP)) {
             cherrySwap.swap(inToken, outToken, amount);
         }
-        if (dex == Dex.Kswap && !flags.or(Flags.FLAG_DISABLE_KSWAP_ALL, Flags.FLAG_DISABLE_KSWAP_USDT)) {
+        if (dex == Dex.CherrySwapUSDT && !flags.or(Flags.FLAG_DISABLE_CHERRYSWAP_ALL, Flags.FLAG_DISABLE_CHERRYSWAP_USDT)) {
             cherrySwap.swapTransitional(inToken, Tokens.USDT, outToken, amount);
         }
-        if (dex == Dex.Kswap && !flags.or(Flags.FLAG_DISABLE_KSWAP_ALL, Flags.FLAG_DISABLE_KSWAP)) {
-            cherrySwap.swapTransitional(inToken, Tokens.USDC, outToken, amount);
-        }
         //stakeswap
-        if (dex == Dex.Kswap && !flags.or(Flags.FLAG_DISABLE_KSWAP_ALL, Flags.FLAG_DISABLE_KSWAP)) {
+        if (dex == Dex.StakeSwap && !flags.or(Flags.FLAG_DISABLE_STAKESWAP_ALL, Flags.FLAG_DISABLE_STAKESWAP)) {
             stakeSwap.swap(inToken, outToken, amount);
         }
-        if (dex == Dex.Kswap && !flags.or(Flags.FLAG_DISABLE_KSWAP_ALL, Flags.FLAG_DISABLE_KSWAP_USDT)) {
+        if (dex == Dex.StakeSwapUSDT && !flags.or(Flags.FLAG_DISABLE_STAKESWAP_ALL, Flags.FLAG_DISABLE_STAKESWAP_USDT)) {
             stakeSwap.swapTransitional(inToken, Tokens.USDT, outToken, amount);
-        }
-        if (dex == Dex.Kswap && !flags.or(Flags.FLAG_DISABLE_KSWAP_ALL, Flags.FLAG_DISABLE_KSWAP_USDC)) {
-            stakeSwap.swapTransitional(inToken, Tokens.USDC, outToken, amount);
         }
     }
 }

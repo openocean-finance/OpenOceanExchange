@@ -129,7 +129,6 @@ library IKswapFactoryExtension {
         IKswapPair pair = factory.getPair(realInToken, realOutToken);
 
         outAmount = pair.calculateRealSwapReturn(realInToken, realOutToken, inAmount);
-
         realInToken.universalTransfer(address(pair), inAmount);
         if (uint256(address(realInToken)) < uint256(address(realOutToken))) {
             pair.swap(0, outAmount, address(this), "");
