@@ -9,6 +9,7 @@ import "../lib/Flags.sol";
 import "./IKswap.sol";
 import "./ICherrySwap.sol";
 import "./IStakeSwap.sol";
+import "./IAiswap.sol";
 
     enum Dex {
         //kswap
@@ -20,6 +21,9 @@ import "./IStakeSwap.sol";
         //stakeswap
         StakeSwap,
         StakeSwapUSDT,
+        // aiswap
+        AiSwap,
+        AiSwapUSDT,
         // bottom mark
         NoDex
     }
@@ -37,6 +41,9 @@ library Dexes {
     //TODO change the address
     IStakeSwapFactory internal constant stakeSwap = IStakeSwapFactory(0x709102921812B3276A65092Fe79eDfc76c4D4AFe);
     using ISakeSwapFactoryExtension for IStakeSwapFactory;
+    //TODO change the address
+    IAiswapFactory internal constant aiSwap = IAiswapFactory(0x709102921812B3276A65092Fe79eDfc76c4D4AFe);
+    using IAiswapFactoryExtension for IAiswapFactory;
 
     function allDexes() internal pure returns (Dex[] memory dexes) {
         uint256 dexCount = uint256(Dex.NoDex);
@@ -77,6 +84,14 @@ library Dexes {
             return stakeSwap.calculateTransitionalSwapReturn(inToken, Tokens.USDT, outToken, inAmounts);
         }
 
+        //aiswap
+        if (dex == Dex.AiSwap && !flags.or(Flags.FLAG_DISABLE_AISWAP_ALL, Flags.FLAG_DISABLE_AISWAP)) {
+            return aiSwap.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+        if (dex == Dex.AiSwap && !flags.or(Flags.FLAG_DISABLE_AISWAP_ALL, Flags.FLAG_DISABLE_AISWAP_USDT)) {
+            return aiSwap.calculateTransitionalSwapReturn(inToken, Tokens.USDT, outToken, inAmounts);
+        }
+
         // fallback
         return (new uint256[](inAmounts.length), 0);
     }
@@ -108,6 +123,14 @@ library Dexes {
         }
         if (dex == Dex.StakeSwapUSDT && !flags.or(Flags.FLAG_DISABLE_STAKESWAP_ALL, Flags.FLAG_DISABLE_STAKESWAP_USDT)) {
             stakeSwap.swapTransitional(inToken, Tokens.USDT, outToken, amount);
+        }
+
+        //aiswap
+        if (dex == Dex.AiSwap && !flags.or(Flags.FLAG_DISABLE_AISWAP_ALL, Flags.FLAG_DISABLE_AISWAP)) {
+            aiSwap.swap(inToken, outToken, amount);
+        }
+        if (dex == Dex.AiSwap && !flags.or(Flags.FLAG_DISABLE_AISWAP_ALL, Flags.FLAG_DISABLE_AISWAP_USDT)) {
+            aiSwap.swapTransitional(inToken, Tokens.USDT, outToken, amount);
         }
     }
 }
