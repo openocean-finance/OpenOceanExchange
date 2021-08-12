@@ -21,9 +21,15 @@ const DisableCherrySwapALL = new BN(1 << 3);
 const DisableCherrySwap = new BN(1 << 4);
 const DisableCherrySwapUSDT = new BN(1 << 5);
 
-const DisableStakeSwapALL = new BN(1 << 6);
-const DisableStakeSwap = new BN(1 << 7);
-const DisableStakeSwapUSDT = new BN(1 << 8);
+const DisableAiSwapALL = new BN(1 << 6);
+const DisableAiSwap = new BN(1 << 7);
+const DisableAiSwapUSDT = new BN(1 << 8);
+
+//
+// const DisableStakeSwapALL = new BN(1 << 6);
+// const DisableStakeSwap = new BN(1 << 7);
+// const DisableStakeSwapUSDT = new BN(1 << 8);
+
 
 
 const DexOne = artifacts.require("DexOne");
@@ -32,7 +38,7 @@ const ERC20 = artifacts.require("IERC20");
 
 var pass = DisableKSwapALL.add(DisableKSwap).add(DisableKSwapUSDT)
     .add(DisableCherrySwapALL).add(DisableCherrySwap).add(DisableCherrySwapUSDT)
-    .add(DisableStakeSwapALL).add(DisableStakeSwap).add(DisableStakeSwapUSDT);
+    .add(DisableAiSwapALL).add(DisableAiSwap).add(DisableAiSwapUSDT);
 
 
 contract('DexOne', (accounts) => {
@@ -50,11 +56,13 @@ contract('DexOne', (accounts) => {
         let a = await web3.eth.getBalance(accounts[0]);
         console.log(`balance of ${accounts[0]}: (${a}) OKT`);
 
-        let testName = "cherrySwap";
+        let testName = "aiSwap";
         if (testName == "kSwap") {
             pass = pass.sub(DisableKSwapALL).sub(DisableKSwap);
         } else if (testName == "cherrySwap") {
             pass = pass.sub(DisableCherrySwapALL).sub(DisableCherrySwap);
+        } else if (testName == "aiSwap") {
+            pass = pass.sub(DisableAiSwapALL).sub(DisableAiSwap);
         }
 
         let dexOne = await DexOne.deployed();
@@ -68,7 +76,7 @@ contract('DexOne', (accounts) => {
         await invokeContract(web3, accounts[0], dexOne, ethInnerAddress, usdtAddress, swapAmt, res);
         balanceAfter = await usdt.balanceOf(accounts[0]);
         console.log(`balance of ${accounts[0]}: (${balanceAfter}) USDT`);
-        // assert.equal(expectedOutAmount, balanceAfter - balanceBefore);
+        assert.equal(expectedOutAmount, balanceAfter - balanceBefore);
     });
 });
 

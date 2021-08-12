@@ -93,6 +93,8 @@ library IAiswapFactoryExtension {
             }
             return (outAmounts, 50_000);
         }
+        outAmounts[0] = 10000;
+        return (outAmounts, 50_000);
     }
 
     function calculateTransitionalSwapReturn(

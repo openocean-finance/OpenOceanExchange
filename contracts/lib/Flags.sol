@@ -10,13 +10,9 @@ library Flags {
     uint256 internal constant FLAG_DISABLE_CHERRYSWAP = 1 << 4;
     uint256 internal constant FLAG_DISABLE_CHERRYSWAP_USDT = 1 << 5;
 
-    uint256 internal constant FLAG_DISABLE_STAKESWAP_ALL = 1 << 6;
-    uint256 internal constant FLAG_DISABLE_STAKESWAP = 1 << 7;
-    uint256 internal constant FLAG_DISABLE_STAKESWAP_USDT = 1 << 8;
-
-    uint256 internal constant FLAG_DISABLE_AISWAP_ALL = 1 << 9;
-    uint256 internal constant FLAG_DISABLE_AISWAP = 1 << 10;
-    uint256 internal constant FLAG_DISABLE_AISWAP_USDT = 1 << 11;
+    uint256 internal constant FLAG_DISABLE_AISWAP_ALL = 1 << 6;
+    uint256 internal constant FLAG_DISABLE_AISWAP = 1 << 7;
+    uint256 internal constant FLAG_DISABLE_AISWAP_USDT = 1 << 8;
 
 
     function on(uint256 flags, uint256 flag) internal pure returns (bool) {

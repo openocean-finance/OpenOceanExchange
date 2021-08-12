@@ -8,7 +8,7 @@ import "../lib/Tokens.sol";
 import "../lib/Flags.sol";
 import "./IKswap.sol";
 import "./ICherrySwap.sol";
-import "./IStakeSwap.sol";
+//import "./IStakeSwap.sol";
 import "./IAiswap.sol";
 
     enum Dex {
@@ -18,9 +18,9 @@ import "./IAiswap.sol";
         // cherryswap
         CherrySwap,
         CherrySwapUSDT,
-        //stakeswap
-        StakeSwap,
-        StakeSwapUSDT,
+//        //stakeswap
+//        StakeSwap,
+//        StakeSwapUSDT,
         // aiswap
         AiSwap,
         AiSwapUSDT,
@@ -38,11 +38,7 @@ library Dexes {
     ICherryFactory internal constant cherrySwap = ICherryFactory(0x709102921812B3276A65092Fe79eDfc76c4D4AFe);
     using ICherryFactoryExtension for ICherryFactory;
 
-    //TODO change the address
-    IStakeSwapFactory internal constant stakeSwap = IStakeSwapFactory(0x709102921812B3276A65092Fe79eDfc76c4D4AFe);
-    using ISakeSwapFactoryExtension for IStakeSwapFactory;
-    //TODO change the address
-    IAiswapFactory internal constant aiSwap = IAiswapFactory(0x709102921812B3276A65092Fe79eDfc76c4D4AFe);
+    IAiswapFactory internal constant aiSwap = IAiswapFactory(0xc799B45d8B529bb7544de1FB24ba88401649DbcE);
     using IAiswapFactoryExtension for IAiswapFactory;
 
     function allDexes() internal pure returns (Dex[] memory dexes) {
@@ -74,14 +70,6 @@ library Dexes {
         }
         if (dex == Dex.CherrySwapUSDT && !flags.or(Flags.FLAG_DISABLE_CHERRYSWAP_ALL, Flags.FLAG_DISABLE_CHERRYSWAP_USDT)) {
             return cherrySwap.calculateTransitionalSwapReturn(inToken, Tokens.USDT, outToken, inAmounts);
-        }
-
-        //stakeswap
-        if (dex == Dex.StakeSwap && !flags.or(Flags.FLAG_DISABLE_STAKESWAP_ALL, Flags.FLAG_DISABLE_STAKESWAP)) {
-            return stakeSwap.calculateSwapReturn(inToken, outToken, inAmounts);
-        }
-        if (dex == Dex.StakeSwapUSDT && !flags.or(Flags.FLAG_DISABLE_STAKESWAP_ALL, Flags.FLAG_DISABLE_STAKESWAP_USDT)) {
-            return stakeSwap.calculateTransitionalSwapReturn(inToken, Tokens.USDT, outToken, inAmounts);
         }
 
         //aiswap
@@ -117,14 +105,6 @@ library Dexes {
         if (dex == Dex.CherrySwapUSDT && !flags.or(Flags.FLAG_DISABLE_CHERRYSWAP_ALL, Flags.FLAG_DISABLE_CHERRYSWAP_USDT)) {
             cherrySwap.swapTransitional(inToken, Tokens.USDT, outToken, amount);
         }
-        //stakeswap
-        if (dex == Dex.StakeSwap && !flags.or(Flags.FLAG_DISABLE_STAKESWAP_ALL, Flags.FLAG_DISABLE_STAKESWAP)) {
-            stakeSwap.swap(inToken, outToken, amount);
-        }
-        if (dex == Dex.StakeSwapUSDT && !flags.or(Flags.FLAG_DISABLE_STAKESWAP_ALL, Flags.FLAG_DISABLE_STAKESWAP_USDT)) {
-            stakeSwap.swapTransitional(inToken, Tokens.USDT, outToken, amount);
-        }
-
         //aiswap
         if (dex == Dex.AiSwap && !flags.or(Flags.FLAG_DISABLE_AISWAP_ALL, Flags.FLAG_DISABLE_AISWAP)) {
             aiSwap.swap(inToken, outToken, amount);
