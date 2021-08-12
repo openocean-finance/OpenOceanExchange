@@ -18,9 +18,9 @@ import "./IAiswap.sol";
         // cherryswap
         CherrySwap,
         CherrySwapUSDT,
-//        //stakeswap
-//        StakeSwap,
-//        StakeSwapUSDT,
+        //        //stakeswap
+        //        StakeSwap,
+        //        StakeSwapUSDT,
         // aiswap
         AiSwap,
         AiSwapUSDT,
@@ -38,7 +38,7 @@ library Dexes {
     ICherryFactory internal constant cherrySwap = ICherryFactory(0x709102921812B3276A65092Fe79eDfc76c4D4AFe);
     using ICherryFactoryExtension for ICherryFactory;
 
-    IAiswapFactory internal constant aiSwap = IAiswapFactory(0xc799B45d8B529bb7544de1FB24ba88401649DbcE);
+    IAiswapFactory internal constant aiSwap = IAiswapFactory(0x65728c1D0e545DB117940d5745089c256516ad43);
     using IAiswapFactoryExtension for IAiswapFactory;
 
     function allDexes() internal pure returns (Dex[] memory dexes) {
