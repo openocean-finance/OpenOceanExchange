@@ -8,25 +8,21 @@ import "../lib/Tokens.sol";
 import "../lib/Flags.sol";
 import "./IKswap.sol";
 import "./ICherrySwap.sol";
-//import "./IStakeSwap.sol";
 import "./IAiswap.sol";
 
-    enum Dex {
-        //kswap
-        Kswap,
-        KswapUSDT,
-        // cherryswap
-        CherrySwap,
-        CherrySwapUSDT,
-        //        //stakeswap
-        //        StakeSwap,
-        //        StakeSwapUSDT,
-        // aiswap
-        AiSwap,
-        AiSwapUSDT,
-        // bottom mark
-        NoDex
-    }
+enum Dex {
+    // kswap
+    Kswap,
+    KswapUSDT,
+    // cherryswap
+    CherrySwap,
+    CherrySwapUSDT,
+    // aiswap
+    AiSwap,
+    AiSwapUSDT,
+    // bottom mark
+    NoDex
+}
 
 library Dexes {
     using UniversalERC20 for IERC20;
@@ -76,7 +72,7 @@ library Dexes {
         if (dex == Dex.AiSwap && !flags.or(Flags.FLAG_DISABLE_AISWAP_ALL, Flags.FLAG_DISABLE_AISWAP)) {
             return aiSwap.calculateSwapReturn(inToken, outToken, inAmounts);
         }
-        if (dex == Dex.AiSwap && !flags.or(Flags.FLAG_DISABLE_AISWAP_ALL, Flags.FLAG_DISABLE_AISWAP_USDT)) {
+        if (dex == Dex.AiSwapUSDT && !flags.or(Flags.FLAG_DISABLE_AISWAP_ALL, Flags.FLAG_DISABLE_AISWAP_USDT)) {
             return aiSwap.calculateTransitionalSwapReturn(inToken, Tokens.USDT, outToken, inAmounts);
         }
 
@@ -109,7 +105,7 @@ library Dexes {
         if (dex == Dex.AiSwap && !flags.or(Flags.FLAG_DISABLE_AISWAP_ALL, Flags.FLAG_DISABLE_AISWAP)) {
             aiSwap.swap(inToken, outToken, amount);
         }
-        if (dex == Dex.AiSwap && !flags.or(Flags.FLAG_DISABLE_AISWAP_ALL, Flags.FLAG_DISABLE_AISWAP_USDT)) {
+        if (dex == Dex.AiSwapUSDT && !flags.or(Flags.FLAG_DISABLE_AISWAP_ALL, Flags.FLAG_DISABLE_AISWAP_USDT)) {
             aiSwap.swapTransitional(inToken, Tokens.USDT, outToken, amount);
         }
     }

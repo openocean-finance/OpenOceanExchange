@@ -14,7 +14,6 @@ library Flags {
     uint256 internal constant FLAG_DISABLE_AISWAP = 1 << 7;
     uint256 internal constant FLAG_DISABLE_AISWAP_USDT = 1 << 8;
 
-
     function on(uint256 flags, uint256 flag) internal pure returns (bool) {
         return (flags & flag) != 0;
     }

@@ -11,15 +11,26 @@ interface IAiswapFactory {
     function getPair(IERC20 tokenA, IERC20 tokenB) external view returns (IAiswapPair pair);
 }
 
-
 interface IAiswapPair {
-    function getReserves() external view returns (uint112 _reserve0, uint112 _reserve1, uint32 _blockTimestampLast);
+    function getReserves()
+        external
+        view
+        returns (
+            uint112 _reserve0,
+            uint112 _reserve1,
+            uint32 _blockTimestampLast
+        );
 
     function skim(address to) external;
 
     function sync() external;
 
-    function swap(uint amount0Out, uint amount1Out, address to, bytes calldata data) external;
+    function swap(
+        uint256 amount0Out,
+        uint256 amount1Out,
+        address to,
+        bytes calldata data
+    ) external;
 }
 
 library IAiswapPairExtension {
@@ -28,7 +39,12 @@ library IAiswapPairExtension {
 
     address private constant SKIM_TARGET = 0x5bDCE812ce8409442ac3FBbd10565F9B17A6C49D;
 
-    function calculateSwapReturn(IAiswapPair pair, IERC20 inToken, IERC20 outToken, uint256 amount) internal view returns (uint256) {
+    function calculateSwapReturn(
+        IAiswapPair pair,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256 amount
+    ) internal view returns (uint256) {
         if (amount == 0) {
             return 0;
         }
@@ -39,11 +55,15 @@ library IAiswapPairExtension {
     }
 
     function calculateRealSwapReturn(
-        IAiswapPair pair, IERC20 inToken, IERC20 outToken, uint256 amount) internal returns (uint256) {
+        IAiswapPair pair,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256 amount
+    ) internal returns (uint256) {
         uint256 inReserve = inToken.universalBalanceOf(address(pair));
         uint256 outReserve = outToken.universalBalanceOf(address(pair));
 
-        (uint112 reserve0, uint112 reserve1,) = pair.getReserves();
+        (uint112 reserve0, uint112 reserve1, ) = pair.getReserves();
         if (inToken > outToken) {
             (reserve0, reserve1) = (reserve1, reserve0);
         }
@@ -68,7 +88,6 @@ library IAiswapPairExtension {
         return (denominator == 0) ? 0 : numerator.div(denominator);
     }
 }
-
 
 library IAiswapFactoryExtension {
     using SafeMath for uint256;

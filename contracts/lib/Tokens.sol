@@ -8,7 +8,7 @@ import "./UniversalERC20.sol";
  * @dev Wrapper of ETH. See https://weth.io/
  */
 abstract contract IWOKT is IERC20 {
-    function deposit() external virtual payable;
+    function deposit() external payable virtual;
 
     function withdraw(uint256 amount) external virtual;
 }
