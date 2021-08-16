@@ -13,12 +13,15 @@ import "./IAiswap.sol";
 enum Dex {
     // kswap
     Kswap,
+    KswapOKT,
     KswapUSDT,
     // cherryswap
     CherrySwap,
+    CherrySwapOKT,
     CherrySwapUSDT,
     // aiswap
     AiSwap,
+    AiSwapOKT,
     AiSwapUSDT,
     // bottom mark
     NoDex
@@ -56,6 +59,9 @@ library Dexes {
         if (dex == Dex.Kswap && !flags.or(Flags.FLAG_DISABLE_KSWAP_ALL, Flags.FLAG_DISABLE_KSWAP)) {
             return kswap.calculateSwapReturn(inToken, outToken, inAmounts);
         }
+        if (dex == Dex.KswapOKT && !flags.or(Flags.FLAG_DISABLE_KSWAP_ALL, Flags.FLAG_DISABLE_KSWAP_OKT)) {
+            return kswap.calculateTransitionalSwapReturn(inToken, Tokens.WOKT, outToken, inAmounts);
+        }
         if (dex == Dex.KswapUSDT && !flags.or(Flags.FLAG_DISABLE_KSWAP_ALL, Flags.FLAG_DISABLE_KSWAP_USDT)) {
             return kswap.calculateTransitionalSwapReturn(inToken, Tokens.USDT, outToken, inAmounts);
         }
@@ -64,6 +70,9 @@ library Dexes {
         if (dex == Dex.CherrySwap && !flags.or(Flags.FLAG_DISABLE_CHERRYSWAP_ALL, Flags.FLAG_DISABLE_CHERRYSWAP)) {
             return cherrySwap.calculateSwapReturn(inToken, outToken, inAmounts);
         }
+        if (dex == Dex.CherrySwapOKT && !flags.or(Flags.FLAG_DISABLE_CHERRYSWAP_ALL, Flags.FLAG_DISABLE_CHERRYSWAP_OKT)) {
+            return cherrySwap.calculateTransitionalSwapReturn(inToken, Tokens.WOKT, outToken, inAmounts);
+        }
         if (dex == Dex.CherrySwapUSDT && !flags.or(Flags.FLAG_DISABLE_CHERRYSWAP_ALL, Flags.FLAG_DISABLE_CHERRYSWAP_USDT)) {
             return cherrySwap.calculateTransitionalSwapReturn(inToken, Tokens.USDT, outToken, inAmounts);
         }
@@ -71,6 +80,9 @@ library Dexes {
         //aiswap
         if (dex == Dex.AiSwap && !flags.or(Flags.FLAG_DISABLE_AISWAP_ALL, Flags.FLAG_DISABLE_AISWAP)) {
             return aiSwap.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+        if (dex == Dex.AiSwapOKT && !flags.or(Flags.FLAG_DISABLE_AISWAP_ALL, Flags.FLAG_DISABLE_AISWAP_OKT)) {
+            return aiSwap.calculateTransitionalSwapReturn(inToken, Tokens.WOKT, outToken, inAmounts);
         }
         if (dex == Dex.AiSwapUSDT && !flags.or(Flags.FLAG_DISABLE_AISWAP_ALL, Flags.FLAG_DISABLE_AISWAP_USDT)) {
             return aiSwap.calculateTransitionalSwapReturn(inToken, Tokens.USDT, outToken, inAmounts);
@@ -91,6 +103,9 @@ library Dexes {
         if (dex == Dex.Kswap && !flags.or(Flags.FLAG_DISABLE_KSWAP_ALL, Flags.FLAG_DISABLE_KSWAP)) {
             kswap.swap(inToken, outToken, amount);
         }
+        if (dex == Dex.KswapOKT && !flags.or(Flags.FLAG_DISABLE_KSWAP_ALL, Flags.FLAG_DISABLE_KSWAP_OKT)) {
+            kswap.swapTransitional(inToken, Tokens.WOKT, outToken, amount);
+        }
         if (dex == Dex.KswapUSDT && !flags.or(Flags.FLAG_DISABLE_KSWAP_ALL, Flags.FLAG_DISABLE_KSWAP_USDT)) {
             kswap.swapTransitional(inToken, Tokens.USDT, outToken, amount);
         }
@@ -98,12 +113,18 @@ library Dexes {
         if (dex == Dex.CherrySwap && !flags.or(Flags.FLAG_DISABLE_CHERRYSWAP_ALL, Flags.FLAG_DISABLE_CHERRYSWAP)) {
             cherrySwap.swap(inToken, outToken, amount);
         }
+        if (dex == Dex.CherrySwapOKT && !flags.or(Flags.FLAG_DISABLE_CHERRYSWAP_ALL, Flags.FLAG_DISABLE_CHERRYSWAP_OKT)) {
+            cherrySwap.swapTransitional(inToken, Tokens.WOKT, outToken, amount);
+        }
         if (dex == Dex.CherrySwapUSDT && !flags.or(Flags.FLAG_DISABLE_CHERRYSWAP_ALL, Flags.FLAG_DISABLE_CHERRYSWAP_USDT)) {
             cherrySwap.swapTransitional(inToken, Tokens.USDT, outToken, amount);
         }
         //aiswap
         if (dex == Dex.AiSwap && !flags.or(Flags.FLAG_DISABLE_AISWAP_ALL, Flags.FLAG_DISABLE_AISWAP)) {
             aiSwap.swap(inToken, outToken, amount);
+        }
+        if (dex == Dex.AiSwapOKT && !flags.or(Flags.FLAG_DISABLE_AISWAP_ALL, Flags.FLAG_DISABLE_AISWAP_OKT)) {
+            aiSwap.swapTransitional(inToken, Tokens.WOKT, outToken, amount);
         }
         if (dex == Dex.AiSwapUSDT && !flags.or(Flags.FLAG_DISABLE_AISWAP_ALL, Flags.FLAG_DISABLE_AISWAP_USDT)) {
             aiSwap.swapTransitional(inToken, Tokens.USDT, outToken, amount);
