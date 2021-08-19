@@ -125,6 +125,10 @@ enum Dex {
     Waultswap,
     // Babyswap
     Babyswap,
+    // Biswap
+    Biswap,
+    BiswapBNB,
+    BiswapBUSD,
     // bottom mark
     NoDex
 }
@@ -462,6 +466,17 @@ library Dexes {
         //     return IBeltSwapExtension.BELT4.calculateSwapReturn(inToken, outToken, inAmounts);
         // }
 
+        // Biswap
+        if (dex == Dex.Biswap && !flags.on(Flags.FLAG_DISABLE_BISWAP_ALL)) {
+            return IUniswapV2LikeFactories.BISWAP.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+        if (dex == Dex.BiswapBNB && !flags.on(Flags.FLAG_DISABLE_BISWAP_ALL)) {
+            return IUniswapV2LikeFactories.BISWAP.calculateTransitionalSwapReturn(inToken, Tokens.WETH, outToken, inAmounts);
+        }
+        if (dex == Dex.BiswapBUSD && !flags.on(Flags.FLAG_DISABLE_BISWAP_ALL)) {
+            return IUniswapV2LikeFactories.BISWAP.calculateTransitionalSwapReturn(inToken, Tokens.BUSD, outToken, inAmounts);
+        }
+
         // fallback
         return (new uint256[](inAmounts.length), 0);
     }
@@ -754,5 +769,16 @@ library Dexes {
         // if (dex == Dex.Beltswap && !flags.on(Flags.FLAG_DISABLE_BELTSWAP_ALL)) {
         //     IBeltSwapExtension.BELT4.swap(inToken, outToken, amount);
         // }
+
+        // Biswap
+        if (dex == Dex.Biswap && !flags.on(Flags.FLAG_DISABLE_BISWAP_ALL)) {
+            IUniswapV2LikeFactories.BISWAP.swap(inToken, outToken, amount);
+        }
+        if (dex == Dex.BiswapBNB && !flags.on(Flags.FLAG_DISABLE_BISWAP_ALL)) {
+            IUniswapV2LikeFactories.BISWAP.swapTransitional(inToken, Tokens.WETH, outToken, amount);
+        }
+        if (dex == Dex.BiswapBUSD && !flags.on(Flags.FLAG_DISABLE_BISWAP_ALL)) {
+            IUniswapV2LikeFactories.BISWAP.swapTransitional(inToken, Tokens.BUSD, outToken, amount);
+        }
     }
 }

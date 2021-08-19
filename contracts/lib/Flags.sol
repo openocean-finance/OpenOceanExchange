@@ -125,6 +125,8 @@ library Flags {
     uint256 internal constant FLAG_DISABLE_WAULTSWAP_ALL = 1 << 91;
     // Babyswap
     uint256 internal constant FLAG_DISABLE_BABYSWAP_ALL = 1 << 92;
+    // Biswap
+    uint256 internal constant FLAG_DISABLE_BISWAP_ALL = 1 << 93;
 
     function on(uint256 flags, uint256 flag) internal pure returns (bool) {
         return (flags & flag) != 0;
