@@ -16,7 +16,7 @@ interface IUniswapV2LikeFactory {
     /**
      * @notice Mdex factory function
      */
-    function pairFees(address) external view returns (uint256);
+    function getPairFees(address) external view returns (uint256);
 }
 
 /**
@@ -161,7 +161,7 @@ library IUniswapV2LikeFactories {
         address pair = IUniswapV2LikeFactory(factoryAddr).getPair(realInToken, realOutToken);
         if (pair != address(0)) {
             if (factory == MDEX) {
-                feeNumerator = uint48(IUniswapV2LikeFactory(factoryAddr).pairFees(pair));
+                feeNumerator = uint48(IUniswapV2LikeFactory(factoryAddr).getPairFees(pair));
             } else if (factory == BISWAP) {
                 feeNumerator = IBiswapPair(pair).swapFee();
             }
@@ -213,7 +213,7 @@ library IUniswapV2LikeFactories {
         (address factoryAddr, uint48 feeNumerator, uint48 feeDenominator) = decodeFactory(factory);
         address pair = IUniswapV2LikeFactory(factoryAddr).getPair(realInToken, realOutToken);
         if (factory == MDEX) {
-            feeNumerator = uint48(IUniswapV2LikeFactory(factoryAddr).pairFees(pair));
+            feeNumerator = uint48(IUniswapV2LikeFactory(factoryAddr).getPairFees(pair));
         } else if (factory == BISWAP) {
             feeNumerator = IBiswapPair(pair).swapFee();
         }
