@@ -8,9 +8,21 @@ import "../lib/UniversalERC20.sol";
 import "../lib/Tokens.sol";
 
 interface IWaultSwapPair {
-    function getReserves() external view returns (uint112 _reserve0, uint112 _reserve1, uint32 _blockTimestampLast);
+    function getReserves()
+        external
+        view
+        returns (
+            uint112 _reserve0,
+            uint112 _reserve1,
+            uint32 _blockTimestampLast
+        );
 
-    function swap(uint amount0Out, uint amount1Out, address to, bytes calldata data) external;
+    function swap(
+        uint256 amount0Out,
+        uint256 amount1Out,
+        address to,
+        bytes calldata data
+    ) external;
 
     function skim(address to) external;
 
@@ -25,7 +37,7 @@ library IWaultSwapPairExtension {
     using SafeMath for uint256;
     using UniversalERC20 for IERC20;
 
-    address private constant SKIM_TARGET = 0x89F2F964c6F1EFd4CAfAD893CE9521096290Fa94;//TODO
+    address private constant SKIM_TARGET = 0x89F2F964c6F1EFd4CAfAD893CE9521096290Fa94; //TODO
 
     function calculateSwapReturn(
         IWaultSwapPair pair,
@@ -50,7 +62,7 @@ library IWaultSwapPairExtension {
         uint256 inReserve = inToken.universalBalanceOf(address(pair));
         uint256 outReserve = outToken.universalBalanceOf(address(pair));
 
-        (uint112 reserve0, uint112 reserve1,) = pair.getReserves();
+        (uint112 reserve0, uint112 reserve1, ) = pair.getReserves();
         if (inToken > outToken) {
             (reserve0, reserve1) = (reserve1, reserve0);
         }
@@ -67,7 +79,7 @@ library IWaultSwapPairExtension {
         uint256 outReserve,
         uint256 amount
     ) private pure returns (uint256) {
-        require(inReserve > 0 && outReserve > 0, 'IPolydexPairExtension: INSUFFICIENT_LIQUIDITY');
+        require(inReserve > 0 && outReserve > 0, "IPolydexPairExtension: INSUFFICIENT_LIQUIDITY");
         uint256 inAmountWithFee = amount.mul(998);
         // Uniswap V2 now requires fixed 0.3% swap fee
         uint256 numerator = inAmountWithFee.mul(outReserve);
@@ -75,7 +87,6 @@ library IWaultSwapPairExtension {
         return (denominator == 0) ? 0 : numerator.div(denominator);
     }
 }
-
 
 library IWaultSwapFactoryExtension {
     using SafeMath for uint256;

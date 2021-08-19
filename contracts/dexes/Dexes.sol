@@ -37,155 +37,153 @@ import "./IPancakeBunny.sol";
 import "./IInnoswap.sol";
 import "./IWaultSwap.sol";
 import "./IBabyswap.sol";
+enum Dex {
+    // UniswapV2,
+    // UniswapV2ETH,
+    // UniswapV2DAI,
+    // UniswapV2USDC,
+    // CurveCompound,
+    // CurveUSDT,
+    // CurveY,
+    // CurveBinance,
+    // CurveSynthetix,
+    // CurvePAX,
+    // CurveRenBTC,
+    // CurveTBTC,
+    // CurveSBTC,
+    // Oasis,
+    // Uniswap,
+    // Curve,
+    // // add SushiSwap
+    // SushiSwap,
+    // SushiSwapETH,
+    // SushiSwapDAI,
+    // SushiSwapUSDC,
+    // // add Balancer
+    // Balancer,
+    // Balancer1,
+    // Balancer2,
+    // Balancer3,
+    // // add Kyber
+    // Kyber,
+    // Kyber1,
+    // Kyber2,
+    // Kyber3,
+    // Kyber4,
 
-
-    enum Dex {
-        // UniswapV2,
-        // UniswapV2ETH,
-        // UniswapV2DAI,
-        // UniswapV2USDC,
-        // CurveCompound,
-        // CurveUSDT,
-        // CurveY,
-        // CurveBinance,
-        // CurveSynthetix,
-        // CurvePAX,
-        // CurveRenBTC,
-        // CurveTBTC,
-        // CurveSBTC,
-        // Oasis,
-        // Uniswap,
-        // Curve,
-        // // add SushiSwap
-        // SushiSwap,
-        // SushiSwapETH,
-        // SushiSwapDAI,
-        // SushiSwapUSDC,
-        // // add Balancer
-        // Balancer,
-        // Balancer1,
-        // Balancer2,
-        // Balancer3,
-        // // add Kyber
-        // Kyber,
-        // Kyber1,
-        // Kyber2,
-        // Kyber3,
-        // Kyber4,
-
-        // Pancake
-        Pancake,
-        PancakeETH,
-        PancakeDAI,
-        PancakeUSDC,
-        PancakeUSDT,
-        // Bakery
-        Bakery,
-        BakeryETH,
-        BakeryDAI,
-        BakeryUSDC,
-        BakeryUSDT,
-        // Burger
-        Burger,
-        BurgerETH,
-        BurgerDGAS,
-        // Thugswap
-        Thugswap,
-        ThugswapETH,
-        ThugswapDAI,
-        ThugswapUSDC,
-        ThugswapUSDT,
-        // BUSD transitional
-        PancakeBUSD,
-        BakeryBUSD,
-        ThugswapBUSD,
-        // StableX
-        Stablex,
-        StablexDAI,
-        StablexBUSD,
-        StablexQUSD,
-        StablexUSDC,
-        StablexUSDT,
-        // Unifi
-        Unifi,
-        // WETH
-        WETH,
-        // Julswap
-        Julswap,
-        JulswapETH,
-        JulswapDAI,
-        JulswapUSDC,
-        JulswapUSDT,
-        JulswapBUSD,
-        // Pancake DOT
-        PancakeDOT,
-        // Acrytos
-        Acryptos,
-        AcryptosUSD,
-        AcryptosVAI,
-        AcryptosUST,
-        AcryptosQUSD,
-        // Apeswap
-        Apeswap,
-        ApeswapETH,
-        ApeswapUSDT,
-        ApeswapBUSD,
-        ApeswapBANANA,
-        // DODO
-        DODO,
-        DODOUSDC,
-        DODOUSDT,
-        // Smoothy
-        Smoothy,
-        // Acryptos
-        AcryptosBTC,
-        // Ellipsis
-        Ellipsis,
-        EllipsisUSD,
-        EllipsisBTC,
-        EllipsisFUSDT,
-        // MDex
-        MDex,
-        MDexETH,
-        MDexBUSD,
-        MDexUSDC,
-        MDexUSDT,
-        // PancakeV2
-        PancakeV2,
-        PancakeETHV2,
-        PancakeUSDCV2,
-        PancakeUSDTV2,
-        PancakeBUSDV2,
-        PancakeDOTV2,
-        // Nerve
-        Nerve,
-        NervePOOL3,
-        NerveBTC,
-        NerveETH,
-        Cafeswap,
-        PantherSwap,
-        PancakeBunny,
-        // Beltswap,
-        // add Mooniswap
-        Mooniswap,
-        MooniswapETH,
-        MooniswapDAI,
-        MooniswapUSDC,
-        // Innoswap
-        Innoswap,
-        //waultSwap
-        Waultswap,
-        //babyswap
-        Babyswap,
-        // bottom mark
-        NoDex
-    }
+    // Pancake
+    Pancake,
+    PancakeETH,
+    PancakeDAI,
+    PancakeUSDC,
+    PancakeUSDT,
+    // Bakery
+    Bakery,
+    BakeryETH,
+    BakeryDAI,
+    BakeryUSDC,
+    BakeryUSDT,
+    // Burger
+    Burger,
+    BurgerETH,
+    BurgerDGAS,
+    // Thugswap
+    Thugswap,
+    ThugswapETH,
+    ThugswapDAI,
+    ThugswapUSDC,
+    ThugswapUSDT,
+    // BUSD transitional
+    PancakeBUSD,
+    BakeryBUSD,
+    ThugswapBUSD,
+    // StableX
+    Stablex,
+    StablexDAI,
+    StablexBUSD,
+    StablexQUSD,
+    StablexUSDC,
+    StablexUSDT,
+    // Unifi
+    Unifi,
+    // WETH
+    WETH,
+    // Julswap
+    Julswap,
+    JulswapETH,
+    JulswapDAI,
+    JulswapUSDC,
+    JulswapUSDT,
+    JulswapBUSD,
+    // Pancake DOT
+    PancakeDOT,
+    // Acrytos
+    Acryptos,
+    AcryptosUSD,
+    AcryptosVAI,
+    AcryptosUST,
+    AcryptosQUSD,
+    // Apeswap
+    Apeswap,
+    ApeswapETH,
+    ApeswapUSDT,
+    ApeswapBUSD,
+    ApeswapBANANA,
+    // DODO
+    DODO,
+    DODOUSDC,
+    DODOUSDT,
+    // Smoothy
+    Smoothy,
+    // Acryptos
+    AcryptosBTC,
+    // Ellipsis
+    Ellipsis,
+    EllipsisUSD,
+    EllipsisBTC,
+    EllipsisFUSDT,
+    // MDex
+    MDex,
+    MDexETH,
+    MDexBUSD,
+    MDexUSDC,
+    MDexUSDT,
+    // PancakeV2
+    PancakeV2,
+    PancakeETHV2,
+    PancakeUSDCV2,
+    PancakeUSDTV2,
+    PancakeBUSDV2,
+    PancakeDOTV2,
+    // Nerve
+    Nerve,
+    NervePOOL3,
+    NerveBTC,
+    NerveETH,
+    Cafeswap,
+    PantherSwap,
+    PancakeBunny,
+    // Beltswap,
+    // add Mooniswap
+    Mooniswap,
+    MooniswapETH,
+    MooniswapDAI,
+    MooniswapUSDC,
+    // Innoswap
+    Innoswap,
+    //waultSwap
+    Waultswap,
+    //babyswap
+    Babyswap,
+    // bottom mark
+    NoDex
+}
 
 library Dexes {
     using UniversalERC20 for IERC20;
     using Flags for uint256;
 
-    IBabyswapFactory internal constant babyswap = IBabyswapFactory(0xB42E3FE71b7E0673335b3331B3e1053BD9822570);
+    IBabyswapFactory internal constant babyswap = IBabyswapFactory(0x86407bEa2078ea5f5EB5A52B2caA963bC1F889Da);
     using IBabyswapFactoryExtension for IBabyswapFactory;
 
     IWaultSwapFactory internal constant waultswap = IWaultSwapFactory(0xB42E3FE71b7E0673335b3331B3e1053BD9822570);

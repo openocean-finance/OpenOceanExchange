@@ -9,19 +9,24 @@ import "../lib/Tokens.sol";
 import "./IPancakeV2.sol";
 
 interface IZapBsc {
-    function zapInToken(address _from, uint amount, address _to) external;
+    function zapInToken(
+        address _from,
+        uint256 amount,
+        address _to
+    ) external;
 }
 
 interface IPancakeRouter02 {
-    function getAmountOut(uint amountIn, uint reserveIn, uint reserveOut) external view returns (uint amountOut);
+    function getAmountOut(
+        uint256 amountIn,
+        uint256 reserveIn,
+        uint256 reserveOut
+    ) external view returns (uint256 amountOut);
 }
 
-
 library IZapBscExtension {
-
     using UniversalERC20 for IERC20;
     using Tokens for IERC20;
-
 
     IPancakeRouter02 private constant ROUTER = IPancakeRouter02(0x10ED43C718714eb63d5aA57B78B54704E256024E);
     IPancakeFactoryV2 private constant pancakeFactory = IPancakeFactoryV2(0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73);
@@ -38,8 +43,8 @@ library IZapBscExtension {
         IERC20 realOutToken = outToken.wrapETH();
         IPancakePairV2 pair = pancakeFactory.getPair(realInToken, realOutToken);
         if (address(pair) != address(0)) {
-            uint inBalance = realInToken.balanceOf(address(pair));
-            uint outBalance = realOutToken.balanceOf(address(pair));
+            uint256 inBalance = realInToken.balanceOf(address(pair));
+            uint256 outBalance = realOutToken.balanceOf(address(pair));
             for (uint256 i = 0; i < inAmounts.length; i++) {
                 outAmounts[i] = ROUTER.getAmountOut(inAmounts[i], inBalance, outBalance);
             }
@@ -52,14 +57,14 @@ library IZapBscExtension {
         IERC20 inToken,
         IERC20 outToken,
         uint256 inAmount
-    ) internal view returns (uint256 outAmount, uint256 gas){
+    ) internal view returns (uint256 outAmount, uint256 gas) {
         _zap;
         IERC20 realInToken = inToken.wrapETH();
         IERC20 realOutToken = outToken.wrapETH();
         IPancakePairV2 pair = pancakeFactory.getPair(realInToken, realOutToken);
         if (address(pair) != address(0)) {
-            uint inBalance = realInToken.balanceOf(address(pair));
-            uint outBalance = realOutToken.balanceOf(address(pair));
+            uint256 inBalance = realInToken.balanceOf(address(pair));
+            uint256 outBalance = realOutToken.balanceOf(address(pair));
             outAmount = ROUTER.getAmountOut(inAmount, inBalance, outBalance);
             return (outAmount, 50_000);
         }
@@ -97,10 +102,10 @@ library IZapBscExtension {
         IERC20 realInToken = inToken.wrapETH();
         IERC20 realOutToken = outToken.wrapETH();
 
-        (outAmount,) = calculateRealSwapReturn(factory, inToken, outToken, inAmount);
+        (outAmount, ) = calculateRealSwapReturn(factory, inToken, outToken, inAmount);
         realInToken.approve(address(factory), inAmount);
         factory.zapInToken(address(realInToken), inAmount, address(realOutToken));
-        uint res = realOutToken.balanceOf(address(this));
+        uint256 res = realOutToken.balanceOf(address(this));
         require(res >= outAmount, "swap outToken is low");
         realOutToken.withdrawFromWETH();
     }
