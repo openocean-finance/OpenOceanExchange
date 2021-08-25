@@ -9,27 +9,36 @@ import "../lib/Flags.sol";
 import "./IKswap.sol";
 import "./ICherrySwap.sol";
 import "./IAiswap.sol";
+import "./IBXHash.sol";
 
-enum Dex {
-    // kswap
-    Kswap,
-    KswapOKT,
-    KswapUSDT,
-    // cherryswap
-    CherrySwap,
-    CherrySwapOKT,
-    CherrySwapUSDT,
-    // aiswap
-    AiSwap,
-    AiSwapOKT,
-    AiSwapUSDT,
-    // bottom mark
-    NoDex
-}
+    enum Dex {
+        // kswap
+        Kswap,
+        KswapOKT,
+        KswapUSDT,
+        // cherryswap
+        CherrySwap,
+        CherrySwapOKT,
+        CherrySwapUSDT,
+        // aiswap
+        AiSwap,
+        AiSwapOKT,
+        AiSwapUSDT,
+        // BXHash
+        BXHash,
+        BXHashOKT,
+        BXHashUSDT,
+        // bottom mark
+        NoDex
+    }
 
 library Dexes {
     using UniversalERC20 for IERC20;
     using Flags for uint256;
+
+    IBXHashFactory internal constant bxhash = IBXHashFactory(0xff65BC42c10dcC73aC0924B674FD3e30427C7823);
+    using IBXHashFactoryExtension for IBXHashFactory;
+
 
     IKswapFactory internal constant kswap = IKswapFactory(0x60DCD4a2406Be12dbe3Bb2AaDa12cFb762A418c1);
     using IKswapFactoryExtension for IKswapFactory;
@@ -55,6 +64,17 @@ library Dexes {
         uint256[] memory inAmounts,
         uint256 flags
     ) internal view returns (uint256[] memory, uint256) {
+        // bxhash
+        if (dex == Dex.BXHash && !flags.or(Flags.FLAG_DISABLE_BXHASH_ALL, Flags.FLAG_DISABLE_BXHASH)) {
+            return bxhash.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+        if (dex == Dex.BXHash && !flags.or(Flags.FLAG_DISABLE_BXHASH_ALL, Flags.FLAG_DISABLE_BXHASH_OKT)) {
+            return bxhash.calculateTransitionalSwapReturn(inToken, Tokens.WOKT, outToken, inAmounts);
+        }
+        if (dex == Dex.BXHash && !flags.or(Flags.FLAG_DISABLE_BXHASH_ALL, Flags.FLAG_DISABLE_BXHASH_USDT)) {
+            return bxhash.calculateTransitionalSwapReturn(inToken, Tokens.USDT, outToken, inAmounts);
+        }
+
         // kswap
         if (dex == Dex.Kswap && !flags.or(Flags.FLAG_DISABLE_KSWAP_ALL, Flags.FLAG_DISABLE_KSWAP)) {
             return kswap.calculateSwapReturn(inToken, outToken, inAmounts);
@@ -99,6 +119,18 @@ library Dexes {
         uint256 amount,
         uint256 flags
     ) internal {
+
+        // bxhash
+        if (dex == Dex.BXHash && !flags.or(Flags.FLAG_DISABLE_BXHASH_ALL, Flags.FLAG_DISABLE_BXHASH)) {
+            bxhash.swap(inToken, outToken, amount);
+        }
+        if (dex == Dex.BXHash && !flags.or(Flags.FLAG_DISABLE_BXHASH_ALL, Flags.FLAG_DISABLE_BXHASH_OKT)) {
+            bxhash.swapTransitional(inToken, Tokens.WOKT, outToken, amount);
+        }
+        if (dex == Dex.BXHash && !flags.or(Flags.FLAG_DISABLE_BXHASH_ALL, Flags.FLAG_DISABLE_BXHASH_USDT)) {
+            bxhash.swapTransitional(inToken, Tokens.USDT, outToken, amount);
+        }
+
         //add kswap
         if (dex == Dex.Kswap && !flags.or(Flags.FLAG_DISABLE_KSWAP_ALL, Flags.FLAG_DISABLE_KSWAP)) {
             kswap.swap(inToken, outToken, amount);

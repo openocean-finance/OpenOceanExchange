@@ -17,6 +17,11 @@ library Flags {
     uint256 internal constant FLAG_DISABLE_AISWAP_OKT = 1 << 10;
     uint256 internal constant FLAG_DISABLE_AISWAP_USDT = 1 << 11;
 
+    uint256 internal constant FLAG_DISABLE_BXHASH_ALL = 1 << 12;
+    uint256 internal constant FLAG_DISABLE_BXHASH = 1 << 13;
+    uint256 internal constant FLAG_DISABLE_BXHASH_OKT = 1 << 14;
+    uint256 internal constant FLAG_DISABLE_BXHASH_USDT = 1 << 15;
+
     function on(uint256 flags, uint256 flag) internal pure returns (bool) {
         return (flags & flag) != 0;
     }

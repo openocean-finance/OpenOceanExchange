@@ -15,15 +15,23 @@ const BigNumber = require('bignumber.js');
 
 const DisableKSwapALL = new BN(1 << 0);
 const DisableKSwap = new BN(1 << 1);
-const DisableKSwapUSDT = new BN(1 << 2);
+const DisableKSwapOKT = new BN(1 << 2);
+const DisableKSwapUSDT = new BN(1 << 3);
 
-const DisableCherrySwapALL = new BN(1 << 3);
-const DisableCherrySwap = new BN(1 << 4);
-const DisableCherrySwapUSDT = new BN(1 << 5);
+const DisableCherrySwapALL = new BN(1 << 4);
+const DisableCherrySwap = new BN(1 << 5);
+const DisableCherrySwapOKT = new BN(1 << 6);
+const DisableCherrySwapUSDT = new BN(1 << 7);
 
-const DisableAiSwapALL = new BN(1 << 6);
-const DisableAiSwap = new BN(1 << 7);
-const DisableAiSwapUSDT = new BN(1 << 8);
+const DisableAiSwapALL = new BN(1 << 8);
+const DisableAiSwap = new BN(1 << 9);
+const DisableAiSwapOKT = new BN(1 << 10);
+const DisableAiSwapUSDT = new BN(1 << 11);
+
+const DisableBxHashALL = new BN(1 << 12);
+const DisableBxHash = new BN(1 << 13);
+const DisableBxHashOKT = new BN(1 << 14);
+const DisableBxHashUSDT = new BN(1 << 15);
 
 //
 // const DisableStakeSwapALL = new BN(1 << 6);
@@ -31,14 +39,14 @@ const DisableAiSwapUSDT = new BN(1 << 8);
 // const DisableStakeSwapUSDT = new BN(1 << 8);
 
 
-
 const DexOne = artifacts.require("DexOne");
 const ERC20 = artifacts.require("IERC20");
 
 
-var pass = DisableKSwapALL.add(DisableKSwap).add(DisableKSwapUSDT)
-    .add(DisableCherrySwapALL).add(DisableCherrySwap).add(DisableCherrySwapUSDT)
-    .add(DisableAiSwapALL).add(DisableAiSwap).add(DisableAiSwapUSDT);
+var pass = DisableKSwapALL.add(DisableKSwap).add(DisableKSwapOKT).add(DisableKSwapUSDT)
+    .add(DisableCherrySwapALL).add(DisableCherrySwap).add(DisableCherrySwapOKT).add(DisableCherrySwapUSDT)
+    .add(DisableAiSwapALL).add(DisableAiSwap).add(DisableAiSwapOKT).add(DisableAiSwapUSDT)
+    .add(DisableBxHashALL).add(DisableBxHash).add(DisableBxHashOKT).add(DisableBxHashUSDT);
 
 
 contract('DexOne', (accounts) => {
@@ -56,13 +64,15 @@ contract('DexOne', (accounts) => {
         let a = await web3.eth.getBalance(accounts[0]);
         console.log(`balance of ${accounts[0]}: (${a}) OKT`);
 
-        let testName = "aiSwap";
+        let testName = "bxhash";
         if (testName == "kSwap") {
             pass = pass.sub(DisableKSwapALL).sub(DisableKSwap);
         } else if (testName == "cherrySwap") {
             pass = pass.sub(DisableCherrySwapALL).sub(DisableCherrySwap);
         } else if (testName == "aiSwap") {
             pass = pass.sub(DisableAiSwapALL).sub(DisableAiSwap);
+        } else if (testName == "bxhash") {
+            pass = pass.sub(DisableBxHashALL).sub(DisableBxHash);
         }
 
         let dexOne = await DexOne.deployed();
