@@ -723,6 +723,11 @@ library Flags {
     uint256 internal constant FLAG_DISABLE_AISWAP_OKT = 1 << 10;
     uint256 internal constant FLAG_DISABLE_AISWAP_USDT = 1 << 11;
 
+    uint256 internal constant FLAG_DISABLE_BXHASH_ALL = 1 << 12;
+    uint256 internal constant FLAG_DISABLE_BXHASH = 1 << 13;
+    uint256 internal constant FLAG_DISABLE_BXHASH_OKT = 1 << 14;
+    uint256 internal constant FLAG_DISABLE_BXHASH_USDT = 1 << 15;
+
     function on(uint256 flags, uint256 flag) internal pure returns (bool) {
         return (flags & flag) != 0;
     }
@@ -1284,10 +1289,179 @@ library IAiswapFactoryExtension {
     }
 }
 
+// File: contracts/dexes/IBXHash.sol
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.6.0;
+
+
+
+
+
+
+interface IBXHashFactory {
+    function getPair(IERC20 tokenA, IERC20 tokenB) external view returns (IBXHashPair pair);
+}
+
+interface IBXHashPair {
+    function getReserves()
+        external
+        view
+        returns (
+            uint112 _reserve0,
+            uint112 _reserve1,
+            uint32 _blockTimestampLast
+        );
+
+    function skim(address to) external;
+
+    function sync() external;
+
+    function swap(
+        uint256 amount0Out,
+        uint256 amount1Out,
+        address to,
+        bytes calldata data
+    ) external;
+}
+
+library IBXHashPairExtension {
+    using SafeMath for uint256;
+    using UniversalERC20 for IERC20;
+
+    address private constant SKIM_TARGET = 0x5bDCE812ce8409442ac3FBbd10565F9B17A6C49D;
+
+    function calculateSwapReturn(
+        IBXHashPair pair,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256 amount
+    ) internal view returns (uint256) {
+        if (amount == 0) {
+            return 0;
+        }
+        uint256 inReserve = inToken.universalBalanceOf(address(pair));
+        uint256 outReserve = outToken.universalBalanceOf(address(pair));
+        return doCalculate(inReserve, outReserve, amount);
+    }
+
+    function calculateRealSwapReturn(
+        IBXHashPair pair,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256 amount
+    ) internal returns (uint256) {
+        uint256 inReserve = inToken.universalBalanceOf(address(pair));
+        uint256 outReserve = outToken.universalBalanceOf(address(pair));
+
+        (uint112 reserve0, uint112 reserve1, ) = pair.getReserves();
+        if (inToken > outToken) {
+            (reserve0, reserve1) = (reserve1, reserve0);
+        }
+        if (inReserve < reserve0 || outReserve < reserve1) {
+            pair.sync();
+        } else if (inReserve > reserve0 || outReserve > reserve1) {
+            pair.skim(SKIM_TARGET);
+        }
+
+        return doCalculate(Math.min(inReserve, reserve0), Math.min(outReserve, reserve1), amount);
+    }
+
+    function doCalculate(
+        uint256 inReserve,
+        uint256 outReserve,
+        uint256 amount
+    ) private pure returns (uint256) {
+        uint256 inAmountWithFee = amount.mul(99775);
+        // Uniswap V2 now requires fixed 0.3% swap fee
+        uint256 numerator = inAmountWithFee.mul(outReserve);
+        uint256 denominator = inReserve.mul(100000).add(inAmountWithFee);
+        return (denominator == 0) ? 0 : numerator.div(denominator);
+    }
+}
+
+library IBXHashFactoryExtension {
+    using SafeMath for uint256;
+    using UniversalERC20 for IERC20;
+    using IBXHashPairExtension for IBXHashPair;
+    using Tokens for IERC20;
+
+    function calculateSwapReturn(
+        IBXHashFactory factory,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256[] memory inAmounts
+    ) internal view returns (uint256[] memory outAmounts, uint256 gas) {
+        outAmounts = new uint256[](inAmounts.length);
+        IERC20 realInToken = inToken.wrapOKT();
+        IERC20 realOutToken = outToken.wrapOKT();
+        IBXHashPair pair = factory.getPair(realInToken, realOutToken);
+        if (pair != IBXHashPair(0)) {
+            for (uint256 i = 0; i < inAmounts.length; i++) {
+                outAmounts[i] = pair.calculateSwapReturn(realInToken, realOutToken, inAmounts[i]);
+            }
+            return (outAmounts, 50_000);
+        }
+    }
+
+    function calculateTransitionalSwapReturn(
+        IBXHashFactory factory,
+        IERC20 inToken,
+        IERC20 transitionToken,
+        IERC20 outToken,
+        uint256[] memory inAmounts
+    ) internal view returns (uint256[] memory outAmounts, uint256 gas) {
+        IERC20 realInToken = inToken.wrapOKT();
+        IERC20 realTransitionToken = transitionToken.wrapOKT();
+        IERC20 realOutToken = outToken.wrapOKT();
+
+        if (realInToken == realTransitionToken || realOutToken == realTransitionToken) {
+            return (new uint256[](inAmounts.length), 0);
+        }
+        uint256 firstGas;
+        uint256 secondGas;
+        (outAmounts, firstGas) = calculateSwapReturn(factory, realInToken, realTransitionToken, inAmounts);
+        (outAmounts, secondGas) = calculateSwapReturn(factory, realTransitionToken, realOutToken, outAmounts);
+        return (outAmounts, firstGas + secondGas);
+    }
+
+    function swap(
+        IBXHashFactory factory,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256 inAmount
+    ) internal returns (uint256 outAmount) {
+        inToken.depositToWOKT(inAmount);
+
+        IERC20 realInToken = inToken.wrapOKT();
+        IERC20 realOutToken = outToken.wrapOKT();
+        IBXHashPair pair = factory.getPair(realInToken, realOutToken);
+        outAmount = pair.calculateRealSwapReturn(realInToken, realOutToken, inAmount);
+        realInToken.universalTransfer(address(pair), inAmount);
+        if (uint256(address(realInToken)) < uint256(address(realOutToken))) {
+            pair.swap(0, outAmount, address(this), "");
+        } else {
+            pair.swap(outAmount, 0, address(this), "");
+        }
+        outToken.withdrawFromWOKT();
+    }
+
+    function swapTransitional(
+        IBXHashFactory factory,
+        IERC20 inToken,
+        IERC20 transitionToken,
+        IERC20 outToken,
+        uint256 inAmount
+    ) internal {
+        swap(factory, transitionToken, outToken, swap(factory, inToken, transitionToken, inAmount));
+    }
+}
+
 // File: contracts/dexes/Dexes.sol
 
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.6.0;
+
 
 
 
@@ -1310,6 +1484,10 @@ enum Dex {
     AiSwap,
     AiSwapOKT,
     AiSwapUSDT,
+    // BXHash
+    BXHash,
+    BXHashOKT,
+    BXHashUSDT,
     // bottom mark
     NoDex
 }
@@ -1317,6 +1495,9 @@ enum Dex {
 library Dexes {
     using UniversalERC20 for IERC20;
     using Flags for uint256;
+
+    IBXHashFactory internal constant bxhash = IBXHashFactory(0xff65BC42c10dcC73aC0924B674FD3e30427C7823);
+    using IBXHashFactoryExtension for IBXHashFactory;
 
     IKswapFactory internal constant kswap = IKswapFactory(0x60DCD4a2406Be12dbe3Bb2AaDa12cFb762A418c1);
     using IKswapFactoryExtension for IKswapFactory;
@@ -1342,6 +1523,17 @@ library Dexes {
         uint256[] memory inAmounts,
         uint256 flags
     ) internal view returns (uint256[] memory, uint256) {
+        // bxhash
+        if (dex == Dex.BXHash && !flags.or(Flags.FLAG_DISABLE_BXHASH_ALL, Flags.FLAG_DISABLE_BXHASH)) {
+            return bxhash.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+        if (dex == Dex.BXHashOKT && !flags.or(Flags.FLAG_DISABLE_BXHASH_ALL, Flags.FLAG_DISABLE_BXHASH_OKT)) {
+            return bxhash.calculateTransitionalSwapReturn(inToken, Tokens.WOKT, outToken, inAmounts);
+        }
+        if (dex == Dex.BXHashUSDT && !flags.or(Flags.FLAG_DISABLE_BXHASH_ALL, Flags.FLAG_DISABLE_BXHASH_USDT)) {
+            return bxhash.calculateTransitionalSwapReturn(inToken, Tokens.USDT, outToken, inAmounts);
+        }
+
         // kswap
         if (dex == Dex.Kswap && !flags.or(Flags.FLAG_DISABLE_KSWAP_ALL, Flags.FLAG_DISABLE_KSWAP)) {
             return kswap.calculateSwapReturn(inToken, outToken, inAmounts);
@@ -1386,6 +1578,17 @@ library Dexes {
         uint256 amount,
         uint256 flags
     ) internal {
+        // bxhash
+        if (dex == Dex.BXHash && !flags.or(Flags.FLAG_DISABLE_BXHASH_ALL, Flags.FLAG_DISABLE_BXHASH)) {
+            bxhash.swap(inToken, outToken, amount);
+        }
+        if (dex == Dex.BXHashOKT && !flags.or(Flags.FLAG_DISABLE_BXHASH_ALL, Flags.FLAG_DISABLE_BXHASH_OKT)) {
+            bxhash.swapTransitional(inToken, Tokens.WOKT, outToken, amount);
+        }
+        if (dex == Dex.BXHashUSDT && !flags.or(Flags.FLAG_DISABLE_BXHASH_ALL, Flags.FLAG_DISABLE_BXHASH_USDT)) {
+            bxhash.swapTransitional(inToken, Tokens.USDT, outToken, amount);
+        }
+
         //add kswap
         if (dex == Dex.Kswap && !flags.or(Flags.FLAG_DISABLE_KSWAP_ALL, Flags.FLAG_DISABLE_KSWAP)) {
             kswap.swap(inToken, outToken, amount);

@@ -13,13 +13,13 @@ interface IBXHashFactory {
 
 interface IBXHashPair {
     function getReserves()
-    external
-    view
-    returns (
-        uint112 _reserve0,
-        uint112 _reserve1,
-        uint32 _blockTimestampLast
-    );
+        external
+        view
+        returns (
+            uint112 _reserve0,
+            uint112 _reserve1,
+            uint32 _blockTimestampLast
+        );
 
     function skim(address to) external;
 
@@ -80,10 +80,10 @@ library IBXHashPairExtension {
         uint256 outReserve,
         uint256 amount
     ) private pure returns (uint256) {
-        uint256 inAmountWithFee = amount.mul(997);
+        uint256 inAmountWithFee = amount.mul(99775);
         // Uniswap V2 now requires fixed 0.3% swap fee
         uint256 numerator = inAmountWithFee.mul(outReserve);
-        uint256 denominator = inReserve.mul(1000).add(inAmountWithFee);
+        uint256 denominator = inReserve.mul(100000).add(inAmountWithFee);
         return (denominator == 0) ? 0 : numerator.div(denominator);
     }
 }
