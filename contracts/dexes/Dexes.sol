@@ -9,23 +9,37 @@ import "../lib/Flags.sol";
 import "./ISushiSwap.sol";
 import "./IPangolinSwap.sol";
 import "./IJoeSwap.sol";
+import "./ILydiaSwap.sol";
+import "./IBaguette.sol";
 
-enum Dex {
-    SushiSwap,
-    SushiSwapETH,
-    SushiSwapDAI,
-    PangolinSwap,
-    PangolinSwapETH,
-    PangolinSwapDAI,
-    JoeSwap,
-    JoeSwapETH,
-    JoeSwapDAI,
-    NoDex
-}
+    enum Dex {
+        SushiSwap,
+        SushiSwapETH,
+        SushiSwapDAI,
+        PangolinSwap,
+        PangolinSwapETH,
+        PangolinSwapDAI,
+        JoeSwap,
+        JoeSwapETH,
+        JoeSwapDAI,
+        LydiaSwap,
+        LydiaSwapETH,
+        LydiaSwapDAI,
+        BaguetteSwap,
+        BaguetteSwapETH,
+        BaguetteSwapDAI,
+        NoDex
+    }
 
 library Dexes {
     using UniversalERC20 for IERC20;
     using Flags for uint256;
+
+    IBaguetteFactory internal constant baguette = IBaguetteFactory(0x3587B8c0136c2C3605a9E5B03ab54Da3e4044b50);
+    using IBaguetteFactoryExtension for IBaguetteFactory;
+
+    ILydiaSwapFactory internal constant lydia = ILydiaSwapFactory(0xe0C1bb6DF4851feEEdc3E14Bd509FEAF428f7655);
+    using ILydiaSwapFactoryExtension for ILydiaSwapFactory;
 
     ISushiSwapFactory internal constant sushiswap = ISushiSwapFactory(0xc35DADB65012eC5796536bD9864eD8773aBc74C4);
     using ISushiSwapFactoryExtension for ISushiSwapFactory;
@@ -51,6 +65,28 @@ library Dexes {
         uint256[] memory inAmounts,
         uint256 flags
     ) internal view returns (uint256[] memory, uint256) {
+        //add baguette
+        if (dex == Dex.BaguetteSwap && !flags.or(Flags.FLAG_DISABLE_BAGUETTE_ALL, Flags.FLAG_DISABLE_BAGUETTE)) {
+            return baguette.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+        if (dex == Dex.BaguetteSwapETH && !flags.or(Flags.FLAG_DISABLE_BAGUETTE_ALL, Flags.FLAG_DISABLE_BAGUETTE_WAVAX)) {
+            return baguette.calculateTransitionalSwapReturn(inToken, Tokens.WAVAX, outToken, inAmounts);
+        }
+        if (dex == Dex.BaguetteSwapDAI && !flags.or(Flags.FLAG_DISABLE_BAGUETTE_ALL, Flags.FLAG_DISABLE_BAGUETTE_DAI)) {
+            return baguette.calculateTransitionalSwapReturn(inToken, Tokens.DAI, outToken, inAmounts);
+        }
+
+        //add lydia
+        if (dex == Dex.LydiaSwap && !flags.or(Flags.FLAG_DISABLE_LYDIA_ALL, Flags.FLAG_DISABLE_LYDIA)) {
+            return lydia.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+        if (dex == Dex.LydiaSwapETH && !flags.or(Flags.FLAG_DISABLE_LYDIA_ALL, Flags.FLAG_DISABLE_LYDIA_WAVAX)) {
+            return lydia.calculateTransitionalSwapReturn(inToken, Tokens.WAVAX, outToken, inAmounts);
+        }
+        if (dex == Dex.LydiaSwapDAI && !flags.or(Flags.FLAG_DISABLE_LYDIA_ALL, Flags.FLAG_DISABLE_LYDIA_DAI)) {
+            return lydia.calculateTransitionalSwapReturn(inToken, Tokens.DAI, outToken, inAmounts);
+        }
+
         //add Joe
         if (dex == Dex.JoeSwap && !flags.or(Flags.FLAG_DISABLE_JOESWAP_ALL, Flags.FLAG_DISABLE_JOESWAP)) {
             return joe.calculateSwapReturn(inToken, outToken, inAmounts);
@@ -95,6 +131,28 @@ library Dexes {
         uint256 amount,
         uint256 flags
     ) internal {
+        //add baguette
+        if (dex == Dex.BaguetteSwap && !flags.or(Flags.FLAG_DISABLE_BAGUETTE_ALL, Flags.FLAG_DISABLE_BAGUETTE)) {
+            baguette.swap(inToken, outToken, amount);
+        }
+        if (dex == Dex.BaguetteSwapETH && !flags.or(Flags.FLAG_DISABLE_BAGUETTE_ALL, Flags.FLAG_DISABLE_BAGUETTE_WAVAX)) {
+            baguette.swapTransitional(inToken, Tokens.WAVAX, outToken, amount);
+        }
+        if (dex == Dex.BaguetteSwapDAI && !flags.or(Flags.FLAG_DISABLE_BAGUETTE_ALL, Flags.FLAG_DISABLE_BAGUETTE_DAI)) {
+            baguette.swapTransitional(inToken, Tokens.DAI, outToken, amount);
+        }
+
+        //add lydia
+        if (dex == Dex.LydiaSwap && !flags.or(Flags.FLAG_DISABLE_LYDIA_ALL, Flags.FLAG_DISABLE_LYDIA)) {
+            lydia.swap(inToken, outToken, amount);
+        }
+        if (dex == Dex.LydiaSwapETH && !flags.or(Flags.FLAG_DISABLE_LYDIA_ALL, Flags.FLAG_DISABLE_LYDIA_WAVAX)) {
+            lydia.swapTransitional(inToken, Tokens.WAVAX, outToken, amount);
+        }
+        if (dex == Dex.LydiaSwapDAI && !flags.or(Flags.FLAG_DISABLE_LYDIA_ALL, Flags.FLAG_DISABLE_LYDIA_DAI)) {
+            lydia.swapTransitional(inToken, Tokens.DAI, outToken, amount);
+        }
+
         //add Joe
         if (dex == Dex.JoeSwap && !flags.or(Flags.FLAG_DISABLE_JOESWAP_ALL, Flags.FLAG_DISABLE_JOESWAP)) {
             joe.swap(inToken, outToken, amount);

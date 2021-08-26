@@ -26,24 +26,33 @@ const DisableJOESWAP = new BN(1).shln(9);
 const DisableJOESWAPWAVAX = new BN(1).shln(10);
 const DisableJOESWAPDAI = new BN(1).shln(11);
 
+const DisableLYDIASWAPALL = new BN(1).shln(12);
+const DisableLYDIASWAP = new BN(1).shln(13);
+const DisableLYDIASWAPWAVAX = new BN(1).shln(14);
+const DisableLYDIASWAPDAI = new BN(1).shln(15);
+
+const DisableBAGUETTESWAPALL = new BN(1).shln(16);
+const DisableBAGUETTESWAP = new BN(1).shln(17);
+const DisableBAGUETTESWAPWAVAX = new BN(1).shln(18);
+const DisableBAGUETTESWAPDAI = new BN(1).shln(19);
+
 
 const DexOne = artifacts.require("DexOne");
 const ERC20 = artifacts.require("IERC20");
 const Factory = artifacts.require("IUniswapV2Factory");
 
 
-var pass = DisableSushiswapAll.add(DisableSushiswap)
-    .add(DisableSushiswapWAVAX).add(DisableSushiswapDAI)
-    .add(DisablePANGONLINSWAPALL).add(DisablePANGONLINSWAP).add(DisablePANGONLINSWAPWAVAX)
-    .add(DisablePANGONLINSWAPDAI).add(DisableJOESWAPALL).add(DisableJOESWAP).add(DisableJOESWAPWAVAX)
-    .add(DisableJOESWAPDAI);
+var pass = DisableSushiswapAll.add(DisableSushiswap).add(DisableSushiswapWAVAX).add(DisableSushiswapDAI)
+    .add(DisablePANGONLINSWAPALL).add(DisablePANGONLINSWAP).add(DisablePANGONLINSWAPWAVAX).add(DisablePANGONLINSWAPDAI)
+    .add(DisableJOESWAPALL).add(DisableJOESWAP).add(DisableJOESWAPWAVAX).add(DisableJOESWAPDAI)
+    .add(DisableLYDIASWAPALL).add(DisableLYDIASWAP).add(DisableLYDIASWAPWAVAX).add(DisableLYDIASWAPDAI)
+    .add(DisableBAGUETTESWAPALL).add(DisableBAGUETTESWAP).add(DisableBAGUETTESWAPWAVAX).add(DisableBAGUETTESWAPDAI);
 
 
 contract('DexOne', (accounts) => {
 
     it('DexOneAll should swap ETH to CAKE', async () => {
 
-        // 合约地址 不对  TODO
         let usdtAddress = "0xde3A24028580884448a5397872046a019649b084";
         const usdt = await ERC20.at(usdtAddress);
 
@@ -51,7 +60,7 @@ contract('DexOne', (accounts) => {
         let wavaxAddress = "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7";
 
         if (false) {
-            let fAddress = "0xc35DADB65012eC5796536bD9864eD8773aBc74C4";//sushiswap
+            let fAddress = "0xe0C1bb6DF4851feEEdc3E14Bd509FEAF428f7655";//sushiswap
             let f = await Factory.at(fAddress);
             let res = await f.getPair(wavaxAddress, usdtAddress);
             console.log("res:", res.toString());
@@ -59,12 +68,12 @@ contract('DexOne', (accounts) => {
         }
 
         var balance = await web3.eth.getBalance(accounts[0]);
-        console.log("xDAI balance:", balance); //
+        console.log("avax balance:", balance); //
 
         let balanceBefore = await usdt.balanceOf(accounts[0])
         console.log(`balance of ${accounts[0]}: (${balanceBefore}) USDT`);
 
-        let testName = "joeswap";
+        let testName = "lydia";
         if (testName == "sushiswap") {
             pass = pass.sub(DisableSushiswapAll);
             pass = pass.sub(DisableSushiswap);
@@ -74,6 +83,9 @@ contract('DexOne', (accounts) => {
         } else if (testName == "joeswap") {
             pass = pass.sub(DisableJOESWAPALL);
             pass = pass.sub(DisableJOESWAP);
+        } else if (testName == "lydia") {
+            pass = pass.sub(DisableLYDIASWAPALL);
+            pass = pass.sub(DisableLYDIASWAP);
         }
 
         const dexOne = await DexOne.deployed();
@@ -84,7 +96,7 @@ contract('DexOne', (accounts) => {
             10,
             pass,
         );
-        expectedOutAmount = res.outAmount;
+        let expectedOutAmount = res.outAmount;
         console.log(`expect out amount ${res.outAmount.toString()} USDT`);
         console.log("res.distribution:", res.distribution.toString());
         const swapped = await dexOne.contract.methods.swap(
@@ -114,8 +126,8 @@ contract('DexOne', (accounts) => {
         web3.eth.sendSignedTransaction(sign.rawTransaction).on('receipt', receipt => {
         });
 
-        balanceAfter = await usdt.balanceOf(accounts[0])
+        let balanceAfter = await usdt.balanceOf(accounts[0])
         console.log(`balance of ${accounts[0]}: (${balanceAfter}) USDT`);
-        assert.equal(expectedOutAmount, balanceAfter - balanceBefore);
+        assert.equal(BigNumber(expectedOutAmount), BigNumber(balanceAfter) - BigNumber(balanceBefore));
     });
 });

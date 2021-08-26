@@ -18,6 +18,16 @@ library Flags {
     uint256 internal constant FLAG_DISABLE_JOESWAP_WAVAX = 1 << 10;
     uint256 internal constant FLAG_DISABLE_JOESWAP_DAI = 1 << 11;
 
+    uint256 internal constant FLAG_DISABLE_LYDIA_ALL = 1 << 12;
+    uint256 internal constant FLAG_DISABLE_LYDIA = 1 << 13;
+    uint256 internal constant FLAG_DISABLE_LYDIA_WAVAX = 1 << 14;
+    uint256 internal constant FLAG_DISABLE_LYDIA_DAI = 1 << 15;
+
+    uint256 internal constant FLAG_DISABLE_BAGUETTE_ALL = 1 << 16;
+    uint256 internal constant FLAG_DISABLE_BAGUETTE = 1 << 17;
+    uint256 internal constant FLAG_DISABLE_BAGUETTE_WAVAX = 1 << 18;
+    uint256 internal constant FLAG_DISABLE_BAGUETTE_DAI = 1 << 19;
+
     function on(uint256 flags, uint256 flag) internal pure returns (bool) {
         return (flags & flag) != 0;
     }
