@@ -11,6 +11,8 @@ const {
     web3
 } = require('@openzeppelin/test-helpers/src/setup');
 
+const BigNumber = require('bignumber.js');
+
 const DisableSushiswapAll = new BN(1).shln(0);
 const DisableSushiswap = new BN(1).shln(1);
 const DisableSushiswapWAVAX = new BN(1).shln(2);
@@ -73,7 +75,7 @@ contract('DexOne', (accounts) => {
         let balanceBefore = await usdt.balanceOf(accounts[0])
         console.log(`balance of ${accounts[0]}: (${balanceBefore}) USDT`);
 
-        let testName = "lydia";
+        let testName = "baguette";
         if (testName == "sushiswap") {
             pass = pass.sub(DisableSushiswapAll);
             pass = pass.sub(DisableSushiswap);
@@ -86,6 +88,9 @@ contract('DexOne', (accounts) => {
         } else if (testName == "lydia") {
             pass = pass.sub(DisableLYDIASWAPALL);
             pass = pass.sub(DisableLYDIASWAP);
+        } else if (testName == "baguette") {
+            pass = pass.sub(DisableBAGUETTESWAPALL);
+            pass = pass.sub(DisableBAGUETTESWAP);
         }
 
         const dexOne = await DexOne.deployed();

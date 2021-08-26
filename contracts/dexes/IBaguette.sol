@@ -91,7 +91,7 @@ library IBaguettePairExtension {
         uint256 outReserve,
         uint256 amount
     ) private pure returns (uint256) {
-        uint256 inAmountWithFee = amount.mul(998);
+        uint256 inAmountWithFee = amount.mul(997);
         // Uniswap V2 now requires fixed 0.3% swap fee
         uint256 numerator = inAmountWithFee.mul(outReserve);
         uint256 denominator = inReserve.mul(1000).add(inAmountWithFee);
@@ -160,7 +160,7 @@ library IBaguetteFactoryExtension {
         if (pair != IBaguettePair(0)) {
             outAmount = pair.calculateRealSwapReturn(realInToken, realOutToken, inAmount);
             realInToken.universalTransfer(address(pair), inAmount);
-            if (uint256(address(realInToken)) < uint256(address(realOutToken))) {
+            if (address(realInToken) < address(realOutToken)) {
                 pair.swap(0, outAmount, address(this), "");
             } else {
                 pair.swap(outAmount, 0, address(this), "");
