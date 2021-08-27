@@ -12,24 +12,24 @@ import "./IJoeSwap.sol";
 import "./ILydiaSwap.sol";
 import "./IBaguette.sol";
 
-    enum Dex {
-        SushiSwap,
-        SushiSwapETH,
-        SushiSwapDAI,
-        PangolinSwap,
-        PangolinSwapETH,
-        PangolinSwapDAI,
-        JoeSwap,
-        JoeSwapETH,
-        JoeSwapDAI,
-        LydiaSwap,
-        LydiaSwapETH,
-        LydiaSwapDAI,
-        BaguetteSwap,
-        BaguetteSwapETH,
-        BaguetteSwapDAI,
-        NoDex
-    }
+enum Dex {
+    SushiSwap,
+    SushiSwapETH,
+    SushiSwapDAI,
+    PangolinSwap,
+    PangolinSwapETH,
+    PangolinSwapDAI,
+    JoeSwap,
+    JoeSwapETH,
+    JoeSwapDAI,
+    LydiaSwap,
+    LydiaSwapETH,
+    LydiaSwapDAI,
+    BaguetteSwap,
+    BaguetteSwapETH,
+    BaguetteSwapDAI,
+    NoDex
+}
 
 library Dexes {
     using UniversalERC20 for IERC20;

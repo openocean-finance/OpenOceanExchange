@@ -727,6 +727,16 @@ library Flags {
     uint256 internal constant FLAG_DISABLE_JOESWAP_WAVAX = 1 << 10;
     uint256 internal constant FLAG_DISABLE_JOESWAP_DAI = 1 << 11;
 
+    uint256 internal constant FLAG_DISABLE_LYDIA_ALL = 1 << 12;
+    uint256 internal constant FLAG_DISABLE_LYDIA = 1 << 13;
+    uint256 internal constant FLAG_DISABLE_LYDIA_WAVAX = 1 << 14;
+    uint256 internal constant FLAG_DISABLE_LYDIA_DAI = 1 << 15;
+
+    uint256 internal constant FLAG_DISABLE_BAGUETTE_ALL = 1 << 16;
+    uint256 internal constant FLAG_DISABLE_BAGUETTE = 1 << 17;
+    uint256 internal constant FLAG_DISABLE_BAGUETTE_WAVAX = 1 << 18;
+    uint256 internal constant FLAG_DISABLE_BAGUETTE_DAI = 1 << 19;
+
     function on(uint256 flags, uint256 flag) internal pure returns (bool) {
         return (flags & flag) != 0;
     }
@@ -1318,10 +1328,375 @@ library IJoeFactoryExtension {
     }
 }
 
+// File: contracts/dexes/ILydiaSwap.sol
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.6.0;
+
+
+
+
+
+
+/**
+ * @notice Uniswap V2 factory contract interface. See https://uniswap.org/docs/v2/smart-contracts/factory/
+ */
+interface ILydiaSwapFactory {
+    function getPair(IERC20 tokenA, IERC20 tokenB) external view returns (ILydiaPair pair);
+}
+
+/**
+ * @notice Uniswap V2 pair pool interface. See https://uniswap.org/docs/v2/smart-contracts/pair/
+ */
+interface ILydiaPair {
+    function swap(
+        uint256 amount0Out,
+        uint256 amount1Out,
+        address to,
+        bytes calldata data
+    ) external;
+
+    function getReserves()
+        external
+        view
+        returns (
+            uint112 reserve0,
+            uint112 reserve1,
+            uint32 blockTimestampLast
+        );
+
+    function skim(address to) external;
+
+    function sync() external;
+}
+
+library ILydiaPairExtension {
+    using SafeMath for uint256;
+    using UniversalERC20 for IERC20;
+
+    //TODO
+    address private constant SKIM_TARGET = 0xe523182610482b8C0DD65d5A08F1Bbd256B1EA0c;
+
+    /**
+     * @notice Use Uniswap's constant product formula to calculate expected swap return.
+     * See https://github.com/runtimeverification/verified-smart-contracts/blob/uniswap/uniswap/x-y-k.pdf
+     */
+    function calculateSwapReturn(
+        ILydiaPair pair,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256 amount
+    ) internal view returns (uint256) {
+        if (amount == 0) {
+            return 0;
+        }
+        uint256 inReserve = inToken.universalBalanceOf(address(pair));
+        uint256 outReserve = outToken.universalBalanceOf(address(pair));
+        return doCalculate(inReserve, outReserve, amount);
+    }
+
+    function calculateRealSwapReturn(
+        ILydiaPair pair,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256 amount
+    ) internal returns (uint256) {
+        uint256 inReserve = inToken.universalBalanceOf(address(pair));
+        uint256 outReserve = outToken.universalBalanceOf(address(pair));
+        (uint112 reserve0, uint112 reserve1, ) = pair.getReserves();
+        if (inToken > outToken) {
+            (reserve0, reserve1) = (reserve1, reserve0);
+        }
+        if (inReserve < reserve0 || outReserve < reserve1) {
+            pair.sync();
+        } else if (inReserve > reserve0 || outReserve > reserve1) {
+            pair.skim(SKIM_TARGET);
+        }
+
+        return doCalculate(Math.min(inReserve, reserve0), Math.min(outReserve, reserve1), amount);
+    }
+
+    function doCalculate(
+        uint256 inReserve,
+        uint256 outReserve,
+        uint256 amount
+    ) private pure returns (uint256) {
+        uint256 inAmountWithFee = amount.mul(998);
+        // Uniswap V2 now requires fixed 0.3% swap fee
+        uint256 numerator = inAmountWithFee.mul(outReserve);
+        uint256 denominator = inReserve.mul(1000).add(inAmountWithFee);
+        return (denominator == 0) ? 0 : numerator.div(denominator);
+    }
+}
+
+library ILydiaSwapFactoryExtension {
+    using SafeMath for uint256;
+    using UniversalERC20 for IERC20;
+    using ILydiaPairExtension for ILydiaPair;
+    using Tokens for IERC20;
+
+    function calculateSwapReturn(
+        ILydiaSwapFactory factory,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256[] memory inAmounts
+    ) internal view returns (uint256[] memory outAmounts, uint256 gas) {
+        outAmounts = new uint256[](inAmounts.length);
+
+        IERC20 realInToken = inToken.wrapAVAX();
+        IERC20 realOutToken = outToken.wrapAVAX();
+        ILydiaPair pair = factory.getPair(realInToken, realOutToken);
+        if (pair != ILydiaPair(0)) {
+            for (uint256 i = 0; i < inAmounts.length; i++) {
+                outAmounts[i] = pair.calculateSwapReturn(realInToken, realOutToken, inAmounts[i]);
+            }
+            return (outAmounts, 50_000);
+        }
+    }
+
+    function calculateTransitionalSwapReturn(
+        ILydiaSwapFactory factory,
+        IERC20 inToken,
+        IERC20 transitionToken,
+        IERC20 outToken,
+        uint256[] memory inAmounts
+    ) internal view returns (uint256[] memory outAmounts, uint256 gas) {
+        IERC20 realInToken = inToken.wrapAVAX();
+        IERC20 realTransitionToken = transitionToken.wrapAVAX();
+        IERC20 realOutToken = outToken.wrapAVAX();
+
+        if (realInToken == realTransitionToken || realOutToken == realTransitionToken) {
+            return (new uint256[](inAmounts.length), 0);
+        }
+        uint256 firstGas;
+        uint256 secondGas;
+        (outAmounts, firstGas) = calculateSwapReturn(factory, realInToken, realTransitionToken, inAmounts);
+        (outAmounts, secondGas) = calculateSwapReturn(factory, realTransitionToken, realOutToken, outAmounts);
+        return (outAmounts, firstGas + secondGas);
+    }
+
+    function swap(
+        ILydiaSwapFactory factory,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256 inAmount
+    ) internal returns (uint256 outAmount) {
+        inToken.depositToWAVAX(inAmount);
+        IERC20 realInToken = inToken.wrapAVAX();
+        IERC20 realOutToken = outToken.wrapAVAX();
+        ILydiaPair pair = factory.getPair(realInToken, realOutToken);
+        if (pair != ILydiaPair(0)) {
+            outAmount = pair.calculateRealSwapReturn(realInToken, realOutToken, inAmount);
+            realInToken.universalTransfer(address(pair), inAmount);
+            if (address(realInToken) < address(realOutToken)) {
+                pair.swap(0, outAmount, address(this), "");
+            } else {
+                pair.swap(outAmount, 0, address(this), "");
+            }
+        }
+        outToken.withdrawFromWAVAX();
+    }
+
+    function swapTransitional(
+        ILydiaSwapFactory factory,
+        IERC20 inToken,
+        IERC20 transitionToken,
+        IERC20 outToken,
+        uint256 inAmount
+    ) internal {
+        swap(factory, transitionToken, outToken, swap(factory, inToken, transitionToken, inAmount));
+    }
+}
+
+// File: contracts/dexes/IBaguette.sol
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.6.0;
+
+
+
+
+
+
+/**
+ * @notice Uniswap V2 factory contract interface. See https://uniswap.org/docs/v2/smart-contracts/factory/
+ */
+interface IBaguetteFactory {
+    function getPair(IERC20 tokenA, IERC20 tokenB) external view returns (IBaguettePair pair);
+}
+
+/**
+ * @notice Uniswap V2 pair pool interface. See https://uniswap.org/docs/v2/smart-contracts/pair/
+ */
+interface IBaguettePair {
+    function swap(
+        uint256 amount0Out,
+        uint256 amount1Out,
+        address to,
+        bytes calldata data
+    ) external;
+
+    function getReserves()
+        external
+        view
+        returns (
+            uint112 reserve0,
+            uint112 reserve1,
+            uint32 blockTimestampLast
+        );
+
+    function skim(address to) external;
+
+    function sync() external;
+}
+
+library IBaguettePairExtension {
+    using SafeMath for uint256;
+    using UniversalERC20 for IERC20;
+
+    //TODO
+    address private constant SKIM_TARGET = 0xe523182610482b8C0DD65d5A08F1Bbd256B1EA0c;
+
+    /**
+     * @notice Use Uniswap's constant product formula to calculate expected swap return.
+     * See https://github.com/runtimeverification/verified-smart-contracts/blob/uniswap/uniswap/x-y-k.pdf
+     */
+    function calculateSwapReturn(
+        IBaguettePair pair,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256 amount
+    ) internal view returns (uint256) {
+        if (amount == 0) {
+            return 0;
+        }
+        uint256 inReserve = inToken.universalBalanceOf(address(pair));
+        uint256 outReserve = outToken.universalBalanceOf(address(pair));
+        return doCalculate(inReserve, outReserve, amount);
+    }
+
+    function calculateRealSwapReturn(
+        IBaguettePair pair,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256 amount
+    ) internal returns (uint256) {
+        uint256 inReserve = inToken.universalBalanceOf(address(pair));
+        uint256 outReserve = outToken.universalBalanceOf(address(pair));
+
+        (uint112 reserve0, uint112 reserve1, ) = pair.getReserves();
+        if (inToken > outToken) {
+            (reserve0, reserve1) = (reserve1, reserve0);
+        }
+        if (inReserve < reserve0 || outReserve < reserve1) {
+            pair.sync();
+        } else if (inReserve > reserve0 || outReserve > reserve1) {
+            pair.skim(SKIM_TARGET);
+        }
+
+        return doCalculate(Math.min(inReserve, reserve0), Math.min(outReserve, reserve1), amount);
+    }
+
+    function doCalculate(
+        uint256 inReserve,
+        uint256 outReserve,
+        uint256 amount
+    ) private pure returns (uint256) {
+        uint256 inAmountWithFee = amount.mul(997);
+        // Uniswap V2 now requires fixed 0.3% swap fee
+        uint256 numerator = inAmountWithFee.mul(outReserve);
+        uint256 denominator = inReserve.mul(1000).add(inAmountWithFee);
+        return (denominator == 0) ? 0 : numerator.div(denominator);
+    }
+}
+
+library IBaguetteFactoryExtension {
+    using SafeMath for uint256;
+    using UniversalERC20 for IERC20;
+    using IBaguettePairExtension for IBaguettePair;
+    using Tokens for IERC20;
+
+    function calculateSwapReturn(
+        IBaguetteFactory factory,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256[] memory inAmounts
+    ) internal view returns (uint256[] memory outAmounts, uint256 gas) {
+        outAmounts = new uint256[](inAmounts.length);
+
+        IERC20 realInToken = inToken.wrapAVAX();
+        IERC20 realOutToken = outToken.wrapAVAX();
+        IBaguettePair pair = factory.getPair(realInToken, realOutToken);
+        if (pair != IBaguettePair(0)) {
+            for (uint256 i = 0; i < inAmounts.length; i++) {
+                outAmounts[i] = pair.calculateSwapReturn(realInToken, realOutToken, inAmounts[i]);
+            }
+            return (outAmounts, 50_000);
+        }
+    }
+
+    function calculateTransitionalSwapReturn(
+        IBaguetteFactory factory,
+        IERC20 inToken,
+        IERC20 transitionToken,
+        IERC20 outToken,
+        uint256[] memory inAmounts
+    ) internal view returns (uint256[] memory outAmounts, uint256 gas) {
+        IERC20 realInToken = inToken.wrapAVAX();
+        IERC20 realTransitionToken = transitionToken.wrapAVAX();
+        IERC20 realOutToken = outToken.wrapAVAX();
+
+        if (realInToken == realTransitionToken || realOutToken == realTransitionToken) {
+            return (new uint256[](inAmounts.length), 0);
+        }
+        uint256 firstGas;
+        uint256 secondGas;
+        (outAmounts, firstGas) = calculateSwapReturn(factory, realInToken, realTransitionToken, inAmounts);
+        (outAmounts, secondGas) = calculateSwapReturn(factory, realTransitionToken, realOutToken, outAmounts);
+        return (outAmounts, firstGas + secondGas);
+    }
+
+    function swap(
+        IBaguetteFactory factory,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256 inAmount
+    ) internal returns (uint256 outAmount) {
+        inToken.depositToWAVAX(inAmount);
+
+        IERC20 realInToken = inToken.wrapAVAX();
+        IERC20 realOutToken = outToken.wrapAVAX();
+        IBaguettePair pair = factory.getPair(realInToken, realOutToken);
+
+        if (pair != IBaguettePair(0)) {
+            outAmount = pair.calculateRealSwapReturn(realInToken, realOutToken, inAmount);
+            realInToken.universalTransfer(address(pair), inAmount);
+            if (address(realInToken) < address(realOutToken)) {
+                pair.swap(0, outAmount, address(this), "");
+            } else {
+                pair.swap(outAmount, 0, address(this), "");
+            }
+        }
+        outToken.withdrawFromWAVAX();
+    }
+
+    function swapTransitional(
+        IBaguetteFactory factory,
+        IERC20 inToken,
+        IERC20 transitionToken,
+        IERC20 outToken,
+        uint256 inAmount
+    ) internal {
+        swap(factory, transitionToken, outToken, swap(factory, inToken, transitionToken, inAmount));
+    }
+}
+
 // File: contracts/dexes/Dexes.sol
 
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.6.0;
+
+
 
 
 
@@ -1341,12 +1716,24 @@ enum Dex {
     JoeSwap,
     JoeSwapETH,
     JoeSwapDAI,
+    LydiaSwap,
+    LydiaSwapETH,
+    LydiaSwapDAI,
+    BaguetteSwap,
+    BaguetteSwapETH,
+    BaguetteSwapDAI,
     NoDex
 }
 
 library Dexes {
     using UniversalERC20 for IERC20;
     using Flags for uint256;
+
+    IBaguetteFactory internal constant baguette = IBaguetteFactory(0x3587B8c0136c2C3605a9E5B03ab54Da3e4044b50);
+    using IBaguetteFactoryExtension for IBaguetteFactory;
+
+    ILydiaSwapFactory internal constant lydia = ILydiaSwapFactory(0xe0C1bb6DF4851feEEdc3E14Bd509FEAF428f7655);
+    using ILydiaSwapFactoryExtension for ILydiaSwapFactory;
 
     ISushiSwapFactory internal constant sushiswap = ISushiSwapFactory(0xc35DADB65012eC5796536bD9864eD8773aBc74C4);
     using ISushiSwapFactoryExtension for ISushiSwapFactory;
@@ -1372,6 +1759,28 @@ library Dexes {
         uint256[] memory inAmounts,
         uint256 flags
     ) internal view returns (uint256[] memory, uint256) {
+        //add baguette
+        if (dex == Dex.BaguetteSwap && !flags.or(Flags.FLAG_DISABLE_BAGUETTE_ALL, Flags.FLAG_DISABLE_BAGUETTE)) {
+            return baguette.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+        if (dex == Dex.BaguetteSwapETH && !flags.or(Flags.FLAG_DISABLE_BAGUETTE_ALL, Flags.FLAG_DISABLE_BAGUETTE_WAVAX)) {
+            return baguette.calculateTransitionalSwapReturn(inToken, Tokens.WAVAX, outToken, inAmounts);
+        }
+        if (dex == Dex.BaguetteSwapDAI && !flags.or(Flags.FLAG_DISABLE_BAGUETTE_ALL, Flags.FLAG_DISABLE_BAGUETTE_DAI)) {
+            return baguette.calculateTransitionalSwapReturn(inToken, Tokens.DAI, outToken, inAmounts);
+        }
+
+        //add lydia
+        if (dex == Dex.LydiaSwap && !flags.or(Flags.FLAG_DISABLE_LYDIA_ALL, Flags.FLAG_DISABLE_LYDIA)) {
+            return lydia.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+        if (dex == Dex.LydiaSwapETH && !flags.or(Flags.FLAG_DISABLE_LYDIA_ALL, Flags.FLAG_DISABLE_LYDIA_WAVAX)) {
+            return lydia.calculateTransitionalSwapReturn(inToken, Tokens.WAVAX, outToken, inAmounts);
+        }
+        if (dex == Dex.LydiaSwapDAI && !flags.or(Flags.FLAG_DISABLE_LYDIA_ALL, Flags.FLAG_DISABLE_LYDIA_DAI)) {
+            return lydia.calculateTransitionalSwapReturn(inToken, Tokens.DAI, outToken, inAmounts);
+        }
+
         //add Joe
         if (dex == Dex.JoeSwap && !flags.or(Flags.FLAG_DISABLE_JOESWAP_ALL, Flags.FLAG_DISABLE_JOESWAP)) {
             return joe.calculateSwapReturn(inToken, outToken, inAmounts);
@@ -1416,6 +1825,28 @@ library Dexes {
         uint256 amount,
         uint256 flags
     ) internal {
+        //add baguette
+        if (dex == Dex.BaguetteSwap && !flags.or(Flags.FLAG_DISABLE_BAGUETTE_ALL, Flags.FLAG_DISABLE_BAGUETTE)) {
+            baguette.swap(inToken, outToken, amount);
+        }
+        if (dex == Dex.BaguetteSwapETH && !flags.or(Flags.FLAG_DISABLE_BAGUETTE_ALL, Flags.FLAG_DISABLE_BAGUETTE_WAVAX)) {
+            baguette.swapTransitional(inToken, Tokens.WAVAX, outToken, amount);
+        }
+        if (dex == Dex.BaguetteSwapDAI && !flags.or(Flags.FLAG_DISABLE_BAGUETTE_ALL, Flags.FLAG_DISABLE_BAGUETTE_DAI)) {
+            baguette.swapTransitional(inToken, Tokens.DAI, outToken, amount);
+        }
+
+        //add lydia
+        if (dex == Dex.LydiaSwap && !flags.or(Flags.FLAG_DISABLE_LYDIA_ALL, Flags.FLAG_DISABLE_LYDIA)) {
+            lydia.swap(inToken, outToken, amount);
+        }
+        if (dex == Dex.LydiaSwapETH && !flags.or(Flags.FLAG_DISABLE_LYDIA_ALL, Flags.FLAG_DISABLE_LYDIA_WAVAX)) {
+            lydia.swapTransitional(inToken, Tokens.WAVAX, outToken, amount);
+        }
+        if (dex == Dex.LydiaSwapDAI && !flags.or(Flags.FLAG_DISABLE_LYDIA_ALL, Flags.FLAG_DISABLE_LYDIA_DAI)) {
+            lydia.swapTransitional(inToken, Tokens.DAI, outToken, amount);
+        }
+
         //add Joe
         if (dex == Dex.JoeSwap && !flags.or(Flags.FLAG_DISABLE_JOESWAP_ALL, Flags.FLAG_DISABLE_JOESWAP)) {
             joe.swap(inToken, outToken, amount);
