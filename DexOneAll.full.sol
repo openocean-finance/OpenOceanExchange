@@ -1,4 +1,3 @@
-
 // File: @openzeppelin/contracts/token/ERC20/IERC20.sol
 
 // SPDX-License-Identifier: MIT
@@ -62,7 +61,11 @@ interface IERC20 {
      *
      * Emits a {Transfer} event.
      */
-    function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
+    function transferFrom(
+        address sender,
+        address recipient,
+        uint256 amount
+    ) external returns (bool);
 
     /**
      * @dev Emitted when `value` tokens are moved from one account (`from`) to
@@ -140,7 +143,11 @@ library SafeMath {
      *
      * - Subtraction cannot overflow.
      */
-    function sub(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
+    function sub(
+        uint256 a,
+        uint256 b,
+        string memory errorMessage
+    ) internal pure returns (uint256) {
         require(b <= a, errorMessage);
         uint256 c = a - b;
 
@@ -199,7 +206,11 @@ library SafeMath {
      *
      * - The divisor cannot be zero.
      */
-    function div(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
+    function div(
+        uint256 a,
+        uint256 b,
+        string memory errorMessage
+    ) internal pure returns (uint256) {
         require(b > 0, errorMessage);
         uint256 c = a / b;
         // assert(a == b * c + a % b); // There is no case in which this doesn't hold
@@ -235,7 +246,11 @@ library SafeMath {
      *
      * - The divisor cannot be zero.
      */
-    function mod(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
+    function mod(
+        uint256 a,
+        uint256 b,
+        string memory errorMessage
+    ) internal pure returns (uint256) {
         require(b != 0, errorMessage);
         return a % b;
     }
@@ -246,7 +261,6 @@ library SafeMath {
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.6.0;
 
-
 abstract contract IDexOne {
     function calculateSwapReturn(
         IERC20 inToken,
@@ -254,7 +268,7 @@ abstract contract IDexOne {
         uint256 inAmount,
         uint256 partition,
         uint256 flags
-    ) public virtual view returns (uint256 outAmount, uint256[] memory distribution);
+    ) public view virtual returns (uint256 outAmount, uint256[] memory distribution);
 
     function calculateSwapReturnWithGas(
         IERC20 inToken,
@@ -265,8 +279,8 @@ abstract contract IDexOne {
         uint256 outTokenEthPriceTimesGasPrice
     )
         public
-        virtual
         view
+        virtual
         returns (
             uint256 outAmount,
             uint256 estimateGasAmount,
@@ -280,7 +294,7 @@ abstract contract IDexOne {
         uint256 minOutAmount,
         uint256[] memory distribution,
         uint256 flags
-    ) public virtual payable returns (uint256 outAmount);
+    ) public payable virtual returns (uint256 outAmount);
 }
 
 abstract contract IDexOneTransitional is IDexOne {
@@ -292,8 +306,8 @@ abstract contract IDexOneTransitional is IDexOne {
         uint256[] memory outTokenEthPriceTimesGasPrices
     )
         public
-        virtual
         view
+        virtual
         returns (
             uint256[] memory outAmounts,
             uint256 estimateGasAmount,
@@ -306,7 +320,7 @@ abstract contract IDexOneTransitional is IDexOne {
         uint256 minOutAmount,
         uint256[] memory distribution,
         uint256[] memory flags
-    ) public virtual payable returns (uint256 outAmount);
+    ) public payable virtual returns (uint256 outAmount);
 }
 
 // File: @openzeppelin/contracts/utils/Address.sol
@@ -343,7 +357,9 @@ library Address {
         bytes32 codehash;
         bytes32 accountHash = 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470;
         // solhint-disable-next-line no-inline-assembly
-        assembly { codehash := extcodehash(account) }
+        assembly {
+            codehash := extcodehash(account)
+        }
         return (codehash != accountHash && codehash != 0x0);
     }
 
@@ -367,7 +383,7 @@ library Address {
         require(address(this).balance >= amount, "Address: insufficient balance");
 
         // solhint-disable-next-line avoid-low-level-calls, avoid-call-value
-        (bool success, ) = recipient.call{ value: amount }("");
+        (bool success, ) = recipient.call{value: amount}("");
         require(success, "Address: unable to send value, recipient may have reverted");
     }
 
@@ -390,7 +406,7 @@ library Address {
      * _Available since v3.1._
      */
     function functionCall(address target, bytes memory data) internal returns (bytes memory) {
-      return functionCall(target, data, "Address: low-level call failed");
+        return functionCall(target, data, "Address: low-level call failed");
     }
 
     /**
@@ -399,7 +415,11 @@ library Address {
      *
      * _Available since v3.1._
      */
-    function functionCall(address target, bytes memory data, string memory errorMessage) internal returns (bytes memory) {
+    function functionCall(
+        address target,
+        bytes memory data,
+        string memory errorMessage
+    ) internal returns (bytes memory) {
         return _functionCallWithValue(target, data, 0, errorMessage);
     }
 
@@ -414,7 +434,11 @@ library Address {
      *
      * _Available since v3.1._
      */
-    function functionCallWithValue(address target, bytes memory data, uint256 value) internal returns (bytes memory) {
+    function functionCallWithValue(
+        address target,
+        bytes memory data,
+        uint256 value
+    ) internal returns (bytes memory) {
         return functionCallWithValue(target, data, value, "Address: low-level call with value failed");
     }
 
@@ -424,16 +448,26 @@ library Address {
      *
      * _Available since v3.1._
      */
-    function functionCallWithValue(address target, bytes memory data, uint256 value, string memory errorMessage) internal returns (bytes memory) {
+    function functionCallWithValue(
+        address target,
+        bytes memory data,
+        uint256 value,
+        string memory errorMessage
+    ) internal returns (bytes memory) {
         require(address(this).balance >= value, "Address: insufficient balance for call");
         return _functionCallWithValue(target, data, value, errorMessage);
     }
 
-    function _functionCallWithValue(address target, bytes memory data, uint256 weiValue, string memory errorMessage) private returns (bytes memory) {
+    function _functionCallWithValue(
+        address target,
+        bytes memory data,
+        uint256 weiValue,
+        string memory errorMessage
+    ) private returns (bytes memory) {
         require(isContract(target), "Address: call to non-contract");
 
         // solhint-disable-next-line avoid-low-level-calls
-        (bool success, bytes memory returndata) = target.call{ value: weiValue }(data);
+        (bool success, bytes memory returndata) = target.call{value: weiValue}(data);
         if (success) {
             return returndata;
         } else {
@@ -459,9 +493,6 @@ library Address {
 
 pragma solidity ^0.6.0;
 
-
-
-
 /**
  * @title SafeERC20
  * @dev Wrappers around ERC20 operations that throw on failure (when the token
@@ -475,11 +506,20 @@ library SafeERC20 {
     using SafeMath for uint256;
     using Address for address;
 
-    function safeTransfer(IERC20 token, address to, uint256 value) internal {
+    function safeTransfer(
+        IERC20 token,
+        address to,
+        uint256 value
+    ) internal {
         _callOptionalReturn(token, abi.encodeWithSelector(token.transfer.selector, to, value));
     }
 
-    function safeTransferFrom(IERC20 token, address from, address to, uint256 value) internal {
+    function safeTransferFrom(
+        IERC20 token,
+        address from,
+        address to,
+        uint256 value
+    ) internal {
         _callOptionalReturn(token, abi.encodeWithSelector(token.transferFrom.selector, from, to, value));
     }
 
@@ -490,23 +530,36 @@ library SafeERC20 {
      * Whenever possible, use {safeIncreaseAllowance} and
      * {safeDecreaseAllowance} instead.
      */
-    function safeApprove(IERC20 token, address spender, uint256 value) internal {
+    function safeApprove(
+        IERC20 token,
+        address spender,
+        uint256 value
+    ) internal {
         // safeApprove should only be called when setting an initial allowance,
         // or when resetting it to zero. To increase and decrease it, use
         // 'safeIncreaseAllowance' and 'safeDecreaseAllowance'
         // solhint-disable-next-line max-line-length
-        require((value == 0) || (token.allowance(address(this), spender) == 0),
+        require(
+            (value == 0) || (token.allowance(address(this), spender) == 0),
             "SafeERC20: approve from non-zero to non-zero allowance"
         );
         _callOptionalReturn(token, abi.encodeWithSelector(token.approve.selector, spender, value));
     }
 
-    function safeIncreaseAllowance(IERC20 token, address spender, uint256 value) internal {
+    function safeIncreaseAllowance(
+        IERC20 token,
+        address spender,
+        uint256 value
+    ) internal {
         uint256 newAllowance = token.allowance(address(this), spender).add(value);
         _callOptionalReturn(token, abi.encodeWithSelector(token.approve.selector, spender, newAllowance));
     }
 
-    function safeDecreaseAllowance(IERC20 token, address spender, uint256 value) internal {
+    function safeDecreaseAllowance(
+        IERC20 token,
+        address spender,
+        uint256 value
+    ) internal {
         uint256 newAllowance = token.allowance(address(this), spender).sub(value, "SafeERC20: decreased allowance below zero");
         _callOptionalReturn(token, abi.encodeWithSelector(token.approve.selector, spender, newAllowance));
     }
@@ -523,7 +576,8 @@ library SafeERC20 {
         // the target address contains contract code and also asserts for success in the low-level call.
 
         bytes memory returndata = address(token).functionCall(data, "SafeERC20: low-level call failed");
-        if (returndata.length > 0) { // Return data is optional
+        if (returndata.length > 0) {
+            // Return data is optional
             // solhint-disable-next-line max-line-length
             require(abi.decode(returndata, (bool)), "SafeERC20: ERC20 operation did not succeed");
         }
@@ -534,9 +588,6 @@ library SafeERC20 {
 
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.6.0;
-
-
-
 
 /**
  * @dev See https://github.com/CryptoManiacsZone/1inchProtocol/blob/master/contracts/UniversalERC20.sol
@@ -661,8 +712,6 @@ library UniversalERC20 {
 
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.6.0;
-
-
 
 /**
  * @dev Wrapper of ETH. See https://weth.io/
@@ -801,7 +850,7 @@ library Math {
      */
     function average(uint256 a, uint256 b) internal pure returns (uint256) {
         // (a + b) / 2 can overflow, so we distribute
-        return (a / 2) + (b / 2) + ((a % 2 + b % 2) / 2);
+        return (a / 2) + (b / 2) + (((a % 2) + (b % 2)) / 2);
     }
 }
 
@@ -809,11 +858,6 @@ library Math {
 
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.6.0;
-
-
-
-
-
 
 /**
  * @notice Uniswap V2 factory contract interface. See https://uniswap.org/docs/v2/smart-contracts/factory/
@@ -991,11 +1035,6 @@ library IQuickswapFactoryExtension {
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.6.0;
 
-
-
-
-
-
 /**
  * @notice Uniswap V2 factory contract interface. See https://uniswap.org/docs/v2/smart-contracts/factory/
  */
@@ -1171,11 +1210,6 @@ library ISushiSwapFactoryExtension {
 
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.6.0;
-
-
-
-
-
 
 /**
  * @notice Uniswap V2 factory contract interface. See https://uniswap.org/docs/v2/smart-contracts/factory/
@@ -1353,9 +1387,6 @@ library IComethFactoryExtension {
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.6.0;
 
-
-
-
 library IWETHExtension {
     using UniversalERC20 for IERC20;
     using Tokens for IERC20;
@@ -1391,11 +1422,6 @@ library IWETHExtension {
 
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.6.0;
-
-
-
-
-
 
 /**
  * @notice Uniswap V2 factory contract interface. See https://uniswap.org/docs/v2/smart-contracts/factory/
@@ -1573,11 +1599,6 @@ library IDfynFactoryExtension {
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.6.0;
 
-
-
-
-
-
 /**
  * @notice Uniswap V2 factory contract interface. See https://uniswap.org/docs/v2/smart-contracts/factory/
  */
@@ -1754,10 +1775,6 @@ library IPolyZapFactoryExtension {
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.6.0;
 
-
-
-
-
 /**
  * @notice Pool contracts of curve.fi
  * See https://github.com/curvefi/curve-vue/blob/master/src/docs/README.md#how-to-integrate-curve-smart-contracts
@@ -1893,18 +1910,6 @@ library ICurvePoolExtension {
 
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.6.0;
-
-
-
-
-
-
-
-
-
-
-
-
 
 enum Dex {
     Quickswap,
@@ -2167,9 +2172,6 @@ library Dexes {
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.6.0;
 
-
-
-
 contract DexOneView {
     using SafeMath for uint256;
     using Dexes for Dex;
@@ -2196,7 +2198,7 @@ contract DexOneView {
         uint256 inAmount,
         uint256 partition,
         uint256 flags
-    ) public virtual view returns (uint256 outAmount, uint256[] memory distribution) {
+    ) public view virtual returns (uint256 outAmount, uint256[] memory distribution) {
         (outAmount, , distribution) = calculateSwapReturnWithGas(inToken, outToken, inAmount, partition, flags, 0);
     }
 
@@ -2209,8 +2211,8 @@ contract DexOneView {
         uint256 outTokenEthPriceTimesGasPrice
     )
         public
-        virtual
         view
+        virtual
         returns (
             uint256 outAmount,
             uint256 estimateGasAmount,
@@ -2331,7 +2333,7 @@ contract DexOneView {
         IERC20 outToken,
         uint256 inAmount,
         uint256 flags
-    ) public virtual view returns (uint256[] memory outAmounts) {
+    ) public view virtual returns (uint256[] memory outAmounts) {
         Dex[] memory dexes = Dexes.allDexes();
         outAmounts = new uint256[](dexes.length);
         if (inToken == outToken) {
@@ -2351,11 +2353,6 @@ contract DexOneView {
 
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.6.0;
-
-
-
-
-
 
 contract DexOne is IDexOne {
     using SafeMath for uint256;
@@ -2442,10 +2439,6 @@ contract DexOne is IDexOne {
             return amount;
         }
 
-        uint256 senderBalance = inToken.universalBalanceOf(msg.sender);
-        if (senderBalance < amount) {
-            amount = senderBalance;
-        }
         inToken.universalTransferFrom(msg.sender, address(this), amount);
         uint256 balance = inToken.universalBalanceOf(address(this));
 
@@ -2476,11 +2469,6 @@ contract DexOne is IDexOne {
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.6.0;
 
-
-
-
-
-
 contract DexOneAll is IDexOneTransitional {
     using SafeMath for uint256;
     using UniversalERC20 for IERC20;
@@ -2504,7 +2492,7 @@ contract DexOneAll is IDexOneTransitional {
         uint256 inAmount,
         uint256 partition,
         uint256 flags
-    ) public override view returns (uint256 outAmount, uint256[] memory distribution) {
+    ) public view override returns (uint256 outAmount, uint256[] memory distribution) {
         (outAmount, , distribution) = calculateSwapReturnWithGas(inToken, outToken, inAmount, partition, flags, 0);
     }
 
@@ -2517,8 +2505,8 @@ contract DexOneAll is IDexOneTransitional {
         uint256 outTokenEthPriceTimesGasPrice
     )
         public
-        override
         view
+        override
         returns (
             uint256 outAmount,
             uint256 estimateGasAmount,
@@ -2533,7 +2521,7 @@ contract DexOneAll is IDexOneTransitional {
         IERC20 outToken,
         uint256 inAmount,
         uint256 flags
-    ) public virtual view returns (uint256[] memory outAmounts) {
+    ) public view virtual returns (uint256[] memory outAmounts) {
         return dexOneView.calculateDexSwapReturns(inToken, outToken, inAmount, flags);
     }
 
@@ -2544,7 +2532,7 @@ contract DexOneAll is IDexOneTransitional {
         uint256 minOutAmount,
         uint256[] memory distribution,
         uint256 flags
-    ) public override payable returns (uint256 outAmount) {
+    ) public payable override returns (uint256 outAmount) {
         inToken.universalTransferFrom(msg.sender, address(this), inAmount);
         uint256 amount = inToken.universalBalanceOf(address(this));
         doSwap(inToken, outToken, amount, distribution, flags);
@@ -2565,8 +2553,8 @@ contract DexOneAll is IDexOneTransitional {
         uint256[] memory outTokenEthPriceTimesGasPrices
     )
         public
-        override
         view
+        override
         returns (
             uint256[] memory outAmounts,
             uint256 estimateGasAmount,
@@ -2608,7 +2596,7 @@ contract DexOneAll is IDexOneTransitional {
         uint256 minOutAmount,
         uint256[] memory distribution,
         uint256[] memory flags
-    ) public override payable returns (uint256 outAmount) {
+    ) public payable override returns (uint256 outAmount) {
         tokens[0].universalTransferFrom(msg.sender, address(this), inAmount);
         outAmount = tokens[0].universalBalanceOf(address(this));
 
