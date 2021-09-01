@@ -2,13 +2,20 @@
 pragma solidity ^0.6.0;
 
 library Flags {
-     // add SushiSwap
-     uint256 internal constant FLAG_DISABLE_SUSHISWAP_ALL = 1 << 0;
-     uint256 internal constant FLAG_DISABLE_SUSHISWAP = 1 << 1;
-     uint256 internal constant FLAG_DISABLE_SUSHISWAP_ETH = 1 << 2;
-     uint256 internal constant FLAG_DISABLE_SUSHISWAP_DAI = 1 << 3;
-     uint256 internal constant FLAG_DISABLE_SUSHISWAP_USDC = 1 << 4;
+    // add SushiSwap
+    uint256 internal constant FLAG_DISABLE_SUSHISWAP_ALL = 1 << 0;
+    uint256 internal constant FLAG_DISABLE_SUSHISWAP = 1 << 1;
+    uint256 internal constant FLAG_DISABLE_SUSHISWAP_FTM = 1 << 2;
 
+    //add SpookySwap
+    uint256 internal constant FLAG_DISABLE_SPOOKYSWAP_ALL = 1 << 3;
+    uint256 internal constant FLAG_DISABLE_SPOOKYSWAP = 1 << 4;
+    uint256 internal constant FLAG_DISABLE_SPOOKYSWAP_FTM = 1 << 5;
+
+    //add SpookySwap
+    uint256 internal constant FLAG_DISABLE_SPIRITSWAP_ALL = 1 << 6;
+    uint256 internal constant FLAG_DISABLE_SPIRITSWAP = 1 << 7;
+    uint256 internal constant FLAG_DISABLE_SPIRITSWAP_FTM = 1 << 8;
 
     function on(uint256 flags, uint256 flag) internal pure returns (bool) {
         return (flags & flag) != 0;

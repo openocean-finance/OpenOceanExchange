@@ -7,19 +7,33 @@ import "../lib/UniversalERC20.sol";
 import "../lib/Tokens.sol";
 import "../lib/Flags.sol";
 import "./ISushiSwap.sol";
-
+import "./ISpookySwap.sol";
+import "./ISpiritSwap.sol";
 
     enum Dex {
         SushiSwap,
-        SushiSwapETH,
-        SushiSwapDAI,
-        SushiSwapUSDC,
+        SushiSwapFTM,
+
+        //ISpookySwap
+        SpookySwap,
+        SpookySwapFTM,
+
+        //ISpookySwap
+        SpiritSwap,
+        SpiritSwapFTM,
         NoDex
     }
 
 library Dexes {
     using UniversalERC20 for IERC20;
     using Flags for uint256;
+
+    //https://ftmscan.com/address/0xef45d134b73241eda7703fa787148d9c9f4950b0#code
+    ISpiritSwapFactory internal constant spiritswap = ISpiritSwapFactory(0xEF45d134b73241eDa7703fa787148D9C9F4950b0);
+    using ISpiritSwapFactoryExtension for ISpiritSwapFactory;
+
+    ISpookySwapFactory internal constant spookyswap = ISpookySwapFactory(0x152eE697f2E276fA89E96742e9bB9aB1F2E61bE3);
+    using ISpookySwapFactoryExtension for ISpookySwapFactory;
 
     ISushiSwapFactory internal constant sushiswap = ISushiSwapFactory(0xc35DADB65012eC5796536bD9864eD8773aBc74C4);
     using ISushiSwapFactoryExtension for ISushiSwapFactory;
@@ -39,18 +53,28 @@ library Dexes {
         uint256[] memory inAmounts,
         uint256 flags
     ) internal view returns (uint256[] memory, uint256) {
+        // add SpiritSwap
+        if (dex == Dex.SpiritSwap && !flags.or(Flags.FLAG_DISABLE_SPIRITSWAP_ALL, Flags.FLAG_DISABLE_SPIRITSWAP)) {
+            return spiritswap.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+        if (dex == Dex.SpiritSwapFTM && !flags.or(Flags.FLAG_DISABLE_SPIRITSWAP_ALL, Flags.FLAG_DISABLE_SPIRITSWAP_FTM)) {
+            return spiritswap.calculateTransitionalSwapReturn(inToken, Tokens.WFTM, outToken, inAmounts);
+        }
+
+        // add SpookySwap
+        if (dex == Dex.SpookySwap && !flags.or(Flags.FLAG_DISABLE_SPOOKYSWAP_ALL, Flags.FLAG_DISABLE_SPOOKYSWAP)) {
+            return spookyswap.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+        if (dex == Dex.SpookySwapFTM && !flags.or(Flags.FLAG_DISABLE_SPOOKYSWAP_ALL, Flags.FLAG_DISABLE_SPOOKYSWAP_FTM)) {
+            return spookyswap.calculateTransitionalSwapReturn(inToken, Tokens.WFTM, outToken, inAmounts);
+        }
+
         // add SushiSwap
         if (dex == Dex.SushiSwap && !flags.or(Flags.FLAG_DISABLE_SUSHISWAP_ALL, Flags.FLAG_DISABLE_SUSHISWAP)) {
             return sushiswap.calculateSwapReturn(inToken, outToken, inAmounts);
         }
-        if (dex == Dex.SushiSwapETH && !flags.or(Flags.FLAG_DISABLE_SUSHISWAP_ALL, Flags.FLAG_DISABLE_SUSHISWAP_ETH)) {
+        if (dex == Dex.SushiSwapFTM && !flags.or(Flags.FLAG_DISABLE_SUSHISWAP_ALL, Flags.FLAG_DISABLE_SUSHISWAP_FTM)) {
             return sushiswap.calculateTransitionalSwapReturn(inToken, Tokens.WFTM, outToken, inAmounts);
-        }
-        if (dex == Dex.SushiSwapDAI && !flags.or(Flags.FLAG_DISABLE_SUSHISWAP_ALL, Flags.FLAG_DISABLE_SUSHISWAP_DAI)) {
-            return sushiswap.calculateTransitionalSwapReturn(inToken, Tokens.DAI, outToken, inAmounts);
-        }
-        if (dex == Dex.SushiSwapUSDC && !flags.or(Flags.FLAG_DISABLE_SUSHISWAP_ALL, Flags.FLAG_DISABLE_SUSHISWAP_USDC)) {
-            return sushiswap.calculateTransitionalSwapReturn(inToken, Tokens.USDC, outToken, inAmounts);
         }
 
         // fallback
@@ -65,18 +89,28 @@ library Dexes {
         uint256 flags
     ) internal {
 
+        // add SpiritSwap
+        if (dex == Dex.SpiritSwap && !flags.or(Flags.FLAG_DISABLE_SPIRITSWAP_ALL, Flags.FLAG_DISABLE_SPIRITSWAP)) {
+            spiritswap.swap(inToken, outToken, amount);
+        }
+        if (dex == Dex.SpiritSwapFTM && !flags.or(Flags.FLAG_DISABLE_SPIRITSWAP_ALL, Flags.FLAG_DISABLE_SPIRITSWAP_FTM)) {
+            spiritswap.swapTransitional(inToken, Tokens.WFTM, outToken, amount);
+        }
+
+        // add SpookySwap
+        if (dex == Dex.SpookySwap && !flags.or(Flags.FLAG_DISABLE_SPOOKYSWAP_ALL, Flags.FLAG_DISABLE_SPOOKYSWAP)) {
+            spookyswap.swap(inToken, outToken, amount);
+        }
+        if (dex == Dex.SpookySwapFTM && !flags.or(Flags.FLAG_DISABLE_SPOOKYSWAP_ALL, Flags.FLAG_DISABLE_SPOOKYSWAP_FTM)) {
+            spookyswap.swapTransitional(inToken, Tokens.WFTM, outToken, amount);
+        }
+
         // add SushiSwap
         if (dex == Dex.SushiSwap && !flags.or(Flags.FLAG_DISABLE_SUSHISWAP_ALL, Flags.FLAG_DISABLE_SUSHISWAP)) {
             sushiswap.swap(inToken, outToken, amount);
         }
-        if (dex == Dex.SushiSwapETH && !flags.or(Flags.FLAG_DISABLE_SUSHISWAP_ALL, Flags.FLAG_DISABLE_SUSHISWAP_ETH)) {
+        if (dex == Dex.SushiSwapFTM && !flags.or(Flags.FLAG_DISABLE_SUSHISWAP_ALL, Flags.FLAG_DISABLE_SUSHISWAP_FTM)) {
             sushiswap.swapTransitional(inToken, Tokens.WFTM, outToken, amount);
-        }
-        if (dex == Dex.SushiSwapDAI && !flags.or(Flags.FLAG_DISABLE_SUSHISWAP_ALL, Flags.FLAG_DISABLE_SUSHISWAP_DAI)) {
-            sushiswap.swapTransitional(inToken, Tokens.DAI, outToken, amount);
-        }
-        if (dex == Dex.SushiSwapUSDC && !flags.or(Flags.FLAG_DISABLE_SUSHISWAP_ALL, Flags.FLAG_DISABLE_SUSHISWAP_USDC)) {
-            sushiswap.swapTransitional(inToken, Tokens.USDC, outToken, amount);
         }
     }
 }
