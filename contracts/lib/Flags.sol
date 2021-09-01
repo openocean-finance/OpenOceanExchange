@@ -17,6 +17,11 @@ library Flags {
     uint256 internal constant FLAG_DISABLE_SPIRITSWAP = 1 << 7;
     uint256 internal constant FLAG_DISABLE_SPIRITSWAP_FTM = 1 << 8;
 
+    //add Curve
+    uint256 internal constant FLAG_DISABLE_CURVE_2POOL = 1 << 9;
+    uint256 internal constant FLAG_DISABLE_CURVE_FUSDT = 1 << 10;
+    uint256 internal constant FLAG_DISABLE_CURVE_RENBTC = 1 << 11;
+
     function on(uint256 flags, uint256 flag) internal pure returns (bool) {
         return (flags & flag) != 0;
     }
