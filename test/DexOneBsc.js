@@ -68,33 +68,68 @@ contract('DexOne', (accounts) => {
         let balanceBefore = await usdt.balanceOf(accounts[0])
         console.log(`balance of ${accounts[0]}: (${balanceBefore}) USDT`);
 
-        let testName = "spookyswap";
+        let testName = "spirit";
         if (testName == "sushiswap") {
             pass = pass.sub(DisableSushiswapAll);
             pass = pass.sub(DisableSushiswap);
         } else if (testName == "spookyswap") {
             pass = pass.sub(DisableSPOOKYSWAPAll);
             pass = pass.sub(DisableSPOOKYSWAP);
+        } else if (testName == "spirit") {
+            pass = pass.sub(DisableSPIRITSWAPAll);
+            pass = pass.sub(DisableSPIRITSWAP);
         }
         const dexOne = await DexOne.deployed();
         let swapAmt = '1000000000000000000';
-        const res = await dexOne.calculateSwapReturn(fmtAddress, usdtAddress, swapAmt, 10, pass);
+        let res = await dexOne.calculateSwapReturn(fmtAddress, usdtAddress, swapAmt, 10, pass);
         expectedOutAmount = res.outAmount;
         console.log(`expect out amount ${res.outAmount.toString()} USDT`);
         console.log("res.distribution:", res.distribution.toString());
 
-        await usdt.approve(dexOne.address, swapAmt);
         await invokeContract(web3, accounts[0], dexOne, fmtAddress, usdtAddress, swapAmt, res);
         balanceAfter = await usdt.balanceOf(accounts[0])
         console.log(`balance of ${accounts[0]}: (${balanceAfter}) USDT`);
         assert.equal(expectedOutAmount, balanceAfter - balanceBefore);
 
 
+        if (false) {
+            return;
+        }
+        //要和上面对应
+        if (testName == "sushiswap") {
+            pass = pass.add(DisableSushiswapAll);
+            pass = pass.add(DisableSushiswap);
+        } else if (testName == "spookyswap") {
+            pass = pass.add(DisableSPOOKYSWAPAll);
+            pass = pass.add(DisableSPOOKYSWAP);
+        } else if (testName == "spirit") {
+            pass = pass.add(DisableSPIRITSWAPAll);
+            pass = pass.add(DisableSPIRITSWAP);
+        }
+
+        pass = pass.sub(DisableCURVE_FUSDT);
+
+        // curve usdt 换 usdc
+        let usdcAddress = "0x04068DA6C83AFCFA0e13ba15A6696662335D5B75";
+        const usdc = await ERC20.at(usdcAddress);
+        swapAmt = 10000;
+        console.log(`swapAmt: ${swapAmt} USDT`);
+        balanceBefore = await usdc.balanceOf(accounts[0])
+        console.log(`balance of ${accounts[0]}: (${balanceBefore}) USDC`);
+        res = await dexOne.calculateSwapReturn(usdtAddress, usdcAddress, swapAmt, 10, pass);
+        expectedOutAmount = res.outAmount;
+        console.log(`expect out amount ${res.outAmount.toString()} USDC`);
+        console.log("res.distribution:", res.distribution.toString());
+
+        await usdt.approve(dexOne.address, swapAmt);
+        await invokeContract(web3, accounts[0], dexOne, usdtAddress, usdcAddress, swapAmt, res);
+        balanceAfter = await usdc.balanceOf(accounts[0]);
+        console.log(`balance of ${accounts[0]}: (${balanceAfter}) USDC`);
+        // assert.equal(expectedOutAmount, balanceAfter - balanceBefore);
     });
 });
 
 async function invokeContract(web3, account, dexOne, srcToken, dstToken, swapAmt, distribution) {
-    console.log(`account: ${account}`);
     swapped = await dexOne.contract.methods.swap(
         srcToken,
         dstToken,

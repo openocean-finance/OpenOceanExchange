@@ -27,7 +27,8 @@ interface ICurvePool {
         int128 i,
         int128 j,
         uint256 dx,
-        uint256 minDy
+        uint256 minDy,
+        address _receiver
     ) external;
 
     function exchange(
@@ -51,6 +52,7 @@ library ICurvePoolExtension {
     // 0 BTC 1 renBTC
     ICurvePool internal constant CURVE_renBTC = ICurvePool(0x3eF6A01A0f81D6046290f3e2A8c5b843e738E604);
 
+    event Test(int128 i, int128 j, uint data, uint data2);
 
     function calculateSwapReturn(
         ICurvePool pool,
@@ -91,12 +93,14 @@ library ICurvePoolExtension {
         if (i == - 1 || j == - 1) {
             return;
         }
-
         inToken.universalApprove(address(pool), inAmount);
         if (underlying) {
-            pool.exchange_underlying(i, j, inAmount, 0);
+            uint dy = pool.get_dy_underlying(i, j, inAmount);
+            emit Test(i, j, dy, 0);
+            pool.exchange_underlying(i, j, inAmount, dy, address(this));
         } else {
-            pool.exchange(i, j, inAmount, 0);
+            uint dy = pool.get_dy(i, j, inAmount);
+            pool.exchange(i, j, inAmount, dy);
         }
     }
 
