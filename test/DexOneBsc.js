@@ -125,7 +125,7 @@ contract('DexOne', (accounts) => {
         await invokeContract(web3, accounts[0], dexOne, usdtAddress, usdcAddress, swapAmt, res);
         balanceAfter = await usdc.balanceOf(accounts[0]);
         console.log(`balance of ${accounts[0]}: (${balanceAfter}) USDC`);
-        // assert.equal(expectedOutAmount, balanceAfter - balanceBefore);
+        assert.equal(expectedOutAmount <= balanceAfter - balanceBefore, true);
     });
 });
 
