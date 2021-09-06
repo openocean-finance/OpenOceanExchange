@@ -54,6 +54,10 @@ const DisableWAULTSWAP = new BN(1).shln(91);
 
 const DisableBABYSWAP = new BN(1).shln(92);
 
+const DisableBISWAP = new BN(1).shln(93);
+
+const DisableGATEBIT = new BN(1).shln(94);
+
 const DexOne = artifacts.require("DexOne");
 const ERC20 = artifacts.require("IERC20");
 const IMooniswap = artifacts.require("IMooniswap");
@@ -67,7 +71,8 @@ var pass = DisablePancakeAll.add(DisableBurgerAll).add(DisableThugswapAll)
     .add(DisableMooniswap).add(DisableMooniswapETH).add(DisableMooniswapDAI)
     .add(DisableMooniswapUSDC).add(DisablePantherSwapALL).add(DisablePantherSwap)
     .add(DisablePantherSwapBNB).add(DisablePantherSwapUSDC).add(DisablePantherSwapUSDT)
-    .add(DisablePancakeBunny).add(DisableOOSWAP).add(DisableWAULTSWAP);
+    .add(DisablePancakeBunny).add(DisableOOSWAP).add(DisableWAULTSWAP)
+    .add(DisableBABYSWAP).add(DisableBISWAP).add(DisableGATEBIT);
 
 
 contract('DexOne', (accounts) => {
@@ -106,7 +111,7 @@ contract('DexOne', (accounts) => {
             instance: usdt,
             address: usdtAddress,
         }
-        let testName = "babySwap";
+        let testName = "gamebit";
         // busd swap usdt
         if (testName == "nerve") {
             console.log("*************** nerve ***************");
@@ -148,13 +153,16 @@ contract('DexOne', (accounts) => {
         } else if (testName == "babySwap") {
             pass = pass.add(DisablePancakeAllV2);
             pass = pass.sub(DisableBABYSWAP);
+        } else if(testName == "gamebit"){
+            pass = pass.add(DisablePancakeAllV2);
+            pass = pass.sub(DisableGATEBIT);
         }
 
         balanceBefore = await tokenOut.instance.balanceOf(accounts[0]);
         console.log(`balance of ${accounts[0]}: (${balanceBefore}) (${tokenOut.name})`);
         res = await dexOne.calculateSwapReturn(busdAddress, tokenOut.address, swapAmt, 5, pass);
         expectedOutAmount = res.outAmount;
-        console.log("ooe calculateSwapReturn:", expectedOutAmount.toString());
+        console.log("calculateSwapReturn:", expectedOutAmount.toString());
         console.log("res.distribution:", res.distribution.toString());
         await busd.approve(dexOne.address, swapAmt);
         await invokeContract(web3, accounts[0], dexOne, busdAddress, tokenOut.address, swapAmt, res);
