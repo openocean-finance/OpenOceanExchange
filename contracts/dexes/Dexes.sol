@@ -13,27 +13,25 @@ import "./ILydiaSwap.sol";
 import "./IBaguette.sol";
 import "./IOoeswap.sol";
 
-    enum Dex {
-        SushiSwap,
-        SushiSwapETH,
-        SushiSwapDAI,
-        PangolinSwap,
-        PangolinSwapETH,
-        PangolinSwapDAI,
-        JoeSwap,
-        JoeSwapETH,
-        JoeSwapDAI,
-        LydiaSwap,
-        LydiaSwapETH,
-        LydiaSwapDAI,
-        BaguetteSwap,
-        BaguetteSwapETH,
-        BaguetteSwapDAI,
-        OOESwap,
-        OOESwapETH,
-        OOESwapDAI,
-        NoDex
-    }
+enum Dex {
+    SushiSwap,
+    SushiSwapETH,
+    SushiSwapDAI,
+    PangolinSwap,
+    PangolinSwapETH,
+    PangolinSwapDAI,
+    JoeSwap,
+    JoeSwapETH,
+    JoeSwapDAI,
+    LydiaSwap,
+    LydiaSwapETH,
+    LydiaSwapDAI,
+    BaguetteSwap,
+    BaguetteSwapETH,
+    BaguetteSwapDAI,
+    OOESwap,
+    NoDex
+}
 
 library Dexes {
     using UniversalERC20 for IERC20;
@@ -73,14 +71,8 @@ library Dexes {
         uint256 flags
     ) internal view returns (uint256[] memory, uint256) {
         // add ooeswap
-        if (dex == Dex.OOESwap && !flags.or(Flags.FLAG_DISABLE_OOE_ALL, Flags.FLAG_DISABLE_OOE)) {
+        if (dex == Dex.OOESwap && !flags.on(Flags.FLAG_DISABLE_OOE_ALL)) {
             return ooe.calculateSwapReturn(inToken, outToken, inAmounts);
-        }
-        if (dex == Dex.OOESwapETH && !flags.or(Flags.FLAG_DISABLE_OOE_ALL, Flags.FLAG_DISABLE_OOE_WAVAX)) {
-            return ooe.calculateTransitionalSwapReturn(inToken, Tokens.WAVAX, outToken, inAmounts);
-        }
-        if (dex == Dex.OOESwapDAI && !flags.or(Flags.FLAG_DISABLE_OOE_ALL, Flags.FLAG_DISABLE_OOE_DAI)) {
-            return ooe.calculateTransitionalSwapReturn(inToken, Tokens.DAI, outToken, inAmounts);
         }
 
         //add baguette
@@ -150,14 +142,8 @@ library Dexes {
         uint256 flags
     ) internal {
         //add ooeswap
-        if (dex == Dex.OOESwap && !flags.or(Flags.FLAG_DISABLE_OOE_ALL, Flags.FLAG_DISABLE_OOE)) {
+        if (dex == Dex.OOESwap && !flags.on(Flags.FLAG_DISABLE_OOE_ALL)) {
             ooe.swap(inToken, outToken, amount);
-        }
-        if (dex == Dex.OOESwapETH && !flags.or(Flags.FLAG_DISABLE_OOE_ALL, Flags.FLAG_DISABLE_OOE_WAVAX)) {
-            ooe.swapTransitional(inToken, Tokens.WAVAX, outToken, amount);
-        }
-        if (dex == Dex.OOESwapDAI && !flags.or(Flags.FLAG_DISABLE_OOE_ALL, Flags.FLAG_DISABLE_OOE_DAI)) {
-            ooe.swapTransitional(inToken, Tokens.DAI, outToken, amount);
         }
 
         //add baguette

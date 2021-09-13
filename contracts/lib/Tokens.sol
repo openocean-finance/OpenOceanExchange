@@ -16,7 +16,7 @@ abstract contract IWAVAX is IERC20 {
 library Tokens {
     using UniversalERC20 for IERC20;
 
-    IERC20 internal constant DAI = IERC20(0xbA7dEebBFC5fA1100Fb055a87773e1E99Cd3507a);
+    IERC20 internal constant DAI = IERC20(0xd586E7F844cEa2F87f50152665BCbc2C279D8d70);
     IERC20 internal constant USDT = IERC20(0xc7198437980c041c805A1EDcbA50c1Ce5db95118);
     IWAVAX internal constant WAVAX = IWAVAX(0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7);
 
@@ -30,7 +30,7 @@ library Tokens {
 
     function depositToWAVAX(IERC20 token, uint256 amount) internal {
         if (token.isAVAX()) {
-            WAVAX.deposit{value : amount}();
+            WAVAX.deposit{value: amount}();
         }
     }
 

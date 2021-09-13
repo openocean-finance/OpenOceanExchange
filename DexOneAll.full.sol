@@ -557,7 +557,7 @@ library UniversalERC20 {
             return true;
         }
 
-        if (isFTM(token)) {
+        if (isAVAX(token)) {
             address(uint160(to)).transfer(amount);
             return true;
         } else {
@@ -576,7 +576,7 @@ library UniversalERC20 {
             return;
         }
 
-        if (isFTM(token)) {
+        if (isAVAX(token)) {
             require(from == msg.sender && msg.value >= amount, "Wrong useage of ETH.universalTransferFrom()");
             if (to != address(this)) {
                 address(uint160(to)).transfer(amount);
@@ -595,7 +595,7 @@ library UniversalERC20 {
             return;
         }
 
-        if (isFTM(token)) {
+        if (isAVAX(token)) {
             if (msg.value > amount) {
                 // return the remainder
                 msg.sender.transfer(msg.value.sub(amount));
@@ -610,7 +610,7 @@ library UniversalERC20 {
         address to,
         uint256 amount
     ) internal {
-        if (!isFTM(token)) {
+        if (!isAVAX(token)) {
             if (amount == 0) {
                 token.safeApprove(to, 0);
                 return;
@@ -627,7 +627,7 @@ library UniversalERC20 {
     }
 
     function universalBalanceOf(IERC20 token, address who) internal view returns (uint256) {
-        if (isFTM(token)) {
+        if (isAVAX(token)) {
             return who.balance;
         } else {
             return token.balanceOf(who);
@@ -635,7 +635,7 @@ library UniversalERC20 {
     }
 
     function universalDecimals(IERC20 token) internal view returns (uint256) {
-        if (isFTM(token)) {
+        if (isAVAX(token)) {
             return 18;
         }
 
@@ -647,7 +647,7 @@ library UniversalERC20 {
         return (success && data.length > 0) ? abi.decode(data, (uint256)) : 18;
     }
 
-    function isFTM(IERC20 token) internal pure returns (bool) {
+    function isAVAX(IERC20 token) internal pure returns (bool) {
         return (address(token) == address(ZERO_ADDRESS));
     }
 
@@ -675,8 +675,8 @@ abstract contract IWAVAX is IERC20 {
 library Tokens {
     using UniversalERC20 for IERC20;
 
-    IERC20 internal constant DAI = IERC20(0xbA7dEebBFC5fA1100Fb055a87773e1E99Cd3507a);
-    IERC20 internal constant USDT = IERC20(0xde3A24028580884448a5397872046a019649b084);
+    IERC20 internal constant DAI = IERC20(0xd586E7F844cEa2F87f50152665BCbc2C279D8d70);
+    IERC20 internal constant USDT = IERC20(0xc7198437980c041c805A1EDcbA50c1Ce5db95118);
     IWAVAX internal constant WAVAX = IWAVAX(0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7);
 
     /**
@@ -684,23 +684,23 @@ library Tokens {
      * @param token token to wrap
      */
     function wrapAVAX(IERC20 token) internal pure returns (IERC20) {
-        return token.isFTM() ? WAVAX : token;
+        return token.isAVAX() ? WAVAX : token;
     }
 
     function depositToWAVAX(IERC20 token, uint256 amount) internal {
-        if (token.isFTM()) {
+        if (token.isAVAX()) {
             WAVAX.deposit{value: amount}();
         }
     }
 
     function withdrawFromWAVAX(IERC20 token) internal {
-        if (token.isFTM()) {
+        if (token.isAVAX()) {
             WAVAX.withdraw(WAVAX.balanceOf(address(this)));
             // library methods will be called in the current contract's context
         }
     }
 
-    function isWAVAX(IERC20 token) internal pure returns (bool) {
+    function isAVAX(IERC20 token) internal pure returns (bool) {
         return address(token) == address(WAVAX);
     }
 }
@@ -736,6 +736,8 @@ library Flags {
     uint256 internal constant FLAG_DISABLE_BAGUETTE = 1 << 17;
     uint256 internal constant FLAG_DISABLE_BAGUETTE_WAVAX = 1 << 18;
     uint256 internal constant FLAG_DISABLE_BAGUETTE_DAI = 1 << 19;
+
+    uint256 internal constant FLAG_DISABLE_OOE_ALL = 1 << 20;
 
     function on(uint256 flags, uint256 flag) internal pure returns (bool) {
         return (flags & flag) != 0;
@@ -1691,10 +1693,192 @@ library IBaguetteFactoryExtension {
     }
 }
 
+// File: contracts/dexes/IOoeswap.sol
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.6.0;
+
+
+
+
+
+
+/**
+ * @notice Uniswap V2 factory contract interface. See https://uniswap.org/docs/v2/smart-contracts/factory/
+ */
+interface IOoeswapFactory {
+    function getPair(IERC20 tokenA, IERC20 tokenB) external view returns (IOoeswapPair pair);
+}
+
+/**
+ * @notice Uniswap V2 pair pool interface. See https://uniswap.org/docs/v2/smart-contracts/pair/
+ */
+interface IOoeswapPair {
+    function swap(
+        uint256 amount0Out,
+        uint256 amount1Out,
+        address to,
+        bytes calldata data
+    ) external;
+
+    function getReserves()
+        external
+        view
+        returns (
+            uint112 reserve0,
+            uint112 reserve1,
+            uint32 blockTimestampLast
+        );
+
+    function skim(address to) external;
+
+    function sync() external;
+}
+
+library IOoeswapPairExtension {
+    using SafeMath for uint256;
+    using UniversalERC20 for IERC20;
+
+    address private constant SKIM_TARGET = 0xe523182610482b8C0DD65d5A08F1Bbd256B1EA0c;
+
+    /**
+     * @notice Use Uniswap's constant product formula to calculate expected swap return.
+     * See https://github.com/runtimeverification/verified-smart-contracts/blob/uniswap/uniswap/x-y-k.pdf
+     */
+    function calculateSwapReturn(
+        IOoeswapPair pair,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256 amount
+    ) internal view returns (uint256) {
+        if (amount == 0) {
+            return 0;
+        }
+        uint256 inReserve = inToken.universalBalanceOf(address(pair));
+        uint256 outReserve = outToken.universalBalanceOf(address(pair));
+        return doCalculate(inReserve, outReserve, amount);
+    }
+
+    function calculateRealSwapReturn(
+        IOoeswapPair pair,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256 amount
+    ) internal returns (uint256) {
+        uint256 inReserve = inToken.universalBalanceOf(address(pair));
+        uint256 outReserve = outToken.universalBalanceOf(address(pair));
+
+        (uint112 reserve0, uint112 reserve1, ) = pair.getReserves();
+        if (inToken > outToken) {
+            (reserve0, reserve1) = (reserve1, reserve0);
+        }
+        if (inReserve < reserve0 || outReserve < reserve1) {
+            pair.sync();
+        } else if (inReserve > reserve0 || outReserve > reserve1) {
+            pair.skim(SKIM_TARGET);
+        }
+
+        return doCalculate(Math.min(inReserve, reserve0), Math.min(outReserve, reserve1), amount);
+    }
+
+    function doCalculate(
+        uint256 inReserve,
+        uint256 outReserve,
+        uint256 amount
+    ) private pure returns (uint256) {
+        uint256 inAmountWithFee = amount.mul(998);
+        // Pancake now requires fixed 0.2% swap fee
+        uint256 numerator = inAmountWithFee.mul(outReserve);
+        uint256 denominator = inReserve.mul(1000).add(inAmountWithFee);
+        return (denominator == 0) ? 0 : numerator.div(denominator);
+    }
+}
+
+library IOoeswapFactoryExtension {
+    using UniversalERC20 for IERC20;
+    using IOoeswapPairExtension for IOoeswapPair;
+    using Tokens for IERC20;
+
+    function calculateSwapReturn(
+        IOoeswapFactory factory,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256[] memory inAmounts
+    ) internal view returns (uint256[] memory outAmounts, uint256 gas) {
+        outAmounts = new uint256[](inAmounts.length);
+
+        IERC20 realInToken = inToken.wrapAVAX();
+        IERC20 realOutToken = outToken.wrapAVAX();
+        IOoeswapPair pair = factory.getPair(realInToken, realOutToken);
+        if (pair != IOoeswapPair(0)) {
+            for (uint256 i = 0; i < inAmounts.length; i++) {
+                outAmounts[i] = pair.calculateSwapReturn(realInToken, realOutToken, inAmounts[i]);
+            }
+            return (outAmounts, 50_000);
+        }
+    }
+
+    function calculateTransitionalSwapReturn(
+        IOoeswapFactory factory,
+        IERC20 inToken,
+        IERC20 transitionToken,
+        IERC20 outToken,
+        uint256[] memory inAmounts
+    ) internal view returns (uint256[] memory outAmounts, uint256 gas) {
+        IERC20 realInToken = inToken.wrapAVAX();
+        IERC20 realTransitionToken = transitionToken.wrapAVAX();
+        IERC20 realOutToken = outToken.wrapAVAX();
+
+        if (realInToken == realTransitionToken || realOutToken == realTransitionToken) {
+            return (new uint256[](inAmounts.length), 0);
+        }
+        uint256 firstGas;
+        uint256 secondGas;
+        (outAmounts, firstGas) = calculateSwapReturn(factory, realInToken, realTransitionToken, inAmounts);
+        (outAmounts, secondGas) = calculateSwapReturn(factory, realTransitionToken, realOutToken, outAmounts);
+        return (outAmounts, firstGas + secondGas);
+    }
+
+    function swap(
+        IOoeswapFactory factory,
+        IERC20 inToken,
+        IERC20 outToken,
+        uint256 inAmount
+    ) internal returns (uint256 outAmount) {
+        inToken.depositToWAVAX(inAmount);
+
+        IERC20 realInToken = inToken.wrapAVAX();
+        IERC20 realOutToken = outToken.wrapAVAX();
+        IOoeswapPair pair = factory.getPair(realInToken, realOutToken);
+
+        outAmount = pair.calculateRealSwapReturn(realInToken, realOutToken, inAmount);
+
+        realInToken.universalTransfer(address(pair), inAmount);
+        if (uint256(address(realInToken)) < uint256(address(realOutToken))) {
+            pair.swap(0, outAmount, address(this), "");
+        } else {
+            pair.swap(outAmount, 0, address(this), "");
+        }
+
+        outToken.withdrawFromWAVAX();
+    }
+
+    function swapTransitional(
+        IOoeswapFactory factory,
+        IERC20 inToken,
+        IERC20 transitionToken,
+        IERC20 outToken,
+        uint256 inAmount
+    ) internal {
+        swap(factory, transitionToken, outToken, swap(factory, inToken, transitionToken, inAmount));
+    }
+}
+
 // File: contracts/dexes/Dexes.sol
 
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.6.0;
+
 
 
 
@@ -1722,12 +1906,16 @@ enum Dex {
     BaguetteSwap,
     BaguetteSwapETH,
     BaguetteSwapDAI,
+    OOESwap,
     NoDex
 }
 
 library Dexes {
     using UniversalERC20 for IERC20;
     using Flags for uint256;
+
+    IOoeswapFactory internal constant ooe = IOoeswapFactory(0x042AF448582d0a3cE3CFa5b65c2675e88610B18d);
+    using IOoeswapFactoryExtension for IOoeswapFactory;
 
     IBaguetteFactory internal constant baguette = IBaguetteFactory(0x3587B8c0136c2C3605a9E5B03ab54Da3e4044b50);
     using IBaguetteFactoryExtension for IBaguetteFactory;
@@ -1759,6 +1947,11 @@ library Dexes {
         uint256[] memory inAmounts,
         uint256 flags
     ) internal view returns (uint256[] memory, uint256) {
+        // add ooeswap
+        if (dex == Dex.OOESwap && !flags.on(Flags.FLAG_DISABLE_OOE_ALL)) {
+            return ooe.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+
         //add baguette
         if (dex == Dex.BaguetteSwap && !flags.or(Flags.FLAG_DISABLE_BAGUETTE_ALL, Flags.FLAG_DISABLE_BAGUETTE)) {
             return baguette.calculateSwapReturn(inToken, outToken, inAmounts);
@@ -1825,6 +2018,11 @@ library Dexes {
         uint256 amount,
         uint256 flags
     ) internal {
+        //add ooeswap
+        if (dex == Dex.OOESwap && !flags.on(Flags.FLAG_DISABLE_OOE_ALL)) {
+            ooe.swap(inToken, outToken, amount);
+        }
+
         //add baguette
         if (dex == Dex.BaguetteSwap && !flags.or(Flags.FLAG_DISABLE_BAGUETTE_ALL, Flags.FLAG_DISABLE_BAGUETTE)) {
             baguette.swap(inToken, outToken, amount);
@@ -2155,7 +2353,7 @@ contract DexOne is IDexOne {
         }
 
         if (partition == 0) {
-            if (inToken.isFTM()) {
+            if (inToken.isAVAX()) {
                 msg.sender.transfer(msg.value);
                 return msg.value;
             }
@@ -2356,6 +2554,6 @@ contract DexOneAll is IDexOneTransitional {
         uint256 flags
     ) internal {
         inToken.universalApprove(address(dexOne), inAmount);
-        dexOne.swap{value: inToken.isFTM() ? inAmount : 0}(inToken, outToken, inAmount, 0, distribution, flags);
+        dexOne.swap{value: inToken.isAVAX() ? inAmount : 0}(inToken, outToken, inAmount, 0, distribution, flags);
     }
 }
