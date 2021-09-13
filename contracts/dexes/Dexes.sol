@@ -11,29 +11,36 @@ import "./IPangolinSwap.sol";
 import "./IJoeSwap.sol";
 import "./ILydiaSwap.sol";
 import "./IBaguette.sol";
+import "./IOoeswap.sol";
 
-enum Dex {
-    SushiSwap,
-    SushiSwapETH,
-    SushiSwapDAI,
-    PangolinSwap,
-    PangolinSwapETH,
-    PangolinSwapDAI,
-    JoeSwap,
-    JoeSwapETH,
-    JoeSwapDAI,
-    LydiaSwap,
-    LydiaSwapETH,
-    LydiaSwapDAI,
-    BaguetteSwap,
-    BaguetteSwapETH,
-    BaguetteSwapDAI,
-    NoDex
-}
+    enum Dex {
+        SushiSwap,
+        SushiSwapETH,
+        SushiSwapDAI,
+        PangolinSwap,
+        PangolinSwapETH,
+        PangolinSwapDAI,
+        JoeSwap,
+        JoeSwapETH,
+        JoeSwapDAI,
+        LydiaSwap,
+        LydiaSwapETH,
+        LydiaSwapDAI,
+        BaguetteSwap,
+        BaguetteSwapETH,
+        BaguetteSwapDAI,
+        OOESwap,
+        OOESwapETH,
+        OOESwapDAI,
+        NoDex
+    }
 
 library Dexes {
     using UniversalERC20 for IERC20;
     using Flags for uint256;
+
+    IOoeswapFactory internal constant ooe = IOoeswapFactory(0x042AF448582d0a3cE3CFa5b65c2675e88610B18d);
+    using IOoeswapFactoryExtension for IOoeswapFactory;
 
     IBaguetteFactory internal constant baguette = IBaguetteFactory(0x3587B8c0136c2C3605a9E5B03ab54Da3e4044b50);
     using IBaguetteFactoryExtension for IBaguetteFactory;
@@ -65,6 +72,17 @@ library Dexes {
         uint256[] memory inAmounts,
         uint256 flags
     ) internal view returns (uint256[] memory, uint256) {
+        // add ooeswap
+        if (dex == Dex.OOESwap && !flags.or(Flags.FLAG_DISABLE_OOE_ALL, Flags.FLAG_DISABLE_OOE)) {
+            return ooe.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+        if (dex == Dex.OOESwapETH && !flags.or(Flags.FLAG_DISABLE_OOE_ALL, Flags.FLAG_DISABLE_OOE_WAVAX)) {
+            return ooe.calculateTransitionalSwapReturn(inToken, Tokens.WAVAX, outToken, inAmounts);
+        }
+        if (dex == Dex.OOESwapDAI && !flags.or(Flags.FLAG_DISABLE_OOE_ALL, Flags.FLAG_DISABLE_OOE_DAI)) {
+            return ooe.calculateTransitionalSwapReturn(inToken, Tokens.DAI, outToken, inAmounts);
+        }
+
         //add baguette
         if (dex == Dex.BaguetteSwap && !flags.or(Flags.FLAG_DISABLE_BAGUETTE_ALL, Flags.FLAG_DISABLE_BAGUETTE)) {
             return baguette.calculateSwapReturn(inToken, outToken, inAmounts);
@@ -131,6 +149,17 @@ library Dexes {
         uint256 amount,
         uint256 flags
     ) internal {
+        //add ooeswap
+        if (dex == Dex.OOESwap && !flags.or(Flags.FLAG_DISABLE_OOE_ALL, Flags.FLAG_DISABLE_OOE)) {
+            ooe.swap(inToken, outToken, amount);
+        }
+        if (dex == Dex.OOESwapETH && !flags.or(Flags.FLAG_DISABLE_OOE_ALL, Flags.FLAG_DISABLE_OOE_WAVAX)) {
+            ooe.swapTransitional(inToken, Tokens.WAVAX, outToken, amount);
+        }
+        if (dex == Dex.OOESwapDAI && !flags.or(Flags.FLAG_DISABLE_OOE_ALL, Flags.FLAG_DISABLE_OOE_DAI)) {
+            ooe.swapTransitional(inToken, Tokens.DAI, outToken, amount);
+        }
+
         //add baguette
         if (dex == Dex.BaguetteSwap && !flags.or(Flags.FLAG_DISABLE_BAGUETTE_ALL, Flags.FLAG_DISABLE_BAGUETTE)) {
             baguette.swap(inToken, outToken, amount);

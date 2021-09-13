@@ -38,6 +38,10 @@ const DisableBAGUETTESWAP = new BN(1).shln(17);
 const DisableBAGUETTESWAPWAVAX = new BN(1).shln(18);
 const DisableBAGUETTESWAPDAI = new BN(1).shln(19);
 
+const DisableOOESWAPALL = new BN(1).shln(20);
+const DisableOOESWAP = new BN(1).shln(21);
+const DisableOOESWAPWAVAX = new BN(1).shln(22);
+const DisableOOESWAPDAI = new BN(1).shln(23);
 
 const DexOne = artifacts.require("DexOne");
 const ERC20 = artifacts.require("IERC20");
@@ -48,18 +52,21 @@ var pass = DisableSushiswapAll.add(DisableSushiswap).add(DisableSushiswapWAVAX).
     .add(DisablePANGONLINSWAPALL).add(DisablePANGONLINSWAP).add(DisablePANGONLINSWAPWAVAX).add(DisablePANGONLINSWAPDAI)
     .add(DisableJOESWAPALL).add(DisableJOESWAP).add(DisableJOESWAPWAVAX).add(DisableJOESWAPDAI)
     .add(DisableLYDIASWAPALL).add(DisableLYDIASWAP).add(DisableLYDIASWAPWAVAX).add(DisableLYDIASWAPDAI)
-    .add(DisableBAGUETTESWAPALL).add(DisableBAGUETTESWAP).add(DisableBAGUETTESWAPWAVAX).add(DisableBAGUETTESWAPDAI);
+    .add(DisableBAGUETTESWAPALL).add(DisableBAGUETTESWAP).add(DisableBAGUETTESWAPWAVAX).add(DisableBAGUETTESWAPDAI)
+    .add(DisableOOESWAPALL).add(DisableOOESWAP).add(DisableOOESWAPWAVAX).add(DisableOOESWAPDAI);
 
 
 contract('DexOne', (accounts) => {
 
     it('DexOneAll should swap ETH to CAKE', async () => {
 
-        let usdtAddress = "0xde3A24028580884448a5397872046a019649b084";
+        let usdtAddress = "0xc7198437980c041c805A1EDcbA50c1Ce5db95118";
         const usdt = await ERC20.at(usdtAddress);
 
         let avaxAddress = "0x0000000000000000000000000000000000000000";
         let wavaxAddress = "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7";
+
+        let ooeAddress = "0x0ebd9537A25f56713E34c45b38F421A1e7191469";
 
         if (false) {
             let fAddress = "0xe0C1bb6DF4851feEEdc3E14Bd509FEAF428f7655";//sushiswap
@@ -94,45 +101,77 @@ contract('DexOne', (accounts) => {
         }
 
         const dexOne = await DexOne.deployed();
+        let swapAmt = '1000000000000000000';
         const res = await dexOne.calculateSwapReturn(
             avaxAddress, // matic
             usdtAddress, // usdt
-            '1000000000000000000', // 1.0
+            swapAmt, // 1.0
             10,
             pass,
         );
         let expectedOutAmount = res.outAmount;
         console.log(`expect out amount ${res.outAmount.toString()} USDT`);
         console.log("res.distribution:", res.distribution.toString());
-        const swapped = await dexOne.contract.methods.swap(
-            avaxAddress,
-            usdtAddress,
-            '1000000000000000000',
-            0,
-            res.distribution.map(dist => dist.toString()),
-            pass.toString(),
-        ).encodeABI();
-        const nonce = await web3.eth.getTransactionCount(accounts[0]);
-
-        const account = accounts[0];
-        console.log(`account: ${account}`);
-        const rawTx = {
-            from: account,
-            to: dexOne.address,
-            gas: "0x166691b7",
-            gasPrice: "0x4a817c800",
-            data: swapped,
-            value: '1000000000000000000',
-            nonce: web3.utils.toHex(nonce),
-        }
-
-        const sign = await web3.eth.accounts.signTransaction(rawTx, '0x94e6de53e500b9fec28037c583f5214c854c7229329ce9baf6f5577bd95f9c9a');
-
-        web3.eth.sendSignedTransaction(sign.rawTransaction).on('receipt', receipt => {
-        });
-
+        // await busd.approve(dexOne.address, swapAmt);
+        await invokeContract(web3, accounts[0], dexOne, avaxAddress, usdtAddress, swapAmt, res);
         let balanceAfter = await usdt.balanceOf(accounts[0])
         console.log(`balance of ${accounts[0]}: (${balanceAfter}) USDT`);
         assert.equal(BigNumber(expectedOutAmount), BigNumber(balanceAfter) - BigNumber(balanceBefore));
+
+        const ooe = await ERC20.at(ooeAddress);
+        // 用USDT 换OOE
+        if (testName == "baguette") {
+            pass = pass.add(DisableBAGUETTESWAPALL);
+            pass = pass.add(DisableBAGUETTESWAP);
+
+            pass = pass.sub(DisableOOESWAPALL);
+            pass = pass.sub(DisableOOESWAP);
+
+            const res = await dexOne.calculateSwapReturn(
+                usdtAddress, // usdt
+                ooeAddress, // ooe
+                expectedOutAmount, // 1.0
+                10,
+                pass,
+            );
+            let newExpectedOutAmount = res.outAmount;
+            console.log(`expect out amount ${res.outAmount.toString()} OOE`);
+            console.log("res.distribution:", res.distribution.toString());
+            balanceBefore = await ooe.balanceOf(accounts[0]);
+            await usdt.approve(dexOne.address, expectedOutAmount);
+            await invokeContract(web3, accounts[0], dexOne, usdtAddress, ooeAddress, expectedOutAmount, res);
+            balanceAfter = await ooe.balanceOf(accounts[0]);
+            console.log(`balance of ${accounts[0]}: (${balanceAfter}) OOE`);
+            assert.equal(BigNumber(newExpectedOutAmount), BigNumber(balanceAfter) - BigNumber(balanceBefore));
+        }
     });
 });
+
+
+async function invokeContract(web3, account, dexOne, srcToken, dstToken, swapAmt, distribution) {
+
+    swapped = await dexOne.contract.methods.swap(
+        srcToken,
+        dstToken,
+        swapAmt,
+        0,
+        distribution.distribution.map(dist => dist.toString()),
+        pass.toString(),
+    ).encodeABI();
+
+    const nonce = await web3.eth.getTransactionCount(account);
+    console.log(`account: ${account}`);
+    const rawTx = {
+        from: account,
+        to: dexOne.address,
+        gas: "0x166691b7",
+        gasPrice: "0x4a817c800",
+        data: swapped,
+        // value: "0xde0b6b3a7640000",
+        value: swapAmt,
+        nonce: web3.utils.toHex(nonce),
+    }
+    const sign = await web3.eth.accounts.signTransaction(rawTx, '0x94e6de53e500b9fec28037c583f5214c854c7229329ce9baf6f5577bd95f9c9a');
+    web3.eth.sendSignedTransaction(sign.rawTransaction).on('receipt', receipt => {
+    });
+}

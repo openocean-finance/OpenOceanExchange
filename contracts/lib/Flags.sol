@@ -28,6 +28,11 @@ library Flags {
     uint256 internal constant FLAG_DISABLE_BAGUETTE_WAVAX = 1 << 18;
     uint256 internal constant FLAG_DISABLE_BAGUETTE_DAI = 1 << 19;
 
+    uint256 internal constant FLAG_DISABLE_OOE_ALL = 1 << 20;
+    uint256 internal constant FLAG_DISABLE_OOE = 1 << 21;
+    uint256 internal constant FLAG_DISABLE_OOE_WAVAX = 1 << 22;
+    uint256 internal constant FLAG_DISABLE_OOE_DAI = 1 << 23;
+
     function on(uint256 flags, uint256 flag) internal pure returns (bool) {
         return (flags & flag) != 0;
     }

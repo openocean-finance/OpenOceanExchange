@@ -17,7 +17,7 @@ library Tokens {
     using UniversalERC20 for IERC20;
 
     IERC20 internal constant DAI = IERC20(0xbA7dEebBFC5fA1100Fb055a87773e1E99Cd3507a);
-    IERC20 internal constant USDT = IERC20(0xde3A24028580884448a5397872046a019649b084);
+    IERC20 internal constant USDT = IERC20(0xc7198437980c041c805A1EDcbA50c1Ce5db95118);
     IWAVAX internal constant WAVAX = IWAVAX(0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7);
 
     /**
@@ -25,23 +25,23 @@ library Tokens {
      * @param token token to wrap
      */
     function wrapAVAX(IERC20 token) internal pure returns (IERC20) {
-        return token.isFTM() ? WAVAX : token;
+        return token.isAVAX() ? WAVAX : token;
     }
 
     function depositToWAVAX(IERC20 token, uint256 amount) internal {
-        if (token.isFTM()) {
-            WAVAX.deposit{value: amount}();
+        if (token.isAVAX()) {
+            WAVAX.deposit{value : amount}();
         }
     }
 
     function withdrawFromWAVAX(IERC20 token) internal {
-        if (token.isFTM()) {
+        if (token.isAVAX()) {
             WAVAX.withdraw(WAVAX.balanceOf(address(this)));
             // library methods will be called in the current contract's context
         }
     }
 
-    function isWAVAX(IERC20 token) internal pure returns (bool) {
+    function isAVAX(IERC20 token) internal pure returns (bool) {
         return address(token) == address(WAVAX);
     }
 }
