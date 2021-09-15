@@ -57,13 +57,14 @@ const DisableBABYSWAP = new BN(1).shln(92);
 const DisableBISWAP = new BN(1).shln(93);
 
 const DisableGATEBIT = new BN(1).shln(94);
+const DisableWOOFi = new BN(1).shln(95);
 
 const DexOne = artifacts.require("DexOne");
 const ERC20 = artifacts.require("IERC20");
 const IMooniswap = artifacts.require("IMooniswap");
 
 
-var pass = DisablePancakeAll.add(DisableBurgerAll).add(DisableThugswapAll)
+var pass = DisablePancakeAllV2.add(DisablePancakeAll).add(DisableBurgerAll).add(DisableThugswapAll)
     .add(DisableStablexAll).add(DisableUnifiAll).add(DisableJulswapAll).add(DisableDODOAll)
     .add(DisableApeswapAll).add(DisableAcryptosAll).add(DisableApeswap).add(DisableSmoothy)
     .add(DisableEllipsis).add(DisableMdexAll).add(DisableBakeryAll).add(DisableNerveAll)
@@ -72,7 +73,7 @@ var pass = DisablePancakeAll.add(DisableBurgerAll).add(DisableThugswapAll)
     .add(DisableMooniswapUSDC).add(DisablePantherSwapALL).add(DisablePantherSwap)
     .add(DisablePantherSwapBNB).add(DisablePantherSwapUSDC).add(DisablePantherSwapUSDT)
     .add(DisablePancakeBunny).add(DisableOOSWAP).add(DisableWAULTSWAP)
-    .add(DisableBABYSWAP).add(DisableBISWAP).add(DisableGATEBIT);
+    .add(DisableBABYSWAP).add(DisableBISWAP).add(DisableGATEBIT).add(DisableWOOFi);
 
 
 contract('DexOne', (accounts) => {
@@ -94,8 +95,12 @@ contract('DexOne', (accounts) => {
 
         const dexOne = await DexOne.deployed();
         let swapAmt = BigNumber(1000000000000000000);
+        let testName = "woofi";
+        if (testName == "woofi"){
+            pass = pass.sub(DisableWOOFi);
+        }
         // eth 换成 busd
-        let res = await dexOne.calculateSwapReturn(ethInnerAddress, busdAddress, swapAmt, 10, pass,);
+        let res = await dexOne.calculateSwapReturn(ethInnerAddress, busdAddress, swapAmt, 10, pass);
         expectedOutAmount = res.outAmount;
         console.log(`expect out amount ${res.outAmount.toString()} BUSD`);
         console.log("res.distribution:", res.distribution.toString());
@@ -104,6 +109,9 @@ contract('DexOne', (accounts) => {
         balanceAfter = await busd.balanceOf(accounts[0])
         console.log(`balance of ${accounts[0]}: (${balanceAfter}) BUSD`);
         assert.equal(expectedOutAmount, balanceAfter - balanceBefore);
+        if(true){
+            return;
+        }
         const ooe = await ERC20.at(ooeAddress);
         const usdt = await ERC20.at(usdtAddress);
         let tokenOut = {
@@ -111,7 +119,7 @@ contract('DexOne', (accounts) => {
             instance: usdt,
             address: usdtAddress,
         }
-        let testName = "gamebit";
+        testName = "gamebit";
         // busd swap usdt
         if (testName == "nerve") {
             console.log("*************** nerve ***************");

@@ -47,11 +47,16 @@ library Tokens {
     IERC20 internal constant SBTC = IERC20(0xfE18be6b3Bd88A2D2A7f928d00292E7a9963CfC6);
 
     // IWETH internal constant WETH = IWETH(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
+    // WBNB
     IWETH internal constant WETH = IWETH(0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c);
 
     // BURGER Token
     IERC20 internal constant DGAS = IERC20(0xAe9269f27437f0fcBC232d39Ec814844a51d6b8f);
 
+    //WOOFi
+    IERC20 internal constant LINK = IERC20(0xF8A0BF9cF54Bb92F17374d9e9A321E6a111a51bD);
+    IERC20 internal constant WOO = IERC20(0x4691937a7508860F876c9c0a2a617E7d9E945D4B);
+    IERC20 internal constant ETH = IERC20(0x2170Ed0880ac9A755fd29B2688956BD959F933F8);
 
     /**
      * @notice Wrap the ETH token to meet the ERC20 standard.

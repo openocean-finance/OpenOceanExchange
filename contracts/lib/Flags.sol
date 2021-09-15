@@ -130,6 +130,8 @@ library Flags {
     // IGatebit
     uint256 internal constant FLAG_DISABLE_GAMEBIT = 1 << 94;
 
+    uint256 internal constant FLAG_DISABLE_WOOFi = 1 << 95;
+
     function on(uint256 flags, uint256 flag) internal pure returns (bool) {
         return (flags & flag) != 0;
     }
