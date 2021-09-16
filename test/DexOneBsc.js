@@ -60,11 +60,11 @@ contract('DexOne', (accounts) => {
 
     it('DexOneAll should swap ETH to CAKE', async () => {
 
-        let usdtAddress = "0xc7198437980c041c805A1EDcbA50c1Ce5db95118";
+        let usdtAddress = "0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9";
         const usdt = await ERC20.at(usdtAddress);
 
         let avaxAddress = "0x0000000000000000000000000000000000000000";
-        let wavaxAddress = "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7";
+        let wavaxAddress = "0x82af49447d8a07e3bd95bd0d56f35241523fbab1";
 
         let ooeAddress = "0x0ebd9537A25f56713E34c45b38F421A1e7191469";
 
@@ -82,7 +82,7 @@ contract('DexOne', (accounts) => {
         let balanceBefore = await usdt.balanceOf(accounts[0])
         console.log(`balance of ${accounts[0]}: (${balanceBefore}) USDT`);
 
-        let testName = "baguette";
+        let testName = "sushiswap";
         if (testName == "sushiswap") {
             pass = pass.sub(DisableSushiswapAll);
             pass = pass.sub(DisableSushiswap);

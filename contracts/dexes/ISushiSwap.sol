@@ -113,8 +113,8 @@ library ISushiSwapFactoryExtension {
     ) internal view returns (uint256[] memory outAmounts, uint256 gas) {
         outAmounts = new uint256[](inAmounts.length);
 
-        IERC20 realInToken = inToken.wrapAVAX();
-        IERC20 realOutToken = outToken.wrapAVAX();
+        IERC20 realInToken = inToken.wrapETH();
+        IERC20 realOutToken = outToken.wrapETH();
         ISushiSwapPair pair = factory.getPair(realInToken, realOutToken);
         if (pair != ISushiSwapPair(0)) {
             for (uint256 i = 0; i < inAmounts.length; i++) {
@@ -131,9 +131,9 @@ library ISushiSwapFactoryExtension {
         IERC20 outToken,
         uint256[] memory inAmounts
     ) internal view returns (uint256[] memory outAmounts, uint256 gas) {
-        IERC20 realInToken = inToken.wrapAVAX();
-        IERC20 realTransitionToken = transitionToken.wrapAVAX();
-        IERC20 realOutToken = outToken.wrapAVAX();
+        IERC20 realInToken = inToken.wrapETH();
+        IERC20 realTransitionToken = transitionToken.wrapETH();
+        IERC20 realOutToken = outToken.wrapETH();
 
         if (realInToken == realTransitionToken || realOutToken == realTransitionToken) {
             return (new uint256[](inAmounts.length), 0);
@@ -151,10 +151,10 @@ library ISushiSwapFactoryExtension {
         IERC20 outToken,
         uint256 inAmount
     ) internal returns (uint256 outAmount) {
-        inToken.depositToWAVAX(inAmount);
+        inToken.depositToWETH(inAmount);
 
-        IERC20 realInToken = inToken.wrapAVAX();
-        IERC20 realOutToken = outToken.wrapAVAX();
+        IERC20 realInToken = inToken.wrapETH();
+        IERC20 realOutToken = outToken.wrapETH();
         ISushiSwapPair pair = factory.getPair(realInToken, realOutToken);
 
         if (pair != ISushiSwapPair(0)) {
@@ -166,7 +166,7 @@ library ISushiSwapFactoryExtension {
                 pair.swap(outAmount, 0, address(this), "");
             }
         }
-        outToken.withdrawFromWAVAX();
+        outToken.withdrawFromWETH();
     }
 
     function swapTransitional(
