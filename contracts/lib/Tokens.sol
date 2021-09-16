@@ -41,7 +41,7 @@ library Tokens {
         }
     }
 
-    function isAVAX(IERC20 token) internal pure returns (bool) {
+    function isWAVAX(IERC20 token) internal pure returns (bool) {
         return address(token) == address(WAVAX);
     }
 }
