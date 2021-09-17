@@ -24,6 +24,9 @@ library Dexes {
     ISushiSwapFactory internal constant sushiswap = ISushiSwapFactory(0xc35DADB65012eC5796536bD9864eD8773aBc74C4);
     using ISushiSwapFactoryExtension for ISushiSwapFactory;
 
+
+    //0xDdB13e6dd168E1a68DC2285Cb212078ae10394A9
+    //bsc for test 0xAfe0A75DFFb395eaaBd0a7E1BBbd0b11f8609eeF
     IDPPFactory internal constant dodo = IDPPFactory(0xDdB13e6dd168E1a68DC2285Cb212078ae10394A9);
     using IDPPFactoryExtension for IDPPFactory;
 

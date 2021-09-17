@@ -7,7 +7,7 @@ import "./UniversalERC20.sol";
 /**
  * @dev Wrapper of ETH. See https://weth.io/
  */
-abstract contract IWAVAX is IERC20 {
+abstract contract IWETH is IERC20 {
     function deposit() external payable virtual;
 
     function withdraw(uint256 amount) external virtual;
@@ -17,8 +17,10 @@ library Tokens {
     using UniversalERC20 for IERC20;
 
     IERC20 internal constant USDT = IERC20(0xc7198437980c041c805A1EDcbA50c1Ce5db95118);
-    IWAVAX internal constant WETH = IWAVAX(0x82af49447d8a07e3bd95bd0d56f35241523fbab1);
-
+    IWETH internal constant WETH = IWETH(0x82aF49447D8a07e3bd95BD0d56f35241523fBab1);
+    //0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c  bsc for test
+//    IERC20 internal constant USDT = IERC20(0xc7198437980c041c805A1EDcbA50c1Ce5db95118);
+//    IWETH internal constant WETH = IWETH(0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c);
     /**
      * @notice Wrap the ETH token to meet the ERC20 standard.
      * @param token token to wrap
