@@ -39,9 +39,9 @@ const DisableBAGUETTESWAPWAVAX = new BN(1).shln(18);
 const DisableBAGUETTESWAPDAI = new BN(1).shln(19);
 
 const DisableOOESWAPALL = new BN(1).shln(20);
-const DisableOOESWAP = new BN(1).shln(21);
-const DisableOOESWAPWAVAX = new BN(1).shln(22);
-const DisableOOESWAPDAI = new BN(1).shln(23);
+
+const DisableKYBERDMMALL = new BN(1).shln(21);
+
 
 const DexOne = artifacts.require("DexOne");
 const ERC20 = artifacts.require("IERC20");
@@ -53,7 +53,7 @@ var pass = DisableSushiswapAll.add(DisableSushiswap).add(DisableSushiswapWAVAX).
     .add(DisableJOESWAPALL).add(DisableJOESWAP).add(DisableJOESWAPWAVAX).add(DisableJOESWAPDAI)
     .add(DisableLYDIASWAPALL).add(DisableLYDIASWAP).add(DisableLYDIASWAPWAVAX).add(DisableLYDIASWAPDAI)
     .add(DisableBAGUETTESWAPALL).add(DisableBAGUETTESWAP).add(DisableBAGUETTESWAPWAVAX).add(DisableBAGUETTESWAPDAI)
-    .add(DisableOOESWAPALL).add(DisableOOESWAP).add(DisableOOESWAPWAVAX).add(DisableOOESWAPDAI);
+    .add(DisableOOESWAPALL).add(DisableKYBERDMMALL);
 
 
 contract('DexOne', (accounts) => {
@@ -67,6 +67,7 @@ contract('DexOne', (accounts) => {
         let wavaxAddress = "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7";
 
         let ooeAddress = "0x0ebd9537A25f56713E34c45b38F421A1e7191469";
+        let wethAddress = "0x49D5c2BdFfac6CE2BFdB6640F4F80f226bc10bAB";
 
         if (false) {
             let fAddress = "0xe0C1bb6DF4851feEEdc3E14Bd509FEAF428f7655";//sushiswap
@@ -76,13 +77,17 @@ contract('DexOne', (accounts) => {
             return;
         }
 
+
         var balance = await web3.eth.getBalance(accounts[0]);
         console.log("avax balance:", balance); //
 
-        let balanceBefore = await usdt.balanceOf(accounts[0])
-        console.log(`balance of ${accounts[0]}: (${balanceBefore}) USDT`);
+        var tokenOut = {
+            address: usdtAddress,
+            instance: usdt,
+            name: "USDT",
+        };
 
-        let testName = "baguette";
+        let testName = "keyberDMM";
         if (testName == "sushiswap") {
             pass = pass.sub(DisableSushiswapAll);
             pass = pass.sub(DisableSushiswap);
@@ -98,24 +103,35 @@ contract('DexOne', (accounts) => {
         } else if (testName == "baguette") {
             pass = pass.sub(DisableBAGUETTESWAPALL);
             pass = pass.sub(DisableBAGUETTESWAP);
+        } else if (testName == "keyberDMM") {
+            pass = pass.sub(DisableKYBERDMMALL);
+            let weth = await ERC20.at(wethAddress);
+            tokenOut = {
+                address: wethAddress,
+                instance: weth,
+                name: "WETH",
+            };
         }
+        let balanceBefore = await tokenOut.instance.balanceOf(accounts[0])
+        console.log(`balance of ${accounts[0]}: (${balanceBefore}) (${tokenOut.name})`);
+
 
         const dexOne = await DexOne.deployed();
         let swapAmt = '1000000000000000000';
         const res = await dexOne.calculateSwapReturn(
             avaxAddress, // matic
-            usdtAddress, // usdt
+            tokenOut.address, // usdt
             swapAmt, // 1.0
             10,
             pass,
         );
         let expectedOutAmount = res.outAmount;
-        console.log(`expect out amount ${res.outAmount.toString()} USDT`);
+        console.log(`expect out amount ${res.outAmount.toString()} (${tokenOut.name})`);
         console.log("res.distribution:", res.distribution.toString());
         // await busd.approve(dexOne.address, swapAmt);
-        await invokeContract(web3, accounts[0], dexOne, avaxAddress, usdtAddress, swapAmt, res);
-        let balanceAfter = await usdt.balanceOf(accounts[0])
-        console.log(`balance of ${accounts[0]}: (${balanceAfter}) USDT`);
+        await invokeContract(web3, accounts[0], dexOne, avaxAddress, tokenOut.address, swapAmt, res);
+        let balanceAfter = await tokenOut.instance.balanceOf(accounts[0])
+        console.log(`balance of ${accounts[0]}: (${balanceAfter}) (${tokenOut.name})`);
         assert.equal(BigNumber(expectedOutAmount), BigNumber(balanceAfter) - BigNumber(balanceBefore));
 
         const ooe = await ERC20.at(ooeAddress);

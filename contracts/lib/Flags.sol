@@ -29,6 +29,7 @@ library Flags {
     uint256 internal constant FLAG_DISABLE_BAGUETTE_DAI = 1 << 19;
 
     uint256 internal constant FLAG_DISABLE_OOE_ALL = 1 << 20;
+    uint256 internal constant FLAG_DISABLE_KYBERDMM_ALL = 1 << 21;
 
     function on(uint256 flags, uint256 flag) internal pure returns (bool) {
         return (flags & flag) != 0;

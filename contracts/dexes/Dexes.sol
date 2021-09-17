@@ -12,30 +12,36 @@ import "./IJoeSwap.sol";
 import "./ILydiaSwap.sol";
 import "./IBaguette.sol";
 import "./IOoeswap.sol";
+import "./IKyberDMM.sol";
 
-enum Dex {
-    SushiSwap,
-    SushiSwapETH,
-    SushiSwapDAI,
-    PangolinSwap,
-    PangolinSwapETH,
-    PangolinSwapDAI,
-    JoeSwap,
-    JoeSwapETH,
-    JoeSwapDAI,
-    LydiaSwap,
-    LydiaSwapETH,
-    LydiaSwapDAI,
-    BaguetteSwap,
-    BaguetteSwapETH,
-    BaguetteSwapDAI,
-    OOESwap,
-    NoDex
-}
+    enum Dex {
+        SushiSwap,
+        SushiSwapETH,
+        SushiSwapDAI,
+        PangolinSwap,
+        PangolinSwapETH,
+        PangolinSwapDAI,
+        JoeSwap,
+        JoeSwapETH,
+        JoeSwapDAI,
+        LydiaSwap,
+        LydiaSwapETH,
+        LydiaSwapDAI,
+        BaguetteSwap,
+        BaguetteSwapETH,
+        BaguetteSwapDAI,
+        OOESwap,
+        KyberDMM,
+        NoDex
+    }
 
 library Dexes {
     using UniversalERC20 for IERC20;
     using Flags for uint256;
+
+    IDMMFactory internal constant kyberDMM = IDMMFactory(0x10908C875D865C66f271F5d3949848971c9595C9);
+    using IDMMFactoryExtension for IDMMFactory;
+
 
     IOoeswapFactory internal constant ooe = IOoeswapFactory(0x042AF448582d0a3cE3CFa5b65c2675e88610B18d);
     using IOoeswapFactoryExtension for IOoeswapFactory;
@@ -70,6 +76,11 @@ library Dexes {
         uint256[] memory inAmounts,
         uint256 flags
     ) internal view returns (uint256[] memory, uint256) {
+        // add kyberDMM
+        if (dex == Dex.KyberDMM && !flags.on(Flags.FLAG_DISABLE_KYBERDMM_ALL)) {
+            return kyberDMM.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+
         // add ooeswap
         if (dex == Dex.OOESwap && !flags.on(Flags.FLAG_DISABLE_OOE_ALL)) {
             return ooe.calculateSwapReturn(inToken, outToken, inAmounts);
@@ -141,6 +152,10 @@ library Dexes {
         uint256 amount,
         uint256 flags
     ) internal {
+        // add kyberDMM
+        if (dex == Dex.KyberDMM && !flags.on(Flags.FLAG_DISABLE_KYBERDMM_ALL)) {
+            kyberDMM.swap(inToken, outToken, amount);
+        }
         //add ooeswap
         if (dex == Dex.OOESwap && !flags.on(Flags.FLAG_DISABLE_OOE_ALL)) {
             ooe.swap(inToken, outToken, amount);
