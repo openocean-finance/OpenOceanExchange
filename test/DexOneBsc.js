@@ -27,6 +27,8 @@ const DisableCURVE_2POOL = new BN(1).shln(9);
 const DisableCURVE_FUSDT = new BN(1).shln(10);
 const DisableCURVE_RENBTC = new BN(1).shln(11);
 
+const DisableFROYO = new BN(1).shln(12);
+const DisableIRONSWAP = new BN(1).shln(13);
 
 const DexOneView = artifacts.require("DexOneView");
 const DexOne = artifacts.require("DexOne");
@@ -34,11 +36,13 @@ const DexOneAll = artifacts.require("DexOneAll");
 const ERC20 = artifacts.require("IERC20");
 const Factory = artifacts.require("IUniswapV2Factory");
 
+const IFroyoPool = artifacts.require("IFroyoPool");
 
 var pass = DisableSushiswapAll.add(DisableSushiswap).add(DisableSushiswapFTM)
     .add(DisableSPOOKYSWAPAll).add(DisableSPOOKYSWAP).add(DisableSPOOKYSWAPFTM)
     .add(DisableSPIRITSWAPAll).add(DisableSPIRITSWAP).add(DisableSPIRITSWAPFTM)
-    .add(DisableCURVE_2POOL).add(DisableCURVE_FUSDT).add(DisableCURVE_RENBTC);
+    .add(DisableCURVE_2POOL).add(DisableCURVE_FUSDT).add(DisableCURVE_RENBTC)
+    .add(DisableFROYO).add(DisableIRONSWAP);
 
 
 contract('DexOne', (accounts) => {
@@ -56,8 +60,8 @@ contract('DexOne', (accounts) => {
             let fAddress = "0xA818b4F111Ccac7AA31D0BCc0806d64F2E0737D7";//honeyswap
 
             fAddress = "0xc35DADB65012eC5796536bD9864eD8773aBc74C4";//sushiswap
-            let f = await Factory.at(fAddress);
-            let res = await f.getPair(wftmAddress, usdtAddress);
+            let f = await IFroyoPool.at('0x83E5f18Da720119fF363cF63417628eB0e9fd523');
+            let res = await f.exchange_underlying(0, 2, 10000, 9996, fAddress).call();
             console.log("res:", res.toString());
             return;
         }
@@ -107,7 +111,7 @@ contract('DexOne', (accounts) => {
             pass = pass.add(DisableSPIRITSWAP);
         }
 
-        pass = pass.sub(DisableCURVE_FUSDT);
+        pass = pass.sub(DisableIRONSWAP);
 
         // curve usdt 换 usdc
         let usdcAddress = "0x04068DA6C83AFCFA0e13ba15A6696662335D5B75";
@@ -122,6 +126,7 @@ contract('DexOne', (accounts) => {
         console.log("res.distribution:", res.distribution.toString());
 
         await usdt.approve(dexOne.address, swapAmt);
+        console.log("usdt approve success");
         await invokeContract(web3, accounts[0], dexOne, usdtAddress, usdcAddress, swapAmt, res);
         balanceAfter = await usdc.balanceOf(accounts[0]);
         console.log(`balance of ${accounts[0]}: (${balanceAfter}) USDC`);

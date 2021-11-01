@@ -22,6 +22,12 @@ library Flags {
     uint256 internal constant FLAG_DISABLE_CURVE_FUSDT = 1 << 10;
     uint256 internal constant FLAG_DISABLE_CURVE_RENBTC = 1 << 11;
 
+    //add froyo
+    uint256 internal constant FLAG_DISABLE_FROYO = 1 << 12;
+
+    //add ironswap
+    uint256 internal constant FLAG_DISABLE_IRONSWAP = 1 << 13;
+
     function on(uint256 flags, uint256 flag) internal pure returns (bool) {
         return (flags & flag) != 0;
     }

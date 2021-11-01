@@ -10,7 +10,7 @@ import "../lib/Tokens.sol";
  * @notice Pool contracts of curve.fi
  * See https://github.com/curvefi/curve-vue/blob/master/src/docs/README.md#how-to-integrate-curve-smart-contracts
  */
-interface ICurvePool {
+interface IFroyoPool {
     function get_dy_underlying(
         int128 i,
         int128 j,
@@ -39,29 +39,19 @@ interface ICurvePool {
     ) external;
 }
 
-
-library ICurvePoolExtension {
+// only support USDC-2 DAI-1 fUSDT-0
+library IFroyoPoolExtension {
     using SafeMath for uint256;
     using UniversalERC20 for IERC20;
 
-    // Curve.fi pool contracts
-    // 0 DAI 1 USDC
-    ICurvePool internal constant CURVE_2POOL = ICurvePool(0x27E611FD27b276ACbd5Ffd632E5eAEBEC9761E40);
-    // 0 fUSDT 1 DAI  2 USDC
-    ICurvePool internal constant CURVE_fUSDT = ICurvePool(0x92D5ebF3593a92888C25C0AbEF126583d4b5312E);
-    // 0 BTC 1 renBTC
-    ICurvePool internal constant CURVE_renBTC = ICurvePool(0x3eF6A01A0f81D6046290f3e2A8c5b843e738E604);
-
     function calculateSwapReturn(
-        ICurvePool pool,
+        IFroyoPool pool,
         IERC20 inToken,
         IERC20 outToken,
         uint256[] memory inAmounts
     ) internal view returns (uint256[] memory outAmounts, uint256 gas) {
         outAmounts = new uint256[](inAmounts.length);
-        IERC20[] memory tokens;
-        bool underlying;
-        (tokens, underlying) = getPoolConfig(pool);
+        IERC20[] memory tokens = getPoolConfig();
 
         // determine curve token index
         (int128 i, int128 j) = determineTokenIndex(inToken, outToken, tokens);
@@ -70,21 +60,17 @@ library ICurvePoolExtension {
         }
 
         for (uint256 k = 0; k < outAmounts.length; k++) {
-            if (underlying) {
-                outAmounts[k] = pool.get_dy_underlying(i, j, inAmounts[k]);
-            } else {
-                outAmounts[k] = pool.get_dy(i, j, inAmounts[k]);
-            }
+            outAmounts[k] = pool.get_dy_underlying(i, j, inAmounts[k]);
         }
     }
 
     function swap(
-        ICurvePool pool,
+        IFroyoPool pool,
         IERC20 inToken,
         IERC20 outToken,
         uint256 inAmount
     ) internal {
-        (IERC20[] memory tokens, bool underlying) = getPoolConfig(pool);
+        IERC20[] memory tokens = getPoolConfig();
 
         // determine curve token index
         (int128 i, int128 j) = determineTokenIndex(inToken, outToken, tokens);
@@ -92,13 +78,8 @@ library ICurvePoolExtension {
             return;
         }
         inToken.universalApprove(address(pool), inAmount);
-        if (underlying) {
-            uint dy = pool.get_dy_underlying(i, j, inAmount);
-            pool.exchange_underlying(i, j, inAmount, dy, address(this));
-        } else {
-            uint dy = pool.get_dy(i, j, inAmount);
-            pool.exchange(i, j, inAmount, dy);
-        }
+        uint dy = pool.get_dy_underlying(i, j, inAmount);
+        pool.exchange(i, j, inAmount, dy);
     }
 
     function determineTokenIndex(
@@ -124,23 +105,10 @@ library ICurvePoolExtension {
      * @notice Build calculation arguments.
      * See https://github.com/curvefi/curve-vue/blob/master/src/docs/README.md
      */
-    function getPoolConfig(ICurvePool pool) private pure returns (IERC20[] memory tokens, bool underlying){
-        if (pool == CURVE_2POOL) {
-            tokens = new IERC20[](2);
-            tokens[0] = Tokens.DAI;
-            tokens[1] = Tokens.USDC;
-            underlying = false;
-        } else if (pool == CURVE_fUSDT) {
-            tokens = new IERC20[](3);
-            tokens[0] = Tokens.fUSDT;
-            tokens[1] = Tokens.DAI;
-            tokens[2] = Tokens.USDC;
-            underlying = true;
-        } else if (pool == CURVE_renBTC) {
-            tokens = new IERC20[](4);
-            tokens[0] = Tokens.BTC;
-            tokens[1] = Tokens.renBTC;
-            underlying = false;
-        }
+    function getPoolConfig() private pure returns (IERC20[] memory tokens){
+        tokens = new IERC20[](3);
+        tokens[0] = Tokens.fUSDT;
+        tokens[1] = Tokens.DAI;
+        tokens[2] = Tokens.USDC;
     }
 }

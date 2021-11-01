@@ -10,6 +10,8 @@ import "./ISushiSwap.sol";
 import "./ISpookySwap.sol";
 import "./ISpiritSwap.sol";
 import "./ICurve.sol";
+import "./IFroyo.sol";
+import "./IronSwap.sol";
 
     enum Dex {
         SushiSwap,
@@ -27,6 +29,10 @@ import "./ICurve.sol";
         Curve2POOL,
         CurvefUSDT,
         CurverenBTC,
+        //IFroyo
+        Froyo,
+        // IronSwap
+        IronSwap,
         NoDex
     }
 
@@ -35,6 +41,14 @@ library Dexes {
     using Flags for uint256;
 
     using ICurvePoolExtension for ICurvePool;
+
+    //https://frozenyogurt.gitbook.io/frozen-yogurt-finance/deployments
+    IronSwap internal constant ironSwap = IronSwap(0x952BDA8A83c3D5F398a686bb4e8C6DD90072d523);
+    using IronSwapExtension for IronSwap;
+
+    //https://frozenyogurt.gitbook.io/frozen-yogurt-finance/deployments
+    IFroyoPool internal constant froyo = IFroyoPool(0x83E5f18Da720119fF363cF63417628eB0e9fd523);
+    using IFroyoPoolExtension for IFroyoPool;
 
     //https://ftmscan.com/address/0xef45d134b73241eda7703fa787148d9c9f4950b0#code
     ISpiritSwapFactory internal constant spiritswap = ISpiritSwapFactory(0xEF45d134b73241eDa7703fa787148D9C9F4950b0);
@@ -62,6 +76,17 @@ library Dexes {
         uint256 flags
     ) internal view returns (uint256[] memory, uint256) {
 
+        //IronSwap
+        if (dex == Dex.IronSwap && !flags.on(Flags.FLAG_DISABLE_IRONSWAP)) {
+            return ironSwap.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+
+        //IFroyoPool
+        if (dex == Dex.Froyo && !flags.on(Flags.FLAG_DISABLE_FROYO)) {
+            return froyo.calculateSwapReturn(inToken, outToken, inAmounts);
+        }
+
+        //Curve
         if (dex == Dex.Curve2POOL && !flags.on(Flags.FLAG_DISABLE_CURVE_2POOL)) {
             return ICurvePoolExtension.CURVE_2POOL.calculateSwapReturn(inToken, outToken, inAmounts);
         }
@@ -110,6 +135,16 @@ library Dexes {
         uint256 flags
     ) internal {
 
+        //IronSwap
+        if (dex == Dex.IronSwap && !flags.on(Flags.FLAG_DISABLE_IRONSWAP)) {
+            ironSwap.swap(inToken, outToken, amount);
+        }
+
+        //IFroyoPool
+        if (dex == Dex.Froyo && !flags.on(Flags.FLAG_DISABLE_FROYO)) {
+            froyo.swap(inToken, outToken, amount);
+        }
+        // Curve
         if (dex == Dex.Curve2POOL && !flags.on(Flags.FLAG_DISABLE_CURVE_2POOL)) {
             ICurvePoolExtension.CURVE_2POOL.swap(inToken, outToken, amount);
         }
